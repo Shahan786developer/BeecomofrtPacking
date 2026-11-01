@@ -30,16 +30,14 @@
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}" 
                                 placeholder="Search by invoice # or customer name..." 
-                                class="form-control border-start-0 ps-0">
+                                class="form-control border-start-0 ps-0" autocomplete="off">
                         </div>
                         <button type="submit" class="btn btn-primary fw-bold px-3">
                             Search
                         </button>
-                        @if(request()->filled('search'))
-                            <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary" title="Clear Search">
-                                <i class="bi bi-x-lg"></i>
-                            </a>
-                        @endif
+                        <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
                     </form>
                 </div>
 
@@ -57,7 +55,8 @@
     </div>
 
     <!-- LIST TABLE -->
-    <div class="card border-0 shadow-sm">
+    <div id="table-container">
+        <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -82,7 +81,9 @@
 
                         <!-- Customer Details -->
                         <td class="py-3">
-                            <span class="fw-bold text-dark d-block">{{ $sale->customer->name }}</span>
+                            <a href="{{ route('customers.ledger', $sale->customer_id) }}" class="fw-bold text-dark text-decoration-none d-block hover-primary" title="View Customer Ledger">
+                                {{ $sale->customer->name }} <i class="bi bi-journal-text text-primary small ms-1"></i>
+                            </a>
                             @if($sale->customer->phone)
                                 <span class="text-secondary small"><i class="bi bi-telephone me-1"></i>{{ $sale->customer->phone }}</span>
                             @endif
@@ -143,6 +144,7 @@
             {{ $sales->links() }}
         </div>
         @endif
+    </div>
     </div>
 
 </div>

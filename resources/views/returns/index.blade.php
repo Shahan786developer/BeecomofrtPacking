@@ -30,16 +30,14 @@
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}" 
                                 placeholder="Search by return #, original invoice #, or customer name..." 
-                                class="form-control border-start-0 ps-0">
+                                class="form-control border-start-0 ps-0" autocomplete="off">
                         </div>
                         <button type="submit" class="btn btn-primary fw-bold px-3">
                             Search
                         </button>
-                        @if(request()->filled('search'))
-                            <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary" title="Clear Search">
-                                <i class="bi bi-x-lg"></i>
-                            </a>
-                        @endif
+                        <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
                     </form>
                 </div>
 
@@ -54,7 +52,8 @@
     </div>
 
     <!-- LIST TABLE -->
-    <div class="card border-0 shadow-sm">
+    <div id="table-container">
+        <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -86,8 +85,10 @@
                         </td>
 
                         <!-- Customer Details -->
-                        <td class="py-3 fw-bold text-dark">
-                            {{ $ret->customer->name }}
+                        <td class="py-3">
+                            <a href="{{ route('customers.ledger', $ret->customer_id) }}" class="fw-bold text-dark text-decoration-none hover-primary" title="View Customer Ledger">
+                                {{ $ret->customer->name }} <i class="bi bi-journal-text text-primary small ms-1"></i>
+                            </a>
                         </td>
 
                         <!-- Date -->
@@ -140,6 +141,7 @@
             {{ $returns->links() }}
         </div>
         @endif
+    </div>
     </div>
 
 </div>

@@ -307,4 +307,20 @@ class BeeComfortTest extends TestCase
         $response->assertSee("INDIA {$product->product_code}");
         $response->assertSee($product->sku_code);
     }
+
+    /**
+     * Test Customer Ledger History and Account Metrics
+     */
+    public function test_customer_ledger_history_and_metrics(): void
+    {
+        $customer = Customer::first();
+        $response = $this->get(route('customers.ledger', $customer));
+
+        $response->assertStatus(200);
+        $response->assertSee($customer->name);
+        $response->assertSee('Total Invoices');
+        $response->assertSee('Total Purchased');
+        $response->assertSee('Total Returns');
+        $response->assertSee('Customer Transaction History');
+    }
 }

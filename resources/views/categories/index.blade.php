@@ -31,21 +31,20 @@
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control border-start-0 ps-0" placeholder="Search categories by name or description...">
+                        <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control border-start-0 ps-0" placeholder="Search categories by name or description..." autocomplete="off">
                     </div>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary px-3">Search</button>
-                    @if(!empty($search))
-                        <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">Clear</a>
-                    @endif
+                    <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary btn-clear-search {{ !empty($search) ? '' : 'd-none' }}">Clear</a>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Categories List Table -->
-    <div class="card border-0 shadow-sm">
+    <div id="table-container">
+        <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -158,6 +157,7 @@
             {{ $categories->links() }}
         </div>
         @endif
+    </div>
     </div>
 
 </div>

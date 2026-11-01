@@ -74,7 +74,9 @@ Route::prefix('stock')->name('stock.')->group(function () {
     Route::post('/{product}/adjust', [StockController::class, 'adjust'])->name('adjust');
 });
 
-// Customers
+// Customers & Customer Ledger History
+Route::get('/customers/{customer}/ledger', [CustomerController::class, 'ledger'])->name('customers.ledger');
+Route::get('/customers/{customer}', [CustomerController::class, 'ledger'])->name('customers.show');
 Route::resource('customers', CustomerController::class)->except(['create', 'show', 'edit']);
 
 // Categories

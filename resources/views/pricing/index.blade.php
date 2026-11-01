@@ -31,21 +31,20 @@
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control border-start-0 ps-0" placeholder="Search pricing rules by name, percentage, or category...">
+                        <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control border-start-0 ps-0" placeholder="Search pricing rules by name, percentage..." autocomplete="off">
                     </div>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary px-3">Search</button>
-                    @if(!empty($search))
-                        <a href="{{ route('pricing.index') }}" class="btn btn-outline-secondary">Clear</a>
-                    @endif
+                    <a href="{{ route('pricing.index') }}" class="btn btn-outline-secondary btn-clear-search {{ !empty($search) ? '' : 'd-none' }}">Clear</a>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- SECTION 1: Percentage Pricing Rules -->
-    <div class="card border-0 shadow-sm">
+    <div id="table-container">
+        <div class="card border-0 shadow-sm">
         <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
             <div>
                 <h5 class="fw-bold text-dark mb-0">Percentage Pricing Tiers</h5>
@@ -173,6 +172,8 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        </div>
     </div>
 
 </div>

@@ -30,16 +30,14 @@
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}" 
                                 placeholder="Search by product title, SKU code, product code, or bill..." 
-                                class="form-control border-start-0 ps-0">
+                                class="form-control border-start-0 ps-0" autocomplete="off">
                         </div>
                         <button type="submit" class="btn btn-primary fw-bold px-3">
                             Search
                         </button>
-                        @if(request()->filled('search'))
-                            <a href="{{ route('products.index') }}" class="btn btn-outline-secondary" title="Clear Search">
-                                <i class="bi bi-x-lg"></i>
-                            </a>
-                        @endif
+                        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
                     </form>
                 </div>
 
@@ -57,7 +55,8 @@
     </div>
 
     <!-- LIST TABLE -->
-    <div class="card border-0 shadow-sm">
+    <div id="table-container">
+        <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -161,6 +160,7 @@
             {{ $products->links() }}
         </div>
         @endif
+    </div>
     </div>
 
 </div>

@@ -31,21 +31,20 @@
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control border-start-0 ps-0" placeholder="Search by name, phone, email, city, or address...">
+                        <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control border-start-0 ps-0" placeholder="Search by name, phone, email, city, or address..." autocomplete="off">
                     </div>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary px-3">Search</button>
-                    @if(!empty($search))
-                        <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">Clear</a>
-                    @endif
+                    <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-clear-search {{ !empty($search) ? '' : 'd-none' }}">Clear</a>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Customers List Table -->
-    <div class="card border-0 shadow-sm">
+    <div id="table-container">
+        <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -63,7 +62,9 @@
                     @forelse($customers as $c)
                     <tr>
                         <td class="ps-4 py-3">
-                            <span class="fw-bold text-dark fs-6 d-block">{{ $c->name }}</span>
+                            <a href="{{ route('customers.ledger', $c) }}" class="fw-bold text-dark text-decoration-none hover-primary fs-6 d-block" title="View Customer History & Ledger">
+                                {{ $c->name }} <i class="bi bi-journal-text text-primary small ms-1"></i>
+                            </a>
                         </td>
                         <td class="py-3 font-monospace small text-dark">
                             {{ $c->phone ?: '—' }}
@@ -84,6 +85,9 @@
                         </td>
                         <td class="pe-4 py-3 text-end">
                             <div class="d-inline-flex gap-1">
+                                <a href="{{ route('customers.ledger', $c) }}" class="btn btn-sm btn-outline-info" title="Customer Ledger & Invoices History">
+                                    <i class="bi bi-journal-text me-1"></i> Ledger
+                                </a>
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editCustomerModal{{ $c->id }}" title="Edit Customer">
                                     <i class="bi bi-pencil me-1"></i> Edit
                                 </button>
@@ -176,6 +180,7 @@
             {{ $customers->links() }}
         </div>
         @endif
+    </div>
     </div>
 
 </div>

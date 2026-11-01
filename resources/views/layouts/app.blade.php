@@ -266,36 +266,43 @@
             <span>BEE COMFORT</span>
         </a>
 
-        <!-- Main 3 Navigation Links -->
+        <!-- Main Navigation Links -->
         <div class="sidebar-menu">
             
             <div class="menu-label">Main System</div>
 
-            <!-- Page 1: Products & Stock -->
+            <!-- Page 1: Dashboard Overview (First Tab) -->
+            <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard', 'home') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <!-- Page 2: Products & Stock -->
             <a href="{{ route('products.index') }}" class="sidebar-link {{ request()->routeIs('products.*', 'stock.*') ? 'active' : '' }}">
                 <i class="bi bi-boxes"></i>
                 <span>Products & Stock</span>
             </a>
 
-            <!-- Page 2: Sales Invoices -->
+            <!-- Page 3: Sales Invoices -->
             <a href="{{ route('sales.index') }}" class="sidebar-link {{ request()->routeIs('sales.*') ? 'active' : '' }}">
                 <i class="bi bi-receipt"></i>
                 <span>Sales Invoices</span>
             </a>
 
-            <!-- Page 3: Bill Returns -->
+            <!-- Page 4: Bill Returns -->
             <a href="{{ route('returns.index') }}" class="sidebar-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-counterclockwise"></i>
                 <span>Bill Returns</span>
             </a>
 
-            <!-- Secondary Links (Dashboard & Tools) -->
-            <div class="menu-label mt-4">Overview & Tools</div>
-
-            <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard', 'home') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i>
-                <span>Dashboard Overview</span>
+            <!-- Page 5: Customers -->
+            <a href="{{ route('customers.index', 'customers.ledger') }}" class="sidebar-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
+                <i class="bi bi-people"></i>
+                <span>Customers</span>
             </a>
+
+            <!-- Secondary Links (Tools & Print) -->
+            <div class="menu-label mt-4">Overview & Tools</div>
 
             <a href="{{ route('barcode.index') }}" class="sidebar-link {{ request()->routeIs('barcode.*') ? 'active' : '' }}">
                 <i class="bi bi-printer"></i>
@@ -304,14 +311,13 @@
 
             <!-- Settings Accordion / Modal Dropdown -->
             <div class="dropdown mt-2">
-                <button class="sidebar-link w-100 border-0 bg-transparent text-start dropdown-toggle {{ request()->routeIs('pricing.*', 'categories.*', 'customers.*') ? 'text-primary' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="sidebar-link w-100 border-0 bg-transparent text-start dropdown-toggle {{ request()->routeIs('pricing.*', 'categories.*') ? 'text-primary' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-gear"></i>
                     <span>Settings & Config</span>
                 </button>
                 <ul class="dropdown-menu shadow border-0 p-2">
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('pricing.index') }}"><i class="bi bi-tag me-2 text-primary"></i> Pricing Rules</a></li>
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('categories.index') }}"><i class="bi bi-folder me-2 text-primary"></i> Product Categories</a></li>
-                    <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('customers.index') }}"><i class="bi bi-people me-2 text-primary"></i> Customers</a></li>
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('barcode.settings') }}"><i class="bi bi-sliders me-2 text-primary"></i> Printer Settings</a></li>
                 </ul>
             </div>
@@ -403,7 +409,7 @@
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Sidebar Toggle Script -->
+    <!-- Sidebar Toggle & Searchable Dropdowns -->
     <script>
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
             document.getElementById('appSidebar').classList.toggle('show');
@@ -420,6 +426,110 @@
                     });
                 }
             });
+        });
+
+        // Universal Live AJAX Search & Pagination
+        document.addEventListener('DOMContentLoaded', function () {
+            const tableContainer = document.getElementById('table-container');
+            const searchInputs = document.querySelectorAll('input[name="search"]');
+
+            if (!tableContainer || searchInputs.length === 0) return;
+
+            let debounceTimer = null;
+            let currentAbortController = null;
+
+            searchInputs.forEach(searchInput => {
+                const form = searchInput.closest('form');
+
+                // Prevent full GET submit; execute AJAX immediately
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        clearTimeout(debounceTimer);
+                        triggerSearch(searchInput.value.trim());
+                    });
+                }
+
+                // Listen to keystrokes for instant live search
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    const q = this.value;
+                    debounceTimer = setTimeout(() => {
+                        triggerSearch(q.trim());
+                    }, 220);
+                });
+
+                // Clear button support
+                if (form) {
+                    const clearBtn = form.querySelector('a[title="Clear Search"], a[href*="index"], .btn-clear-search');
+                    if (clearBtn) {
+                        clearBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            searchInput.value = '';
+                            searchInput.focus();
+                            triggerSearch('');
+                        });
+                    }
+                }
+            });
+
+            // Delegate pagination clicks inside #table-container
+            tableContainer.addEventListener('click', function (e) {
+                const pageLink = e.target.closest('.pagination a');
+                if (pageLink && pageLink.href) {
+                    e.preventDefault();
+                    fetchPage(pageLink.href);
+                }
+            });
+
+            function triggerSearch(query) {
+                const url = new URL(window.location.href);
+                if (query) {
+                    url.searchParams.set('search', query);
+                } else {
+                    url.searchParams.delete('search');
+                }
+                url.searchParams.delete('page');
+                fetchPage(url.toString());
+            }
+
+            function fetchPage(url) {
+                if (currentAbortController) {
+                    currentAbortController.abort();
+                }
+                currentAbortController = new AbortController();
+
+                tableContainer.style.opacity = '0.55';
+                tableContainer.style.pointerEvents = 'none';
+
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: currentAbortController.signal
+                })
+                .then(res => res.text())
+                .then(html => {
+                    window.history.replaceState({}, '', url);
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContainer = doc.getElementById('table-container');
+
+                    if (newContainer) {
+                        tableContainer.innerHTML = newContainer.innerHTML;
+                    } else {
+                        tableContainer.innerHTML = html;
+                    }
+
+                    tableContainer.style.opacity = '1';
+                    tableContainer.style.pointerEvents = 'auto';
+                })
+                .catch(err => {
+                    if (err.name === 'AbortError') return;
+                    console.error('AJAX search error:', err);
+                    tableContainer.style.opacity = '1';
+                    tableContainer.style.pointerEvents = 'auto';
+                });
+            }
         });
     </script>
 
