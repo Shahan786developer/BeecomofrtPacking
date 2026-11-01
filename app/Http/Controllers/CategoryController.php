@@ -7,10 +7,30 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::withCount('products')->orderBy('name')->paginate(15);
-        return view('categories.index', compact('categories'));
+        $search = $request->query('search');
+        $query = Category::withCount('products');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $categories = $query->orderByDesc('is_default')->orderBy('name')->paginate(15)->withQueryString();
+
+        return view('categories.index', compact('categories', 'search'));
+    }
+
+    public function setDefault(Category $category)
+    {
+        Category::query()->update(['is_default' => false]);
+        $category->update(['is_default' => true]);
+
+        return redirect()->route('categories.index')
+            ->with('success', "Category '{$category->name}' has been set as the default category.");
     }
 
     public function store(Request $request)
@@ -18,9 +38,19 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:categories,name',
             'description' => 'nullable|string|max:255',
+            'is_default' => 'nullable|boolean',
         ]);
 
-        $category = Category::create($validated);
+        $isDefault = $request->boolean('is_default');
+        if ($isDefault) {
+            Category::query()->update(['is_default' => false]);
+        }
+
+        $category = Category::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'is_default' => $isDefault,
+        ]);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

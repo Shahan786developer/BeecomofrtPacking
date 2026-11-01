@@ -112,16 +112,16 @@
                     <!-- Section 3: Pricing -->
                     <div>
                         <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
-                            <i class="bi bi-cash-coin text-primary me-1"></i> 3. Pricing Configuration
+                            <i class="bi bi-cash-coin text-primary me-1"></i> 3. Pricing Configuration (Rupees Rs.)
                         </h6>
 
                         <div class="row g-3">
                             <div class="col-12 col-md-4">
                                 <label for="actual_price" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Actual Purchase Price ($) <span class="text-danger">*</span>
+                                    Actual Purchase Price (Rs.) <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light text-secondary">$</span>
+                                    <span class="input-group-text bg-light text-secondary">Rs.</span>
                                     <input type="number" step="0.01" min="0" name="actual_price" id="actual_price" value="{{ old('actual_price', $product->actual_price) }}" required
                                         class="form-control fw-bold font-monospace text-dark">
                                 </div>
@@ -142,10 +142,10 @@
 
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Calculated Selling Price
+                                    Calculated Selling Price (Rs.)
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light text-secondary">$</span>
+                                    <span class="input-group-text bg-light text-secondary">Rs.</span>
                                     <input type="text" id="selling_price_display" value="{{ number_format($product->selling_price, 2) }}" readonly
                                         class="form-control fw-black text-dark font-monospace fs-6 bg-light cursor-not-allowed">
                                 </div>

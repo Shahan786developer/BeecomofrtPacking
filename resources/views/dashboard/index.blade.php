@@ -161,7 +161,7 @@
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black text-primary mb-1 font-monospace">${{ number_format($totalSalesAmount, 2) }}</div>
+                        <div class="h2 fw-black text-primary mb-1 font-monospace">Rs. {{ number_format($totalSalesAmount, 2) }}</div>
                         <span class="text-secondary small">{{ $totalSalesCount }} Customer Invoices</span>
                     </div>
                     <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
@@ -183,7 +183,7 @@
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-secondary small fw-bold text-uppercase d-block">Customer Returns</span>
-                        <div class="h4 fw-bold text-danger mb-0 font-monospace">${{ number_format($totalReturnAmount, 2) }}</div>
+                        <div class="h4 fw-bold text-danger mb-0 font-monospace">Rs. {{ number_format($totalReturnAmount, 2) }}</div>
                         <span class="text-secondary small">{{ $totalReturnsCount }} returns processed</span>
                     </div>
                     <div class="rounded-3 bg-danger-subtle text-danger p-2">
@@ -199,7 +199,7 @@
                 <div class="card-body p-3 d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-secondary small fw-bold text-uppercase d-block">Net Realized Sales</span>
-                        <div class="h4 fw-bold text-success mb-0 font-monospace">${{ number_format(max(0, $totalSalesAmount - $totalReturnAmount), 2) }}</div>
+                        <div class="h4 fw-bold text-success mb-0 font-monospace">Rs. {{ number_format(max(0, $totalSalesAmount - $totalReturnAmount), 2) }}</div>
                         <span class="text-secondary small">Sales minus Returns</span>
                     </div>
                     <div class="rounded-3 bg-success-subtle text-success p-2">
@@ -298,7 +298,7 @@
                                 </td>
                                 <td class="py-3 text-dark fw-semibold">{{ $sale->customer->name }}</td>
                                 <td class="py-3 text-secondary small">{{ $sale->invoice_date->format('d M Y') }}</td>
-                                <td class="pe-4 py-3 text-end font-monospace fw-bold text-dark">${{ number_format($sale->total_amount, 2) }}</td>
+                                <td class="pe-4 py-3 text-end font-monospace fw-bold text-dark">Rs. {{ number_format($sale->total_amount, 2) }}</td>
                             </tr>
                             @empty
                             <tr>
@@ -338,7 +338,7 @@
                                 </td>
                                 <td class="py-3 font-monospace small text-primary">{{ $ret->sale->invoice_no }}</td>
                                 <td class="py-3 text-dark fw-semibold">{{ $ret->customer->name }}</td>
-                                <td class="pe-4 py-3 text-end font-monospace fw-bold text-danger">${{ number_format($ret->total_amount, 2) }}</td>
+                                <td class="pe-4 py-3 text-end font-monospace fw-bold text-danger">Rs. {{ number_format($ret->total_amount, 2) }}</td>
                             </tr>
                             @empty
                             <tr>
@@ -366,14 +366,14 @@
                     labels: {!! json_encode($chartDates) !!},
                     datasets: [
                         {
-                            label: 'Sales ($)',
+                            label: 'Sales (Rs.)',
                             data: {!! json_encode($salesTrend) !!},
                             backgroundColor: '#0d6efd',
                             borderRadius: 6,
                             barPercentage: 0.6,
                         },
                         {
-                            label: 'Returns ($)',
+                            label: 'Returns (Rs.)',
                             data: {!! json_encode($returnsTrend) !!},
                             backgroundColor: '#ffc107',
                             borderRadius: 6,
@@ -389,7 +389,7 @@
                         y: {
                             beginAtZero: true,
                             grid: { color: '#f1f5f9' },
-                            ticks: { callback: v => '$' + v }
+                            ticks: { callback: v => 'Rs. ' + v }
                         },
                         x: { grid: { display: false } }
                     }

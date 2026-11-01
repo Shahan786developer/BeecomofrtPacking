@@ -58,6 +58,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::orderBy('name')->get();
+        $defaultCategory = Category::where('is_default', true)->first();
         $dozens = Dozen::orderBy('quantity')->get();
         $defaultDozen = Dozen::where('is_default', true)->first() ?? Dozen::where('quantity', 12)->first();
 
@@ -70,6 +71,7 @@ class ProductController extends Controller
 
         return view('products.create', compact(
             'categories',
+            'defaultCategory',
             'dozens',
             'defaultDozen',
             'pricingRules',

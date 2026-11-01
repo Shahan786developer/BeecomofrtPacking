@@ -108,15 +108,15 @@
                 <table class="table table-hover align-middle mb-0" id="return-items-table">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4 py-3 text-center" style="width: 60px;">Return?</th>
+                            <th class="ps-4 py-3 text-center" style="width: 70px;">Return?</th>
                             <th class="py-3 text-secondary text-uppercase fs-7">Product Description (Unified Title)</th>
                             <th class="py-3 text-secondary text-uppercase fs-7">SKU</th>
                             <th class="py-3 text-center text-secondary text-uppercase fs-7">Sold</th>
                             <th class="py-3 text-center text-secondary text-uppercase fs-7">Already Returned</th>
                             <th class="py-3 text-center text-secondary text-uppercase fs-7">Eligible</th>
-                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Rate ($)</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Rate (Rs.)</th>
                             <th class="py-3 text-center text-secondary text-uppercase fs-7" style="width: 120px;">Return Qty</th>
-                            <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Refund ($)</th>
+                            <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Refund (Rs.)</th>
                         </tr>
                     </thead>
                     <tbody id="return-items-body" class="border-top-0">
@@ -148,7 +148,7 @@
 
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                                 <span class="h5 fw-bold text-dark mb-0">Total Refund:</span>
-                                <span id="total-return-amount-display" class="h3 fw-black text-danger font-monospace mb-0">$0.00</span>
+                                <span id="total-return-amount-display" class="h3 fw-black text-danger font-monospace mb-0">Rs. 0.00</span>
                             </div>
 
                             <button type="submit" id="btn-submit-return" disabled class="btn btn-warning btn-lg fw-bold w-100 shadow-sm mt-2">
@@ -283,10 +283,10 @@
 
             html += `
             <tr class="${isChecked ? 'table-warning' : ''}">
-                <td class="ps-4 py-3 text-center">
+                <td class="ps-4 py-3 text-center align-middle">
                     <input type="checkbox" ${isChecked ? 'checked' : ''} ${!isEligible ? 'disabled' : ''}
                         onchange="toggleSelect(${idx})"
-                        class="form-check-input">
+                        class="form-check-input" style="width: 24px; height: 24px; cursor: pointer;">
                     ${isChecked ? `<input type="hidden" name="items[${idx}][sale_detail_id]" value="${item.sale_detail_id}">` : ''}
                 </td>
                 <td class="py-3">
@@ -303,7 +303,7 @@
                         : `<span class="badge bg-light text-secondary border small">Fully Returned</span>`
                     }
                 </td>
-                <td class="py-3 text-end font-monospace fw-bold text-secondary">$${item.unit_price.toFixed(2)}</td>
+                <td class="py-3 text-end font-monospace fw-bold text-secondary">Rs. ${item.unit_price.toFixed(2)}</td>
                 <td class="py-3 text-center">
                     ${isChecked 
                         ? `<input type="number" name="items[${idx}][quantity]" value="${item.return_qty}" min="1" max="${item.eligible_quantity}" required
@@ -313,7 +313,7 @@
                     }
                 </td>
                 <td class="pe-4 py-3 text-end font-monospace fw-bold fs-6 ${isChecked ? 'text-danger' : 'text-secondary'}">
-                    $${lineRefund}
+                    Rs. ${lineRefund}
                 </td>
             </tr>
             `;
@@ -336,7 +336,7 @@
         });
 
         totalQtyDisplay.textContent = `${totalUnits} unit(s)`;
-        totalReturnDisplay.textContent = '$' + totalRefund.toFixed(2);
+        totalReturnDisplay.textContent = 'Rs. ' + totalRefund.toFixed(2);
     }
 </script>
 @endpush

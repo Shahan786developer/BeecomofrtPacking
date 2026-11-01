@@ -138,7 +138,7 @@ class SaleController extends Controller
             return $sale;
         });
 
-        return redirect()->route('sales.show', $sale)
+        return redirect()->route('sales.index')
             ->with('success', "Invoice #{$sale->invoice_no} created successfully. Stock quantities deducted.");
     }
 
@@ -146,5 +146,103 @@ class SaleController extends Controller
     {
         $sale->load(['customer', 'details.product.category', 'details.product.dozen', 'returns.details']);
         return view('sales.show', compact('sale'));
+    }
+
+    public function edit(Sale $sale)
+    {
+        $customers = Customer::orderBy('name')->get();
+        $sale->load(['customer', 'details']);
+
+        $products = Product::with(['category', 'dozen', 'sku'])
+            ->orderBy('product_code')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'sku_code' => $p->sku_code,
+                    'title' => $p->title,
+                    'stock_quantity' => $p->stock_quantity,
+                    'selling_price' => (float) $p->selling_price,
+                ];
+            });
+
+        return view('sales.edit', compact('sale', 'customers', 'products'));
+    }
+
+    public function update(Request $request, Sale $sale)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'invoice_date' => 'required|date',
+            'notes' => 'nullable|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ], [
+            'customer_id.required' => 'Please select a customer.',
+            'items.required' => 'At least one product item must be added to the invoice.',
+            'items.min' => 'At least one product item must be added to the invoice.',
+            'items.*.quantity.min' => 'Item quantity must be at least 1.',
+        ]);
+
+        DB::transaction(function () use ($sale, $validated) {
+            // Restore original stock from old details
+            foreach ($sale->details as $oldDetail) {
+                $product = Product::lockForUpdate()->find($oldDetail->product_id);
+                if ($product) {
+                    $product->recordStockChange(
+                        quantityChange: +$oldDetail->quantity,
+                        type: 'adjustment',
+                        referenceId: $sale->id,
+                        referenceType: Sale::class,
+                        notes: "Restoring stock for invoice #{$sale->invoice_no} update"
+                    );
+                }
+            }
+
+            // Remove old details
+            $sale->details()->delete();
+
+            $subtotal = 0.0;
+            foreach ($validated['items'] as $itemData) {
+                $product = Product::lockForUpdate()->findOrFail($itemData['product_id']);
+                $quantity = (int) $itemData['quantity'];
+                $unitPrice = (float) $product->selling_price;
+                $lineTotal = (float) ($quantity * $unitPrice);
+                $subtotal += $lineTotal;
+
+                SaleDetail::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $product->id,
+                    'product_title' => $product->title,
+                    'sku_code' => $product->sku_code,
+                    'unit_price' => $unitPrice,
+                    'quantity' => $quantity,
+                    'returned_quantity' => 0,
+                    'total_amount' => $lineTotal,
+                ]);
+
+                // Deduct updated stock
+                $product->recordStockChange(
+                    quantityChange: -$quantity,
+                    type: 'sale',
+                    referenceId: $sale->id,
+                    referenceType: Sale::class,
+                    notes: "Updated invoice #{$sale->invoice_no} sale to customer ID {$sale->customer_id}"
+                );
+            }
+
+            $sale->update([
+                'customer_id' => $validated['customer_id'],
+                'invoice_date' => $validated['invoice_date'],
+                'notes' => $validated['notes'] ?? null,
+                'subtotal' => $subtotal,
+                'discount' => 0,
+                'total_amount' => $subtotal,
+            ]);
+        });
+
+        return redirect()->route('sales.index')
+            ->with('success', "Invoice #{$sale->invoice_no} updated successfully.");
     }
 }

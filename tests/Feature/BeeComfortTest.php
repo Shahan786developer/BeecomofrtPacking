@@ -158,7 +158,7 @@ class BeeComfortTest extends TestCase
 
         $sale = Sale::where('invoice_no', 'INV-TEST-0001')->first();
         $this->assertNotNull($sale);
-        $response->assertRedirect(route('sales.show', $sale));
+        $response->assertRedirect(route('sales.index'));
 
         // Verify stock deduction
         $product->refresh();
@@ -255,7 +255,7 @@ class BeeComfortTest extends TestCase
 
         $return = ReturnRecord::where('return_no', 'RET-TEST-SUCCESS')->first();
         $this->assertNotNull($return);
-        $responseSuccess->assertRedirect(route('returns.show', $return));
+        $responseSuccess->assertRedirect(route('returns.index'));
 
         // Check stock restored
         $product->refresh();

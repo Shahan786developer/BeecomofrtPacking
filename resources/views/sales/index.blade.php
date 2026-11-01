@@ -103,20 +103,20 @@
                         <!-- Grand Total -->
                         <td class="py-3 text-end">
                             <span class="fw-black text-dark font-monospace fs-6">
-                                ${{ number_format($sale->total_amount, 2) }}
+                                Rs. {{ number_format($sale->total_amount, 2) }}
                             </span>
                         </td>
 
-                        <!-- Action Buttons (View, Print, Return) -->
+                        <!-- Action Buttons (View, Edit, Return) -->
                         <td class="pe-3 py-3 text-end">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('sales.show', $sale) }}" class="btn btn-outline-primary" title="View Invoice">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{{ route('sales.show', $sale) }}" class="btn btn-sm btn-outline-info" title="View Invoice">
                                     <i class="bi bi-eye me-1"></i> View
                                 </a>
-                                <a href="{{ route('sales.show', $sale) }}" onclick="setTimeout(() => window.print(), 300)" class="btn btn-outline-secondary" title="Print Invoice">
-                                    <i class="bi bi-printer me-1"></i> Print
+                                <a href="{{ route('sales.edit', $sale) }}" class="btn btn-sm btn-outline-primary" title="Edit Invoice">
+                                    <i class="bi bi-pencil me-1"></i> Edit
                                 </a>
-                                <a href="{{ route('returns.create', ['sale_id' => $sale->id]) }}" class="btn btn-outline-warning" title="Process Return">
+                                <a href="{{ route('returns.create', ['sale_id' => $sale->id]) }}" class="btn btn-sm btn-outline-warning" title="Process Return">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i> Return
                                 </a>
                             </div>

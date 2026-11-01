@@ -31,6 +31,7 @@ Route::prefix('pricing')->name('pricing.')->group(function () {
     Route::get('/', [PricingController::class, 'index'])->name('index');
     Route::post('/percentage', [PricingController::class, 'storePercentage'])->name('percentage.store');
     Route::post('/category', [PricingController::class, 'storeCategory'])->name('category.store');
+    Route::put('/{pricingRule}', [PricingController::class, 'update'])->name('update');
     Route::post('/{pricingRule}/default', [PricingController::class, 'setDefault'])->name('default');
     Route::delete('/{pricingRule}', [PricingController::class, 'destroy'])->name('destroy');
 });
@@ -52,6 +53,8 @@ Route::prefix('sales')->name('sales.')->group(function () {
     Route::get('/create', [SaleController::class, 'create'])->name('create');
     Route::post('/', [SaleController::class, 'store'])->name('store');
     Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
+    Route::get('/{sale}/edit', [SaleController::class, 'edit'])->name('edit');
+    Route::put('/{sale}', [SaleController::class, 'update'])->name('update');
 });
 
 // Bill Returns
@@ -60,6 +63,8 @@ Route::prefix('returns')->name('returns.')->group(function () {
     Route::get('/create', [ReturnController::class, 'create'])->name('create');
     Route::post('/', [ReturnController::class, 'store'])->name('store');
     Route::get('/{return}', [ReturnController::class, 'show'])->name('show');
+    Route::get('/{return}/edit', [ReturnController::class, 'edit'])->name('edit');
+    Route::put('/{return}', [ReturnController::class, 'update'])->name('update');
 });
 
 // Stock Management
@@ -73,6 +78,7 @@ Route::prefix('stock')->name('stock.')->group(function () {
 Route::resource('customers', CustomerController::class)->except(['create', 'show', 'edit']);
 
 // Categories
+Route::post('/categories/{category}/default', [CategoryController::class, 'setDefault'])->name('categories.default');
 Route::resource('categories', CategoryController::class)->except(['create', 'show', 'edit']);
 
 // AJAX & Scanning APIs

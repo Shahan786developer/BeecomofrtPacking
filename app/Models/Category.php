@@ -13,6 +13,11 @@ class Category extends Model
     protected $fillable = [
         'name',
         'description',
+        'is_default',
+    ];
+
+    protected $casts = [
+        'is_default' => 'boolean',
     ];
 
     public function products(): HasMany

@@ -104,17 +104,17 @@
 
                         <!-- Refund -->
                         <td class="py-3 text-end font-monospace fw-bold text-danger fs-6">
-                            ${{ number_format($ret->total_amount, 2) }}
+                            Rs. {{ number_format($ret->total_amount, 2) }}
                         </td>
 
-                        <!-- Action Buttons (Receipt / Print) -->
+                        <!-- Action Buttons (View, Edit) -->
                         <td class="pe-3 py-3 text-end">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('returns.show', $ret) }}" class="btn btn-outline-primary" title="View Receipt">
-                                    <i class="bi bi-file-text me-1"></i> View
+                            <div class="d-inline-flex gap-1">
+                                <a href="{{ route('returns.show', $ret) }}" class="btn btn-sm btn-outline-info" title="View Return Receipt">
+                                    <i class="bi bi-eye me-1"></i> View
                                 </a>
-                                <a href="{{ route('returns.show', $ret) }}" onclick="setTimeout(() => window.print(), 300)" class="btn btn-outline-secondary" title="Print Receipt">
-                                    <i class="bi bi-printer me-1"></i> Print
+                                <a href="{{ route('returns.edit', $ret) }}" class="btn btn-sm btn-outline-primary" title="Edit Return">
+                                    <i class="bi bi-pencil me-1"></i> Edit
                                 </a>
                             </div>
                         </td>

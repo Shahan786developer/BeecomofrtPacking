@@ -108,9 +108,9 @@
                                     {{ $detail->sku_code }}
                                 </span>
                             </td>
-                            <td class="text-end font-monospace text-secondary">${{ number_format($detail->unit_price, 2) }}</td>
+                            <td class="text-end font-monospace text-secondary">Rs. {{ number_format($detail->unit_price, 2) }}</td>
                             <td class="text-center fw-bold">{{ $detail->quantity }}</td>
-                            <td class="text-end font-monospace fw-bold text-dark">${{ number_format($detail->total_amount, 2) }}</td>
+                            <td class="text-end font-monospace fw-bold text-dark">Rs. {{ number_format($detail->total_amount, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -135,19 +135,19 @@
                     <div class="d-flex flex-column gap-2 text-sm-end">
                         <div class="d-flex justify-content-between justify-content-sm-end gap-4 text-secondary">
                             <span>Subtotal:</span>
-                            <span class="font-monospace text-dark fw-bold">${{ number_format($sale->subtotal, 2) }}</span>
+                            <span class="font-monospace text-dark fw-bold">Rs. {{ number_format($sale->subtotal, 2) }}</span>
                         </div>
 
                         @if($sale->discount > 0)
                         <div class="d-flex justify-content-between justify-content-sm-end gap-4 text-danger">
                             <span>Discount:</span>
-                            <span class="font-monospace fw-bold">-${{ number_format($sale->discount, 2) }}</span>
+                            <span class="font-monospace fw-bold">-Rs. {{ number_format($sale->discount, 2) }}</span>
                         </div>
                         @endif
 
                         <div class="d-flex justify-content-between justify-content-sm-end gap-4 pt-2 border-top">
                             <span class="h5 fw-bold text-dark mb-0">Grand Total:</span>
-                            <span class="h4 fw-black text-primary font-monospace mb-0">${{ number_format($sale->total_amount, 2) }}</span>
+                            <span class="h4 fw-black text-primary font-monospace mb-0">Rs. {{ number_format($sale->total_amount, 2) }}</span>
                         </div>
                     </div>
                 </div>

@@ -96,15 +96,15 @@
                             {{ $product->bill_no }}
                         </td>
 
-                        <!-- Actual Purchase Price -->
+                        <!-- Actual Purchase Price (Rupees) -->
                         <td class="py-3 text-end font-monospace text-secondary">
-                            ${{ number_format($product->actual_price, 2) }}
+                            Rs. {{ number_format($product->actual_price, 2) }}
                         </td>
 
-                        <!-- Selling Price -->
+                        <!-- Selling Price (Rupees) -->
                         <td class="py-3 text-end">
                             <span class="fw-black text-dark font-monospace fs-6">
-                                ${{ number_format($product->selling_price, 2) }}
+                                Rs. {{ number_format($product->selling_price, 2) }}
                             </span>
                         </td>
 
@@ -125,18 +125,21 @@
                             @endif
                         </td>
 
-                        <!-- Action Buttons (Edit, Print, Stock) -->
+                        <!-- Action Icons (View, Edit, Stock Ledger, Print) -->
                         <td class="pe-3 py-3 text-end">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('products.edit', $product) }}" class="btn btn-outline-primary" title="Edit Product">
-                                    <i class="bi bi-pencil me-1"></i> Edit
+                            <div class="d-inline-flex gap-1">
+                                <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info" title="View Product">
+                                    <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('barcode.index', ['product_id' => $product->id]) }}" class="btn btn-outline-secondary" title="Print Barcode">
-                                    <i class="bi bi-printer me-1"></i> Print
+                                <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary" title="Edit Product">
+                                    <i class="bi bi-pencil"></i>
                                 </a>
-                                <button type="button" onclick="openAdjustModal({{ $product->id }}, '{{ addslashes($product->title) }}', {{ $product->stock_quantity }})" class="btn btn-outline-warning" title="Adjust Stock">
-                                    <i class="bi bi-sliders"></i>
-                                </button>
+                                <a href="{{ route('products.movements', $product) }}" class="btn btn-sm btn-outline-secondary" title="Stock Ledger">
+                                    <i class="bi bi-journal-text"></i>
+                                </a>
+                                <a href="{{ route('barcode.index', ['product_id' => $product->id]) }}" class="btn btn-sm btn-outline-dark" title="Print Barcode Labels">
+                                    <i class="bi bi-printer"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -164,81 +167,4 @@
     </div>
 
 </div>
-
-<!-- ADJUST STOCK MODAL -->
-<div class="modal fade" id="adjustStockModal" tabindex="-1" aria-labelledby="adjustStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-dark" id="adjustStockModalLabel">
-                    <i class="bi bi-sliders text-primary me-2"></i> Adjust Stock Count
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <form method="POST" id="adjust-stock-form" action="">
-                @csrf
-                <div class="modal-body p-4 d-flex flex-column gap-3">
-                    <div>
-                        <span class="text-secondary small fw-bold text-uppercase d-block">Product:</span>
-                        <h6 id="adjust-modal-title" class="fw-bold text-dark mb-0 mt-1"></h6>
-                    </div>
-
-                    <div class="p-3 bg-light rounded-3 border">
-                        <span class="text-secondary small fw-bold text-uppercase d-block">Current Stock Count:</span>
-                        <span id="adjust-modal-current" class="h5 fw-black text-dark mb-0 mt-1 d-block font-monospace"></span>
-                    </div>
-
-                    <div>
-                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Adjustment Action <span class="text-danger">*</span>
-                        </label>
-                        <select name="adjustment_type" required class="form-select fw-semibold">
-                            <option value="add">Add Units to Inventory (+)</option>
-                            <option value="subtract">Subtract Units from Inventory (-)</option>
-                            <option value="set">Set Exact Count (Physical Audit)</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Quantity of Units <span class="text-danger">*</span>
-                        </label>
-                        <input type="number" name="quantity" required min="0" placeholder="Number of units" class="form-control fw-bold font-monospace">
-                    </div>
-
-                    <div>
-                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Adjustment Reason / Note <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" name="notes" required placeholder="e.g. Audit reconciliation, damaged goods" class="form-control">
-                    </div>
-                </div>
-
-                <div class="modal-footer border-top bg-light">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary fw-bold">Save Adjustment</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @endsection
-
-@push('scripts')
-<script>
-    let adjustModalInstance = null;
-
-    function openAdjustModal(productId, productTitle, currentStock) {
-        document.getElementById('adjust-modal-title').textContent = productTitle;
-        document.getElementById('adjust-modal-current').textContent = currentStock + ' units';
-        document.getElementById('adjust-stock-form').action = `/stock/${productId}/adjust`;
-
-        if (!adjustModalInstance) {
-            adjustModalInstance = new bootstrap.Modal(document.getElementById('adjustStockModal'));
-        }
-        adjustModalInstance.show();
-    }
-</script>
-@endpush

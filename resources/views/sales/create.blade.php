@@ -4,7 +4,7 @@
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('sales.index') }}" class="text-decoration-none">Sales Invoices</a></li>
-    <li class="breadcrumb-item active" aria-current="page">New Invoice</li>
+    <li class="breadcrumb-item active" aria-current="page">Create Invoice</li>
 @endsection
 
 @section('content')
@@ -13,8 +13,8 @@
     <!-- Header -->
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="h3 fw-bold text-dark mb-1">New Sales Invoice</h1>
-            <p class="text-secondary small mb-0">Scan product barcodes, auto-populate selling rates, and issue customer bills.</p>
+            <h1 class="h4 fw-bold text-dark mb-1">New Sales Invoice</h1>
+            <p class="text-secondary small mb-0">Select catalog products, compute totals in Rupees (Rs.), and deduct inventory upon saving.</p>
         </div>
         <div>
             <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary">
@@ -24,75 +24,68 @@
     </div>
 
     <!-- MAIN FORM -->
-    <form method="POST" action="{{ route('sales.store') }}" id="sales-form" class="d-flex flex-column gap-4">
+    <form method="POST" action="{{ route('sales.store') }}" id="sale-form" class="d-flex flex-column gap-4">
         @csrf
 
         <!-- INVOICE METADATA CARD -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <div class="row g-4">
-                    <!-- 1. Customer Selection -->
+                <div class="row g-3">
+                    <!-- Invoice Number -->
+                    <div class="col-12 col-md-4">
+                        <label for="invoice_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Invoice Number <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="invoice_no" id="invoice_no" value="{{ old('invoice_no', $nextInvoiceNo) }}" required
+                            class="form-control font-monospace fw-bold fs-6">
+                    </div>
+
+                    <!-- Customer Selection -->
                     <div class="col-12 col-md-5">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label for="customer_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
                                 Customer Account <span class="text-danger">*</span>
                             </label>
-                            <button type="button" class="btn btn-link btn-sm text-primary text-decoration-none p-0 fw-bold small" onclick="openNewCustomerModal()">
-                                + Add Customer
+                            <button type="button" onclick="openNewCustomerModal()" class="btn btn-link btn-sm text-primary text-decoration-none p-0 fw-bold">
+                                <i class="bi bi-person-plus me-1"></i> + New Customer
                             </button>
                         </div>
                         <select name="customer_id" id="customer_id" required class="searchable-select form-select">
                             <option value="">Select Customer...</option>
-                            @foreach($customers as $cust)
-                                <option value="{{ $cust->id }}" {{ $loop->first ? 'selected' : '' }}>
-                                    {{ $cust->name }} {{ $cust->phone ? "({$cust->phone})" : '' }}
+                            @foreach($customers as $customer)
+                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
+                                    {{ $customer->name }} ({{ $customer->phone ?: 'No Phone' }})
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
-                    <!-- 2. Invoice Number -->
-                    <div class="col-12 col-sm-6 col-md-4">
-                        <label for="invoice_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Invoice Number <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" name="invoice_no" id="invoice_no" value="{{ old('invoice_no', $nextInvoiceNo) }}" required class="form-control font-monospace fw-bold bg-light">
-                    </div>
-
-                    <!-- 3. Invoice Date -->
-                    <div class="col-12 col-sm-6 col-md-3">
+                    <!-- Invoice Date -->
+                    <div class="col-12 col-md-3">
                         <label for="invoice_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Invoice Date <span class="text-danger">*</span>
                         </label>
-                        <input type="date" name="invoice_date" id="invoice_date" value="{{ old('invoice_date', $today) }}" required class="form-control fw-semibold">
+                        <input type="date" name="invoice_date" id="invoice_date" value="{{ old('invoice_date', $today) }}" required class="form-control font-monospace">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- PRODUCT BARCODE SCANNER (Requirement #4) -->
+        <!-- PRODUCT SELECTION CARD (Strict Catalog Dropdown) -->
         <div class="card border-0 shadow-sm bg-primary text-white">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-bold text-uppercase fs-7 text-white-50 d-flex align-items-center gap-2">
-                        <i class="bi bi-upc-scan fs-5 text-white"></i> Product Barcode Scanner (Direct SKU Input)
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-uppercase fs-7 text-white-50">
+                        <i class="bi bi-upc me-1"></i> Select Catalog Product
                     </span>
-                    <span class="badge bg-white text-primary fw-bold">Barcode Active</span>
+                    <span class="badge bg-white text-primary fw-bold">Catalog Single-Select</span>
                 </div>
 
-                <div class="row g-3 align-items-center">
-                    <!-- Barcode Input -->
-                    <div class="col-12 col-lg-5">
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text bg-white border-0 text-primary"><i class="bi bi-upc"></i></span>
-                            <input type="text" id="barcode_scanner_input" autofocus placeholder="Scan 7-digit SKU (e.g. 1000001)..." class="form-control border-0 font-monospace fw-bold text-dark">
-                        </div>
-                    </div>
-
-                    <!-- Dropdown selector -->
-                    <div class="col-12 col-lg-5 text-dark">
+                <div class="row g-2 align-items-center">
+                    <!-- Dropdown selector: Strictly select 1 product from catalog -->
+                    <div class="col-12 col-md-10 text-dark">
                         <select id="quick_product_select" class="searchable-select form-select form-select-lg">
-                            <option value="">Or select product from catalog...</option>
+                            <option value="">Select registered product from catalog...</option>
                             @foreach($products as $prod)
                                 <option value="{{ $prod['id'] }}" 
                                     data-id="{{ $prod['id'] }}"
@@ -100,15 +93,15 @@
                                     data-title="{{ $prod['title'] }}"
                                     data-price="{{ $prod['selling_price'] }}"
                                     data-stock="{{ $prod['stock_quantity'] }}">
-                                    {{ $prod['title'] }} — [SKU: {{ $prod['sku_code'] }}] (${{ number_format($prod['selling_price'], 2) }})
+                                    {{ $prod['title'] }} — [SKU: {{ $prod['sku_code'] }}] (Rs. {{ number_format($prod['selling_price'], 2) }})
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
-                    <div class="col-12 col-lg-2">
+                    <div class="col-12 col-md-2">
                         <button type="button" id="btn-add-item" class="btn btn-light btn-lg w-100 fw-bold text-primary shadow-sm">
-                            <i class="bi bi-plus-lg me-1"></i> Add
+                            <i class="bi bi-plus-lg me-1"></i> Add Item
                         </button>
                     </div>
                 </div>
@@ -136,9 +129,9 @@
                             <th class="py-3 text-secondary text-uppercase fs-7">Product Description (Unified Title)</th>
                             <th class="py-3 text-secondary text-uppercase fs-7">SKU</th>
                             <th class="py-3 text-center text-secondary text-uppercase fs-7">Stock</th>
-                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Rate ($)</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Rate (Rs.)</th>
                             <th class="py-3 text-center text-secondary text-uppercase fs-7" style="width: 130px;">Quantity</th>
-                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Amount ($)</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Amount (Rs.)</th>
                             <th class="pe-4 py-3 text-center text-secondary text-uppercase fs-7" style="width: 60px;">Action</th>
                         </tr>
                     </thead>
@@ -146,7 +139,7 @@
                         <tr id="empty-row">
                             <td colspan="8" class="text-center py-5 text-secondary">
                                 <i class="bi bi-cart3 display-6 text-secondary d-block mb-2"></i>
-                                <span class="fw-medium">Invoice is currently empty.</span> Scan a 7-digit SKU barcode above or select a product from catalog.
+                                <span class="fw-medium">Invoice is currently empty.</span> Select a product from the dropdown above to add it to this bill.
                             </td>
                         </tr>
                     </tbody>
@@ -164,26 +157,21 @@
                         <textarea name="notes" id="notes" rows="3" placeholder="Optional notes for customer or invoice records..." class="form-control bg-white"></textarea>
                     </div>
 
-                    <!-- Totals -->
+                    <!-- Totals (Discount removed) -->
                     <div class="col-12 col-lg-5">
                         <div class="card border-0 shadow-sm p-4 bg-white d-flex flex-column gap-3">
                             <div class="d-flex justify-content-between align-items-center text-secondary">
                                 <span>Subtotal:</span>
-                                <span id="subtotal-display" class="fw-bold font-monospace text-dark fs-6">$0.00</span>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center gap-3">
-                                <span class="text-secondary small fw-bold">Discount ($):</span>
-                                <input type="number" step="0.01" min="0" name="discount" id="discount_input" value="0.00" class="form-control form-control-sm text-end fw-bold font-monospace" style="max-width: 120px;">
+                                <span id="subtotal-display" class="fw-bold font-monospace text-dark fs-6">Rs. 0.00</span>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                                 <span class="h5 fw-bold text-dark mb-0">Total Amount:</span>
-                                <span id="total-amount-display" class="h3 fw-black text-primary font-monospace mb-0">$0.00</span>
+                                <span id="total-amount-display" class="h3 fw-black text-primary font-monospace mb-0">Rs. 0.00</span>
                             </div>
 
                             <button type="submit" id="btn-submit-invoice" disabled class="btn btn-primary btn-lg fw-bold w-100 shadow-sm mt-2">
-                                <i class="bi bi-check2-circle me-1"></i> Complete & Save Invoice
+                                <i class="bi bi-check2-circle me-1"></i> Save Invoice
                             </button>
                         </div>
                     </div>
@@ -232,7 +220,6 @@
         </div>
     </div>
 </div>
-
 @endsection
 
 @push('scripts')
@@ -240,13 +227,11 @@
     const allProductsCatalog = {!! json_encode($products) !!};
     let invoiceRows = [];
 
-    const scannerInput = document.getElementById('barcode_scanner_input');
     const quickSelect = document.getElementById('quick_product_select');
     const btnAddItem = document.getElementById('btn-add-item');
     const itemsBody = document.getElementById('invoice-items-body');
     const itemsBadge = document.getElementById('items-badge');
     const subtotalDisplay = document.getElementById('subtotal-display');
-    const discountInput = document.getElementById('discount_input');
     const totalAmountDisplay = document.getElementById('total-amount-display');
     const btnSubmit = document.getElementById('btn-submit-invoice');
     const feedbackBox = document.getElementById('scanner-feedback');
@@ -255,22 +240,6 @@
     let customerModalInstance = null;
 
     document.addEventListener('DOMContentLoaded', function () {
-        scannerInput.focus();
-
-        scannerInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                processScannedSku(this.value.trim());
-            }
-        });
-
-        scannerInput.addEventListener('input', function() {
-            const val = this.value.trim();
-            if (/^\d{7}$/.test(val)) {
-                processScannedSku(val);
-            }
-        });
-
         btnAddItem.addEventListener('click', function() {
             let prodId = quickSelect.tomselect ? quickSelect.tomselect.getValue() : quickSelect.value;
             if (prodId) {
@@ -278,45 +247,37 @@
                 if (prod) {
                     addProductToInvoice(prod);
                     if (quickSelect.tomselect) quickSelect.tomselect.clear();
+                    showFeedback(`Product '${prod.title}' added to invoice.`);
                 }
-            } else {
-                scannerInput.focus();
             }
         });
 
-        discountInput.addEventListener('input', calculateTotals);
-    });
+        // Optional barcode key listener for USB barcode scanners
+        let barcodeBuffer = '';
+        let barcodeTimeout = null;
+        document.addEventListener('keydown', function(e) {
+            // If typing in input, ignore
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-    function processScannedSku(sku) {
-        if (!sku) return;
-
-        const prod = allProductsCatalog.find(p => p.sku_code == sku);
-        if (prod) {
-            addProductToInvoice(prod);
-            scannerInput.value = '';
-            showFeedback(`Product '${prod.title}' added.`);
-        } else {
-            fetch(`/api/products/by-sku/${encodeURIComponent(sku)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.found) {
-                        addProductToInvoice({
-                            id: data.id,
-                            sku_code: data.sku_code,
-                            title: data.title,
-                            selling_price: data.selling_price,
-                            stock_quantity: data.stock_quantity,
-                        });
-                        scannerInput.value = '';
-                        showFeedback(`Product '${data.title}' added.`);
-                    } else {
-                        alert(`No product found with SKU '${sku}'.`);
-                        scannerInput.select();
+            if (e.key === 'Enter') {
+                if (/^\d{7}$/.test(barcodeBuffer)) {
+                    const prod = allProductsCatalog.find(p => p.sku_code == barcodeBuffer);
+                    if (prod) {
+                        addProductToInvoice(prod);
+                        showFeedback(`Barcode scanned: '${prod.title}' added.`);
                     }
-                })
-                .catch(err => alert(`Error: ${err}`));
-        }
-    }
+                }
+                barcodeBuffer = '';
+                return;
+            }
+
+            if (e.key.length === 1) {
+                barcodeBuffer += e.key;
+                clearTimeout(barcodeTimeout);
+                barcodeTimeout = setTimeout(() => { barcodeBuffer = ''; }, 300);
+            }
+        });
+    });
 
     function showFeedback(msg) {
         feedbackText.textContent = msg;
@@ -359,7 +320,7 @@
                 <tr id="empty-row">
                     <td colspan="8" class="text-center py-5 text-secondary">
                         <i class="bi bi-cart3 display-6 text-secondary d-block mb-2"></i>
-                        <span class="fw-medium">Invoice is currently empty.</span> Scan a 7-digit SKU barcode above or select a product from catalog.
+                        <span class="fw-medium">Invoice is currently empty.</span> Select a product from the dropdown above to add it to this bill.
                     </td>
                 </tr>
             `;
@@ -392,7 +353,7 @@
                     </span>
                 </td>
                 <td class="py-3 text-end font-monospace fw-bold text-secondary">
-                    $${item.price.toFixed(2)}
+                    Rs. ${item.price.toFixed(2)}
                 </td>
                 <td class="py-3 text-center">
                     <input type="number" name="items[${idx}][quantity]" value="${item.quantity}" min="1" required
@@ -400,7 +361,7 @@
                         class="form-control form-control-sm text-center fw-bold font-monospace mx-auto" style="max-width: 80px;">
                 </td>
                 <td class="py-3 text-end font-monospace fw-bold text-dark fs-6">
-                    $${lineTotal}
+                    Rs. ${lineTotal}
                 </td>
                 <td class="pe-4 py-3 text-center">
                     <button type="button" onclick="removeRow(${idx})" class="btn btn-sm btn-outline-danger" title="Remove Item">
@@ -421,11 +382,8 @@
             subtotal += (item.quantity * item.price);
         });
 
-        const discount = parseFloat(discountInput.value) || 0;
-        const total = Math.max(0, subtotal - discount);
-
-        subtotalDisplay.textContent = '$' + subtotal.toFixed(2);
-        totalAmountDisplay.textContent = '$' + total.toFixed(2);
+        subtotalDisplay.textContent = 'Rs. ' + subtotal.toFixed(2);
+        totalAmountDisplay.textContent = 'Rs. ' + subtotal.toFixed(2);
     }
 
     function openNewCustomerModal() {

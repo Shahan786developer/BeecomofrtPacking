@@ -112,13 +112,13 @@
                                     {{ $item->sku_code }}
                                 </span>
                             </td>
-                            <td class="text-end font-monospace text-secondary">${{ number_format($item->unit_price, 2) }}</td>
+                            <td class="text-end font-monospace text-secondary">Rs. {{ number_format($item->unit_price, 2) }}</td>
                             <td class="text-center">
                                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle fw-bold fs-7 px-2 py-1">
                                     +{{ $item->quantity }}
                                 </span>
                             </td>
-                            <td class="text-end font-monospace fw-bold text-danger">${{ number_format($item->total_amount, 2) }}</td>
+                            <td class="text-end font-monospace fw-bold text-danger">Rs. {{ number_format($item->total_amount, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -148,7 +148,7 @@
 
                         <div class="d-flex justify-content-between justify-content-sm-end gap-4 pt-2 border-top">
                             <span class="h5 fw-bold text-dark mb-0">Total Refund Credited:</span>
-                            <span class="h4 fw-black text-danger font-monospace mb-0">${{ number_format($return->total_amount, 2) }}</span>
+                            <span class="h4 fw-black text-danger font-monospace mb-0">Rs. {{ number_format($return->total_amount, 2) }}</span>
                         </div>
                     </div>
                 </div>

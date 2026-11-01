@@ -74,7 +74,7 @@
                         <i class="bi bi-tag text-primary fs-5"></i>
                     </div>
                     <div class="h2 fw-black text-dark mb-1 font-monospace">
-                        ${{ number_format($product->selling_price, 2) }}
+                        Rs. {{ number_format($product->selling_price, 2) }}
                     </div>
                     <span class="text-secondary small">Fixed rate loaded during barcode scan</span>
                 </div>
@@ -90,9 +90,9 @@
                         <i class="bi bi-cash-stack text-secondary fs-5"></i>
                     </div>
                     <div class="h2 fw-black text-secondary mb-1 font-monospace">
-                        ${{ number_format($product->actual_price, 2) }}
+                        Rs. {{ number_format($product->actual_price, 2) }}
                     </div>
-                    <span class="text-secondary small">Margin: <strong class="text-success">${{ number_format($product->selling_price - $product->actual_price, 2) }}</strong></span>
+                    <span class="text-secondary small">Margin: <strong class="text-success">Rs. {{ number_format($product->selling_price - $product->actual_price, 2) }}</strong></span>
                 </div>
             </div>
         </div>

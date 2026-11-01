@@ -149,7 +149,7 @@ class ReturnController extends Controller
             return $return;
         });
 
-        return redirect()->route('returns.show', $return)
+        return redirect()->route('returns.index')
             ->with('success', "Return record #{$return->return_no} processed successfully. Stock restored.");
     }
 
@@ -157,5 +157,98 @@ class ReturnController extends Controller
     {
         $return->load(['customer', 'sale', 'details.product.category', 'details.product.dozen']);
         return view('returns.show', compact('return'));
+    }
+
+    public function edit(ReturnRecord $return)
+    {
+        $return->load(['customer', 'sale.details', 'details']);
+        return view('returns.edit', compact('return'));
+    }
+
+    public function update(Request $request, ReturnRecord $return)
+    {
+        $validated = $request->validate([
+            'return_date' => 'required|date',
+            'reason' => 'nullable|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.sale_detail_id' => 'required|exists:sale_details,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ], [
+            'items.required' => 'At least one return item must be added.',
+            'items.min' => 'At least one return item must be added.',
+            'items.*.quantity.min' => 'Return quantity must be at least 1.',
+        ]);
+
+        DB::transaction(function () use ($return, $validated) {
+            // Revert previously returned quantities on sale_details and product stock
+            foreach ($return->details as $oldDetail) {
+                $saleDetail = SaleDetail::lockForUpdate()->find($oldDetail->sale_detail_id);
+                if ($saleDetail) {
+                    $saleDetail->decrement('returned_quantity', $oldDetail->quantity);
+                }
+
+                $product = Product::lockForUpdate()->find($oldDetail->product_id);
+                if ($product) {
+                    $product->recordStockChange(
+                        quantityChange: -$oldDetail->quantity,
+                        type: 'adjustment',
+                        referenceId: $return->id,
+                        referenceType: ReturnRecord::class,
+                        notes: "Reverting stock for return #{$return->return_no} update"
+                    );
+                }
+            }
+
+            // Remove old details
+            $return->details()->delete();
+
+            $totalAmount = 0.0;
+            foreach ($validated['items'] as $itemData) {
+                $saleDetail = SaleDetail::lockForUpdate()->findOrFail($itemData['sale_detail_id']);
+                $returnQty = (int) $itemData['quantity'];
+                $eligibleQty = $saleDetail->eligible_return_quantity;
+
+                if ($returnQty > $eligibleQty) {
+                    throw ValidationException::withMessages([
+                        'items' => "Cannot return {$returnQty} units of '{$saleDetail->product_title}'. Maximum returnable quantity is {$eligibleQty}.",
+                    ]);
+                }
+
+                $unitPrice = (float) $saleDetail->unit_price;
+                $lineTotal = (float) ($returnQty * $unitPrice);
+                $totalAmount += $lineTotal;
+
+                ReturnDetail::create([
+                    'return_id' => $return->id,
+                    'sale_detail_id' => $saleDetail->id,
+                    'product_id' => $saleDetail->product_id,
+                    'product_title' => $saleDetail->product_title,
+                    'sku_code' => $saleDetail->sku_code,
+                    'unit_price' => $unitPrice,
+                    'quantity' => $returnQty,
+                    'total_amount' => $lineTotal,
+                ]);
+
+                $saleDetail->increment('returned_quantity', $returnQty);
+
+                $product = Product::lockForUpdate()->findOrFail($saleDetail->product_id);
+                $product->recordStockChange(
+                    quantityChange: +$returnQty,
+                    type: 'return',
+                    referenceId: $return->id,
+                    referenceType: ReturnRecord::class,
+                    notes: "Updated customer return #{$return->return_no}"
+                );
+            }
+
+            $return->update([
+                'return_date' => $validated['return_date'],
+                'reason' => $validated['reason'] ?? null,
+                'total_amount' => $totalAmount,
+            ]);
+        });
+
+        return redirect()->route('returns.index')
+            ->with('success', "Return record #{$return->return_no} updated successfully.");
     }
 }

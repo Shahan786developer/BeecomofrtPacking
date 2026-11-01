@@ -52,16 +52,16 @@
                         </h6>
 
                         <div class="row g-3">
-                            <!-- 1. Bill No -->
+                            <!-- 1. Bill No (Blank by default) -->
                             <div class="col-12 col-md-4">
                                 <label for="bill_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                                     Bill Number <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no', 'BILL-' . date('Y') . '-' . rand(100, 999)) }}" required
-                                    placeholder="e.g. BILL-2026-101" class="form-control font-monospace fw-semibold">
+                                <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no') }}" required
+                                    placeholder="e.g. BILL-101" class="form-control font-monospace fw-semibold">
                             </div>
 
-                            <!-- 2. Category -->
+                            <!-- 2. Category (Pre-selects default category if available) -->
                             <div class="col-12 col-md-4">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <label for="category_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
@@ -74,8 +74,10 @@
                                 <select name="category_id" id="category_id" required class="searchable-select form-select">
                                     <option value="">Select Category</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : ($loop->first ? 'selected' : '') }} data-name="{{ $category->name }}">
-                                            {{ $category->name }}
+                                        <option value="{{ $category->id }}" 
+                                            {{ old('category_id', $defaultCategory->id ?? '') == $category->id ? 'selected' : '' }} 
+                                            data-name="{{ $category->name }}">
+                                            {{ $category->name }} {{ $category->is_default ? '(Default)' : '' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -106,14 +108,14 @@
                         </h6>
 
                         <div class="row g-3">
-                            <!-- 4. Product Code -->
+                            <!-- 4. Product Code (Auto hyphen: 2 letters, hyphen, 2 numbers) -->
                             <div class="col-12 col-md-4">
                                 <label for="product_code" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                                     Product Code <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" name="product_code" id="product_code" value="{{ old('product_code', 'AA-01') }}" required
-                                    placeholder="e.g. AA-01" style="text-transform: uppercase;" class="form-control font-monospace fw-bold text-uppercase">
-                                <div class="form-text small text-secondary">Uppercase alphanumeric code (e.g. AA-01)</div>
+                                <input type="text" name="product_code" id="product_code" value="{{ old('product_code') }}" required
+                                    placeholder="e.g. AA-01" maxlength="5" style="text-transform: uppercase;" class="form-control font-monospace fw-bold text-uppercase">
+                                <div class="form-text small text-secondary">Auto-formatted: 2 letters, hyphen, 2 digits (e.g. AA-01)</div>
                             </div>
 
                             <!-- 5. SKU (Auto generated, 7 digits, read-only) -->
@@ -127,12 +129,12 @@
                                 <div class="form-text small text-secondary">Unique 7-digit numeric barcode ID</div>
                             </div>
 
-                            <!-- 9. Initial Stock Quantity -->
+                            <!-- 9. Initial Stock Quantity (Blank by default) -->
                             <div class="col-12 col-md-4">
                                 <label for="quantity" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                                     Initial Stock Quantity <span class="text-danger">*</span>
                                 </label>
-                                <input type="number" name="quantity" id="quantity" value="{{ old('quantity', 100) }}" required class="form-control fw-bold font-monospace">
+                                <input type="number" name="quantity" id="quantity" value="{{ old('quantity') }}" required placeholder="e.g. 100" class="form-control fw-bold font-monospace">
                                 <div class="form-text small text-secondary">Units available in warehouse at registration</div>
                             </div>
                         </div>
@@ -141,19 +143,19 @@
                     <!-- Section 3: Pricing -->
                     <div>
                         <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
-                            <i class="bi bi-cash-coin text-primary me-1"></i> 3. Pricing Configuration
+                            <i class="bi bi-cash-coin text-primary me-1"></i> 3. Pricing Configuration (Rupees Rs.)
                         </h6>
 
                         <div class="row g-3">
-                            <!-- 6. Actual Price -->
+                            <!-- 6. Actual Price (Blank by default, Rs.) -->
                             <div class="col-12 col-md-4">
                                 <label for="actual_price" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Actual Purchase Price ($) <span class="text-danger">*</span>
+                                    Actual Purchase Price (Rs.) <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light text-secondary">$</span>
-                                    <input type="number" step="0.01" min="0" name="actual_price" id="actual_price" value="{{ old('actual_price', 650) }}" required
-                                        class="form-control fw-bold text-dark font-monospace">
+                                    <span class="input-group-text bg-light text-secondary">Rs.</span>
+                                    <input type="number" step="0.01" min="0" name="actual_price" id="actual_price" value="{{ old('actual_price') }}" required
+                                        placeholder="e.g. 650" class="form-control fw-bold text-dark font-monospace">
                                 </div>
                             </div>
 
@@ -173,14 +175,14 @@
                                 </select>
                             </div>
 
-                            <!-- 8. Selling Price (Auto Calculated, Read-only) -->
+                            <!-- 8. Selling Price (Auto Calculated, Read-only, Rs.) -->
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Calculated Selling Price
+                                    Calculated Selling Price (Rs.)
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light text-secondary">$</span>
-                                    <input type="text" id="selling_price_display" value="880.00" readonly
+                                    <span class="input-group-text bg-light text-secondary">Rs.</span>
+                                    <input type="text" id="selling_price_display" value="0.00" readonly
                                         class="form-control fw-black text-dark font-monospace fs-6 bg-light cursor-not-allowed">
                                 </div>
                                 <div class="form-text small text-secondary">Computed automatically from purchase price and markup rule</div>
@@ -218,18 +220,23 @@
         const pricingRuleSelect = document.getElementById('pricing_rule_id');
         const sellingPriceDisplay = document.getElementById('selling_price_display');
 
+        // Product code auto-masking: 2 letters, then auto-insert hyphen, then 2 numbers
         productCodeInput.addEventListener('input', function() {
-            this.value = this.value.toUpperCase();
+            let raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (raw.length > 2) {
+                raw = raw.substring(0, 2) + '-' + raw.substring(2, 4);
+            }
+            this.value = raw;
             updateTitle();
         });
 
         function updateTitle() {
-            let cat = 'Comfort Fit';
+            let cat = 'Product';
             if (categorySelect.tomselect) {
                 const opt = categorySelect.tomselect.options[categorySelect.tomselect.getValue()];
-                if (opt) cat = opt.text;
-            } else if (categorySelect.selectedIndex >= 0) {
-                cat = categorySelect.options[categorySelect.selectedIndex].text;
+                if (opt) cat = opt.text.replace(/\(Default\)/g, '').trim();
+            } else if (categorySelect.selectedIndex >= 0 && categorySelect.value) {
+                cat = categorySelect.options[categorySelect.selectedIndex].text.replace(/\(Default\)/g, '').trim();
             }
 
             let dozen = '12 pieces';
@@ -246,7 +253,7 @@
 
         function recalcSellingPrice() {
             const actual = parseFloat(actualPriceInput.value) || 0;
-            let percentage = 35;
+            let percentage = 0;
 
             let ruleId = pricingRuleSelect.tomselect ? pricingRuleSelect.tomselect.getValue() : pricingRuleSelect.value;
             if (ruleId) {

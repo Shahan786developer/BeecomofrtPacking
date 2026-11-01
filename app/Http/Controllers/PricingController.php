@@ -10,20 +10,35 @@ use Illuminate\Support\Facades\DB;
 
 class PricingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $percentageRules = PricingRule::where('rule_type', 'percentage')
-            ->orderBy('percentage', 'asc')
-            ->get();
+        $search = $request->query('search');
 
-        $categoryRules = PricingRule::with('category')
-            ->where('rule_type', 'category')
-            ->orderBy('name')
-            ->get();
+        $pQuery = PricingRule::where('rule_type', 'percentage');
+        $cQuery = PricingRule::with('category')->where('rule_type', 'category');
 
+        if ($search) {
+            $pQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('percentage', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+
+            $cQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('percentage', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('category', function ($catQ) use ($search) {
+                      $catQ->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $percentageRules = $pQuery->orderBy('percentage', 'asc')->get();
+        $categoryRules = $cQuery->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
 
-        return view('pricing.index', compact('percentageRules', 'categoryRules', 'categories'));
+        return view('pricing.index', compact('percentageRules', 'categoryRules', 'categories', 'search'));
     }
 
     public function storePercentage(Request $request)
@@ -79,6 +94,36 @@ class PricingController extends Controller
 
         return redirect()->route('pricing.index')
             ->with('success', "Category pricing configuration for '{$category->name}' created successfully.");
+    }
+
+    public function update(Request $request, PricingRule $pricingRule)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'percentage' => 'required|numeric|min:0|max:1000',
+            'category_id' => 'nullable|exists:categories,id',
+            'is_default' => 'nullable|boolean',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $isDefault = $request->boolean('is_default');
+
+        DB::transaction(function () use ($pricingRule, $validated, $isDefault) {
+            if ($isDefault && !$pricingRule->is_default) {
+                PricingRule::where('is_default', true)->update(['is_default' => false]);
+            }
+
+            $pricingRule->update([
+                'name' => $validated['name'],
+                'percentage' => (float) $validated['percentage'],
+                'category_id' => $validated['category_id'] ?? $pricingRule->category_id,
+                'is_default' => $isDefault ? true : $pricingRule->is_default,
+                'description' => $validated['description'] ?? null,
+            ]);
+        });
+
+        return redirect()->route('pricing.index')
+            ->with('success', "Pricing rule '{$pricingRule->name}' updated successfully.");
     }
 
     public function setDefault(PricingRule $pricingRule)
