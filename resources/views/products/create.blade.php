@@ -85,10 +85,16 @@
 
                             <!-- 3. Dozens (12 default) -->
                             <div class="col-12 col-md-4">
-                                <label for="dozen_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Dozens Unit <span class="text-danger">*</span>
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="dozen_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                        Dozens Unit <span class="text-danger">*</span>
+                                    </label>
+                                    <a href="{{ route('dozens.index') }}" target="_blank" class="text-primary text-decoration-none small fw-bold">
+                                        + New
+                                    </a>
+                                </div>
                                 <select name="dozen_id" id="dozen_id" required class="searchable-select form-select">
+                                    <option value="">Select Dozens Unit</option>
                                     @foreach($dozens as $dozen)
                                         <option value="{{ $dozen->id }}" 
                                             {{ old('dozen_id', $defaultDozen->id ?? null) == $dozen->id ? 'selected' : '' }}

@@ -20,6 +20,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 0. Super Admin User
+        \App\Models\User::updateOrCreate(
+            ['email' => 'superadmin@gmail.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => \Illuminate\Support\Facades\Hash::make('waqar$1234'),
+            ]
+        );
+
         // 1. Categories
         $categories = [
             ['name' => 'Comfort Fit', 'description' => 'Premium everyday comfort line'],

@@ -311,22 +311,42 @@
 
             <!-- Settings Accordion / Modal Dropdown -->
             <div class="dropdown mt-2">
-                <button class="sidebar-link w-100 border-0 bg-transparent text-start dropdown-toggle {{ request()->routeIs('pricing.*', 'categories.*') ? 'text-primary' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="sidebar-link w-100 border-0 bg-transparent text-start dropdown-toggle {{ request()->routeIs('pricing.*', 'categories.*', 'dozens.*') ? 'text-primary' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-gear"></i>
                     <span>Settings & Config</span>
                 </button>
                 <ul class="dropdown-menu shadow border-0 p-2">
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('pricing.index') }}"><i class="bi bi-tag me-2 text-primary"></i> Pricing Rules</a></li>
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('categories.index') }}"><i class="bi bi-folder me-2 text-primary"></i> Product Categories</a></li>
+                    <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('dozens.index') }}"><i class="bi bi-boxes me-2 text-primary"></i> Dozens Units</a></li>
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('barcode.settings') }}"><i class="bi bi-sliders me-2 text-primary"></i> Printer Settings</a></li>
                 </ul>
             </div>
 
         </div>
 
-        <!-- Sidebar Footer Status -->
-        <div class="p-3 border-top bg-light no-print text-center small text-secondary">
-            <span class="badge bg-success-subtle text-success border border-success-subtle">
+        <!-- Sidebar Footer Status & Logged In User -->
+        <div class="p-3 border-top bg-light no-print">
+            @auth
+            <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                        SA
+                    </span>
+                    <div class="lh-1 text-start">
+                        <span class="d-block fw-bold text-dark fs-7">{{ Auth::user()->name }}</span>
+                        <span class="text-secondary" style="font-size: 0.68rem;">Super Admin</span>
+                    </div>
+                </div>
+                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 fs-7" title="Logout of System">
+                        <i class="bi bi-power"></i>
+                    </button>
+                </form>
+            </div>
+            @endauth
+            <span class="badge bg-success-subtle text-success border border-success-subtle w-100 py-1">
                 <i class="bi bi-check-circle me-1"></i> 32&times;22mm Thermal Active
             </span>
         </div>
@@ -350,14 +370,40 @@
                 </div>
             </div>
 
-            <!-- Header Quick Action Buttons: Create & Print -->
+            <!-- Header Quick Action Buttons: Create, Print & User Profile -->
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm px-3 shadow-sm">
+                <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm px-3 shadow-sm d-none d-sm-inline-flex align-items-center">
                     <i class="bi bi-plus-lg me-1"></i> Add Product
                 </a>
-                <a href="{{ route('sales.create') }}" class="btn btn-outline-primary btn-sm px-3">
+                <a href="{{ route('sales.create') }}" class="btn btn-outline-primary btn-sm px-3 d-none d-sm-inline-flex align-items-center">
                     <i class="bi bi-cart-plus me-1"></i> New Sale
                 </a>
+
+                @auth
+                <!-- User Profile & Logout Dropdown -->
+                <div class="dropdown ms-1">
+                    <button class="btn btn-light btn-sm border dropdown-toggle d-flex align-items-center gap-2 py-1 px-2.5" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                            SA
+                        </span>
+                        <span class="d-none d-md-inline fw-semibold text-dark small">{{ Auth::user()->name }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 mt-1">
+                        <li class="px-2 py-1.5 border-bottom mb-1">
+                            <span class="d-block fw-bold text-dark small">{{ Auth::user()->name }}</span>
+                            <span class="d-block text-secondary fs-7 text-truncate" style="max-width: 180px;">{{ Auth::user()->email }}</span>
+                        </li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item rounded py-1.5 small text-danger fw-semibold">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                @endauth
             </div>
         </header>
 

@@ -48,9 +48,14 @@
                             </div>
 
                             <div class="col-12 col-md-4">
-                                <label for="category_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Category <span class="text-danger">*</span>
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="category_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                        Category <span class="text-danger">*</span>
+                                    </label>
+                                    <a href="{{ route('categories.index') }}" target="_blank" class="text-primary text-decoration-none small fw-bold">
+                                        + New
+                                    </a>
+                                </div>
                                 <select name="category_id" id="category_id" required class="searchable-select form-select">
                                     @foreach($categories as $category)
                                         <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
@@ -61,9 +66,14 @@
                             </div>
 
                             <div class="col-12 col-md-4">
-                                <label for="dozen_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Dozens Unit <span class="text-danger">*</span>
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="dozen_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                        Dozens Unit <span class="text-danger">*</span>
+                                    </label>
+                                    <a href="{{ route('dozens.index') }}" target="_blank" class="text-primary text-decoration-none small fw-bold">
+                                        + New
+                                    </a>
+                                </div>
                                 <select name="dozen_id" id="dozen_id" required class="searchable-select form-select">
                                     @foreach($dozens as $dozen)
                                         <option value="{{ $dozen->id }}" {{ old('dozen_id', $product->dozen_id) == $dozen->id ? 'selected' : '' }}>

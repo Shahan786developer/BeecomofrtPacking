@@ -25,6 +25,11 @@ class BeeComfortTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+
+        $admin = \App\Models\User::where('email', 'superadmin@gmail.com')->first();
+        if ($admin) {
+            $this->actingAs($admin);
+        }
     }
 
     /**
@@ -322,5 +327,72 @@ class BeeComfortTest extends TestCase
         $response->assertSee('Total Purchased');
         $response->assertSee('Total Returns');
         $response->assertSee('Customer Transaction History');
+    }
+
+    /**
+     * Test Authentication Protection: unauthenticated visitor cannot access system
+     */
+    public function test_unauthenticated_user_redirects_to_login(): void
+    {
+        auth()->logout();
+
+        $response = $this->get('/dashboard');
+        $response->assertRedirect('/login');
+
+        $response2 = $this->get('/products');
+        $response2->assertRedirect('/login');
+    }
+
+    /**
+     * Test Super Admin Login with exact provided credentials
+     */
+    public function test_super_admin_authentication_and_credentials(): void
+    {
+        auth()->logout();
+
+        // Failed attempt with wrong password
+        $failResponse = $this->post(route('login.post'), [
+            'email' => 'superadmin@gmail.com',
+            'password' => 'wrongpass',
+        ]);
+        $failResponse->assertSessionHasErrors('email');
+        $this->assertFalse(auth()->check());
+
+        // Successful login with superadmin@gmail.com / waqar$1234
+        $successResponse = $this->post(route('login.post'), [
+            'email' => 'superadmin@gmail.com',
+            'password' => 'waqar$1234',
+        ]);
+        $successResponse->assertRedirect('/dashboard');
+        $this->assertTrue(auth()->check());
+        $this->assertEquals('superadmin@gmail.com', auth()->user()->email);
+
+        // Logout
+        $logoutResponse = $this->post(route('logout'));
+        $logoutResponse->assertRedirect('/login');
+        $this->assertFalse(auth()->check());
+    }
+
+    /**
+     * Test Dozen Unit Management and Default Pre-selection
+     */
+    public function test_dozens_unit_management_and_default(): void
+    {
+        // Add new dozen unit
+        $response = $this->post(route('dozens.store'), [
+            'label' => '18 pieces',
+            'quantity' => 18,
+            'is_default' => 1,
+        ]);
+        $response->assertRedirect(route('dozens.index'));
+
+        $dozen = Dozen::where('label', '18 pieces')->first();
+        $this->assertNotNull($dozen);
+        $this->assertTrue($dozen->is_default);
+
+        // Verify product create page pre-selects this default
+        $createPage = $this->get(route('products.create'));
+        $createPage->assertStatus(200);
+        $createPage->assertSee('18 pieces');
     }
 }
