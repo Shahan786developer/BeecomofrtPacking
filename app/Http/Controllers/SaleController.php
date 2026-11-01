@@ -1,0 +1,150 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\Sale;
+use App\Models\SaleDetail;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class SaleController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Sale::with(['customer', 'details']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_no', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('phone', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($fromDate = $request->input('from_date')) {
+            $query->whereDate('invoice_date', '>=', $fromDate);
+        }
+
+        if ($toDate = $request->input('to_date')) {
+            $query->whereDate('invoice_date', '<=', $toDate);
+        }
+
+        $sales = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+
+        return view('sales.index', compact('sales'));
+    }
+
+    public function create()
+    {
+        $customers = Customer::orderBy('name')->get();
+        $nextInvoiceNo = Sale::generateNextInvoiceNo();
+        $today = Carbon::today()->format('Y-m-d');
+
+        // All registered products with dynamic combined title for quick barcode/search selection
+        $products = Product::with(['category', 'dozen', 'sku'])
+            ->orderBy('product_code')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'sku_code' => $p->sku_code,
+                    'title' => $p->title,
+                    'stock_quantity' => $p->stock_quantity,
+                    'selling_price' => (float) $p->selling_price,
+                ];
+            });
+
+        return view('sales.create', compact('customers', 'nextInvoiceNo', 'today', 'products'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'invoice_no' => 'required|string|unique:sales,invoice_no',
+            'invoice_date' => 'required|date',
+            'discount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ], [
+            'customer_id.required' => 'Please select a customer.',
+            'items.required' => 'At least one product item must be added to the invoice.',
+            'items.min' => 'At least one product item must be added to the invoice.',
+            'items.*.quantity.min' => 'Item quantity must be at least 1.',
+        ]);
+
+        $sale = DB::transaction(function () use ($validated) {
+            $discount = (float) ($validated['discount'] ?? 0);
+
+            $sale = Sale::create([
+                'invoice_no' => trim($validated['invoice_no']),
+                'customer_id' => $validated['customer_id'],
+                'invoice_date' => $validated['invoice_date'],
+                'subtotal' => 0,
+                'discount' => $discount,
+                'total_amount' => 0,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $subtotal = 0.0;
+
+            foreach ($validated['items'] as $itemData) {
+                // Lock product record to maintain accurate stock
+                $product = Product::with(['category', 'dozen'])->lockForUpdate()->findOrFail($itemData['product_id']);
+
+                $quantity = (int) $itemData['quantity'];
+
+                // Selling price and title are fetched from saved product record (read-only)
+                $unitPrice = (float) $product->selling_price;
+                $lineTotal = (float) ($quantity * $unitPrice);
+                $subtotal += $lineTotal;
+
+                SaleDetail::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $product->id,
+                    'product_title' => $product->title,
+                    'sku_code' => $product->sku_code,
+                    'unit_price' => $unitPrice,
+                    'quantity' => $quantity,
+                    'returned_quantity' => 0,
+                    'total_amount' => $lineTotal,
+                ]);
+
+                // On successful invoice submission, automatically deduct sold quantity from product stock.
+                // Maintain accurate negative stock quantities if sold beyond current inventory.
+                $product->recordStockChange(
+                    quantityChange: -$quantity,
+                    type: 'sale',
+                    referenceId: $sale->id,
+                    referenceType: Sale::class,
+                    notes: "Invoice #{$sale->invoice_no} sale to customer ID {$sale->customer_id}"
+                );
+            }
+
+            $totalAmount = max(0, $subtotal - $discount);
+
+            $sale->update([
+                'subtotal' => $subtotal,
+                'total_amount' => $totalAmount,
+            ]);
+
+            return $sale;
+        });
+
+        return redirect()->route('sales.show', $sale)
+            ->with('success', "Invoice #{$sale->invoice_no} created successfully. Stock quantities deducted.");
+    }
+
+    public function show(Sale $sale)
+    {
+        $sale->load(['customer', 'details.product.category', 'details.product.dozen', 'returns.details']);
+        return view('sales.show', compact('sale'));
+    }
+}
