@@ -125,9 +125,9 @@
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-envelope"></i>
                         </span>
-                        <input type="email" name="email" id="email" value="{{ old('email', 'superadmin@gmail.com') }}" required autofocus
+                        <input type="email" name="email" id="email" value="{{ old('email') }}" required autofocus
                             class="form-control border-start-0 ps-0 fw-semibold @error('email') is-invalid @enderror"
-                            placeholder="admin@beecomfort.com">
+                            placeholder="admin@domain.com">
                     </div>
                 </div>
 
@@ -167,17 +167,6 @@
                     <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Dashboard
                 </button>
             </form>
-
-            <!-- Quick Reference Credentials Hint Box -->
-            <div class="credentials-hint mt-4">
-                <div class="d-flex align-items-center gap-1 fw-bold text-dark mb-1">
-                    <i class="bi bi-shield-lock-fill text-primary"></i> Super Admin Credentials:
-                </div>
-                <div class="font-monospace small">
-                    Email: <strong class="text-dark">superadmin@gmail.com</strong><br>
-                    Password: <strong class="text-dark">waqar$1234</strong>
-                </div>
-            </div>
 
         </div>
 
