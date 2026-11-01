@@ -125,7 +125,7 @@
                             @endif
                         </td>
 
-                        <!-- Action Icons (View, Edit, Stock Ledger, Print) -->
+                        <!-- Action Icons (View, Edit, Print) -->
                         <td class="pe-3 py-3 text-end">
                             <div class="d-inline-flex gap-1">
                                 <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info" title="View Product">
@@ -133,9 +133,6 @@
                                 </a>
                                 <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary" title="Edit Product">
                                     <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{{ route('products.movements', $product) }}" class="btn btn-sm btn-outline-secondary" title="Stock Ledger">
-                                    <i class="bi bi-journal-text"></i>
                                 </a>
                                 <a href="{{ route('barcode.index', ['product_id' => $product->id]) }}" class="btn btn-sm btn-outline-dark" title="Print Barcode Labels">
                                     <i class="bi bi-printer"></i>

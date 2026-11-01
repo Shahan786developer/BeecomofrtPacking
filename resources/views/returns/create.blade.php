@@ -229,17 +229,31 @@
         if (item) {
             if (item.eligible_quantity <= 0) {
                 alert(`All units for '${item.product_title}' have already been returned.`);
+                returnScannerInput.value = '';
+                returnScannerInput.focus();
                 return;
             }
-            item.selected = true;
+            if (item.selected) {
+                if (item.return_qty < item.eligible_quantity) {
+                    item.return_qty += 1;
+                } else {
+                    alert(`Maximum eligible return quantity reached for '${item.product_title}' (${item.eligible_quantity} units).`);
+                }
+            } else {
+                item.selected = true;
+                item.return_qty = 1;
+            }
             renderReturnTable();
             returnScannerInput.value = '';
+            returnScannerInput.focus();
 
-            feedbackText.textContent = `Matched '${item.product_title}'. Added to return.`;
+            feedbackText.textContent = `Matched '${item.product_title}' (Return Qty: ${item.return_qty}).`;
             feedbackBox.classList.remove('d-none');
             setTimeout(() => { feedbackBox.classList.add('d-none'); }, 3000);
         } else {
             alert(`SKU '${sku}' was not found on this invoice.`);
+            returnScannerInput.value = '';
+            returnScannerInput.focus();
         }
     }
 

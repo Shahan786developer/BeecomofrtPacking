@@ -14,7 +14,7 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
             <h1 class="h4 fw-bold text-dark mb-1">New Sales Invoice</h1>
-            <p class="text-secondary small mb-0">Select catalog products, compute totals in Rupees (Rs.), and deduct inventory upon saving.</p>
+            <p class="text-secondary small mb-0">Scan barcodes or select products to generate customer bill. Totals in Rupees (Rs.).</p>
         </div>
         <div>
             <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary">
@@ -54,7 +54,7 @@
                             <option value="">Select Customer...</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                                    {{ $customer->name }} ({{ $customer->phone ?: 'No Phone' }})
+                                    {{ $customer->name }} ({{ $customer->phone ?: ($customer->city ?: 'No Contact') }})
                                 </option>
                             @endforeach
                         </select>
@@ -71,38 +71,60 @@
             </div>
         </div>
 
-        <!-- PRODUCT SELECTION CARD (Strict Catalog Dropdown) -->
+        <!-- BARCODE SCAN BAR & PRODUCT SELECTION -->
         <div class="card border-0 shadow-sm bg-primary text-white">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-uppercase fs-7 text-white-50">
-                        <i class="bi bi-upc me-1"></i> Select Catalog Product
-                    </span>
-                    <span class="badge bg-white text-primary fw-bold">Catalog Single-Select</span>
-                </div>
-
-                <div class="row g-2 align-items-center">
-                    <!-- Dropdown selector: Strictly select 1 product from catalog -->
-                    <div class="col-12 col-md-10 text-dark">
-                        <select id="quick_product_select" class="searchable-select form-select form-select-lg">
-                            <option value="">Select registered product from catalog...</option>
-                            @foreach($products as $prod)
-                                <option value="{{ $prod['id'] }}" 
-                                    data-id="{{ $prod['id'] }}"
-                                    data-sku="{{ $prod['sku_code'] }}"
-                                    data-title="{{ $prod['title'] }}"
-                                    data-price="{{ $prod['selling_price'] }}"
-                                    data-stock="{{ $prod['stock_quantity'] }}">
-                                    {{ $prod['title'] }} — [SKU: {{ $prod['sku_code'] }}] (Rs. {{ number_format($prod['selling_price'], 2) }})
-                                </option>
-                            @endforeach
-                        </select>
+                <div class="row g-3 align-items-center">
+                    <!-- 1. Dedicated Barcode Scan Bar -->
+                    <div class="col-12 col-lg-6">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="barcode_scanner_input" class="form-label small fw-bold text-white text-uppercase mb-0">
+                                <i class="bi bi-upc-scan me-1"></i> Scan Barcode (7-Digit SKU)
+                            </label>
+                            <span class="badge bg-white text-primary fw-bold">Scan Bar Active</span>
+                        </div>
+                        <div class="input-group input-group-lg shadow-sm">
+                            <span class="input-group-text bg-white border-0 text-primary">
+                                <i class="bi bi-upc"></i>
+                            </span>
+                            <input type="text" id="barcode_scanner_input" autofocus
+                                placeholder="Scan barcode with scanner or type SKU..." 
+                                class="form-control border-0 font-monospace fw-bold text-dark"
+                                autocomplete="off">
+                        </div>
+                        <div class="form-text text-white-50 small mt-1">
+                            Scan or enter SKU to automatically add product to table
+                        </div>
                     </div>
 
-                    <div class="col-12 col-md-2">
-                        <button type="button" id="btn-add-item" class="btn btn-light btn-lg w-100 fw-bold text-primary shadow-sm">
-                            <i class="bi bi-plus-lg me-1"></i> Add Item
-                        </button>
+                    <!-- 2. Catalog Single-Select Dropdown -->
+                    <div class="col-12 col-lg-6">
+                        <label for="quick_product_select" class="form-label small fw-bold text-white text-uppercase mb-1">
+                            <i class="bi bi-search me-1"></i> Or Select from Catalog
+                        </label>
+                        <div class="d-flex gap-2">
+                            <div class="flex-grow-1 text-dark">
+                                <select id="quick_product_select" class="searchable-select form-select form-select-lg">
+                                    <option value="">Select registered product from catalog...</option>
+                                    @foreach($products as $prod)
+                                        <option value="{{ $prod['id'] }}" 
+                                            data-id="{{ $prod['id'] }}"
+                                            data-sku="{{ $prod['sku_code'] }}"
+                                            data-title="{{ $prod['title'] }}"
+                                            data-price="{{ $prod['selling_price'] }}"
+                                            data-stock="{{ $prod['stock_quantity'] }}">
+                                            {{ $prod['title'] }} — [SKU: {{ $prod['sku_code'] }}] (Rs. {{ number_format($prod['selling_price'], 2) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="button" id="btn-add-item" class="btn btn-light btn-lg fw-bold text-primary shadow-sm flex-shrink-0">
+                                <i class="bi bi-plus-lg me-1"></i> Add
+                            </button>
+                        </div>
+                        <div class="form-text text-white-50 small mt-1">
+                            Strict catalog single-select (choose 1 product)
+                        </div>
                     </div>
                 </div>
 
@@ -139,7 +161,7 @@
                         <tr id="empty-row">
                             <td colspan="8" class="text-center py-5 text-secondary">
                                 <i class="bi bi-cart3 display-6 text-secondary d-block mb-2"></i>
-                                <span class="fw-medium">Invoice is currently empty.</span> Select a product from the dropdown above to add it to this bill.
+                                <span class="fw-medium">Invoice is currently empty.</span> Scan a barcode in the scan bar or select from the dropdown above.
                             </td>
                         </tr>
                     </tbody>
@@ -183,7 +205,7 @@
 
 </div>
 
-<!-- QUICK ADD CUSTOMER MODAL (Bootstrap 5) -->
+<!-- QUICK ADD CUSTOMER MODAL (Fields: Name, Email, City, Phone, Address) -->
 <div class="modal fade" id="newCustomerModal" tabindex="-1" aria-labelledby="newCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -200,16 +222,20 @@
                     <input type="text" id="modal_cust_name" required placeholder="Full Name or Business Name" class="form-control fw-bold">
                 </div>
                 <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Phone Number</label>
-                    <input type="text" id="modal_cust_phone" placeholder="+92 300 0000000" class="form-control font-monospace">
-                </div>
-                <div>
                     <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Email</label>
                     <input type="email" id="modal_cust_email" placeholder="customer@domain.com" class="form-control">
                 </div>
                 <div>
+                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">City</label>
+                    <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Karachi, Rawalpindi" class="form-control">
+                </div>
+                <div>
+                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Phone Number</label>
+                    <input type="text" id="modal_cust_phone" placeholder="+92 300 0000000" class="form-control font-monospace">
+                </div>
+                <div>
                     <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Address</label>
-                    <input type="text" id="modal_cust_address" placeholder="City or store location" class="form-control">
+                    <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control">
                 </div>
             </div>
 
@@ -227,6 +253,7 @@
     const allProductsCatalog = {!! json_encode($products) !!};
     let invoiceRows = [];
 
+    const scannerInput = document.getElementById('barcode_scanner_input');
     const quickSelect = document.getElementById('quick_product_select');
     const btnAddItem = document.getElementById('btn-add-item');
     const itemsBody = document.getElementById('invoice-items-body');
@@ -240,6 +267,24 @@
     let customerModalInstance = null;
 
     document.addEventListener('DOMContentLoaded', function () {
+        if (scannerInput) {
+            scannerInput.focus();
+
+            scannerInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    processScan(this.value.trim());
+                }
+            });
+
+            scannerInput.addEventListener('input', function() {
+                const val = this.value.trim();
+                if (/^\d{7}$/.test(val)) {
+                    processScan(val);
+                }
+            });
+        }
+
         btnAddItem.addEventListener('click', function() {
             let prodId = quickSelect.tomselect ? quickSelect.tomselect.getValue() : quickSelect.value;
             if (prodId) {
@@ -248,36 +293,47 @@
                     addProductToInvoice(prod);
                     if (quickSelect.tomselect) quickSelect.tomselect.clear();
                     showFeedback(`Product '${prod.title}' added to invoice.`);
+                    if (scannerInput) scannerInput.focus();
                 }
-            }
-        });
-
-        // Optional barcode key listener for USB barcode scanners
-        let barcodeBuffer = '';
-        let barcodeTimeout = null;
-        document.addEventListener('keydown', function(e) {
-            // If typing in input, ignore
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-            if (e.key === 'Enter') {
-                if (/^\d{7}$/.test(barcodeBuffer)) {
-                    const prod = allProductsCatalog.find(p => p.sku_code == barcodeBuffer);
-                    if (prod) {
-                        addProductToInvoice(prod);
-                        showFeedback(`Barcode scanned: '${prod.title}' added.`);
-                    }
-                }
-                barcodeBuffer = '';
-                return;
-            }
-
-            if (e.key.length === 1) {
-                barcodeBuffer += e.key;
-                clearTimeout(barcodeTimeout);
-                barcodeTimeout = setTimeout(() => { barcodeBuffer = ''; }, 300);
             }
         });
     });
+
+    function processScan(sku) {
+        if (!sku) return;
+
+        const prod = allProductsCatalog.find(p => p.sku_code == sku);
+        if (prod) {
+            addProductToInvoice(prod);
+            scannerInput.value = '';
+            scannerInput.focus();
+            showFeedback(`Scanned [SKU: ${sku}]: '${prod.title}' added.`);
+        } else {
+            fetch(`/api/products/by-sku/${encodeURIComponent(sku)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.found) {
+                        addProductToInvoice({
+                            id: data.id,
+                            sku_code: data.sku_code,
+                            title: data.title,
+                            selling_price: data.selling_price,
+                            stock_quantity: data.stock_quantity,
+                        });
+                        scannerInput.value = '';
+                        scannerInput.focus();
+                        showFeedback(`Scanned [SKU: ${sku}]: '${data.title}' added.`);
+                    } else {
+                        alert(`No product found with barcode SKU '${sku}'.`);
+                        scannerInput.select();
+                    }
+                })
+                .catch(err => {
+                    alert(`Error scanning barcode: ${err}`);
+                    scannerInput.select();
+                });
+        }
+    }
 
     function showFeedback(msg) {
         feedbackText.textContent = msg;
@@ -320,7 +376,7 @@
                 <tr id="empty-row">
                     <td colspan="8" class="text-center py-5 text-secondary">
                         <i class="bi bi-cart3 display-6 text-secondary d-block mb-2"></i>
-                        <span class="fw-medium">Invoice is currently empty.</span> Select a product from the dropdown above to add it to this bill.
+                        <span class="fw-medium">Invoice is currently empty.</span> Scan a barcode in the scan bar or select from the dropdown above.
                     </td>
                 </tr>
             `;
@@ -399,8 +455,9 @@
 
     function saveNewCustomerAjax() {
         const name = document.getElementById('modal_cust_name').value.trim();
-        const phone = document.getElementById('modal_cust_phone').value.trim();
         const email = document.getElementById('modal_cust_email').value.trim();
+        const city = document.getElementById('modal_cust_city').value.trim();
+        const phone = document.getElementById('modal_cust_phone').value.trim();
         const address = document.getElementById('modal_cust_address').value.trim();
 
         if (!name) {
@@ -415,7 +472,7 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ name, phone, email, address })
+            body: JSON.stringify({ name, email, city, phone, address })
         })
         .then(r => r.json())
         .then(data => {
@@ -424,7 +481,7 @@
                 if (customerSelect.tomselect) {
                     customerSelect.tomselect.addOption({
                         value: data.customer.id,
-                        text: `${data.customer.name} (${data.customer.phone || 'No Phone'})`
+                        text: `${data.customer.name} (${data.customer.phone || data.customer.city || 'No Phone'})`
                     });
                     customerSelect.tomselect.setValue(data.customer.id);
                 }

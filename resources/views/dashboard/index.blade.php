@@ -25,54 +25,6 @@
         </div>
     </div>
 
-    <!-- ONE-MONTH ZERO/NEGATIVE STOCK ALERT BANNER (If any) -->
-    @if($oneMonthDepletedProducts->count() > 0)
-    <div class="card border-danger-subtle bg-danger-subtle shadow-sm">
-        <div class="card-body p-4">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-danger text-white rounded-3 p-3 d-flex align-items-center justify-center flex-shrink-0" style="width: 48px; height: 48px;">
-                        <i class="bi bi-exclamation-triangle-fill fs-4"></i>
-                    </div>
-                    <div>
-                        <h5 class="fw-bold text-danger mb-1">
-                            Critical Attention: One-Month Depleted Stock Alert ({{ $oneMonthDepletedProducts->count() }} Products)
-                        </h5>
-                        <p class="text-danger-emphasis small mb-0">
-                            These items have remained depleted (&le; 0 stock) for 30+ days. Per inventory policy, products remain active.
-                        </p>
-                    </div>
-                </div>
-                <div>
-                    <a href="{{ route('stock.index', ['status' => 'depleted_month']) }}" class="btn btn-danger btn-sm fw-bold whitespace-nowrap">
-                        Review Depleted Stock &rarr;
-                    </a>
-                </div>
-            </div>
-
-            <!-- Compact Alert Items Grid -->
-            <div class="row g-2 mt-3">
-                @foreach($oneMonthDepletedProducts as $depProduct)
-                <div class="col-12 col-md-6 col-xl-4">
-                    <div class="bg-white rounded-3 p-3 border d-flex justify-content-between align-items-center shadow-xs">
-                        <div>
-                            <span class="fw-bold text-dark small d-block text-truncate" style="max-width: 200px;">{{ $depProduct->title }}</span>
-                            <span class="font-monospace text-secondary small">SKU: {{ $depProduct->sku_code }}</span>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge {{ $depProduct->stock_quantity < 0 ? 'bg-danger text-white' : 'bg-warning text-dark' }} px-2 py-1 font-monospace">
-                                {{ $depProduct->stock_quantity }} units
-                            </span>
-                            <span class="text-secondary small d-block mt-0.5">{{ $depProduct->depleted_days }}d depleted</span>
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-    @endif
-
     <!-- SUMMARY METRICS -->
     <div class="row g-3">
         <!-- 1. Total Products -->
@@ -351,6 +303,54 @@
             </div>
         </div>
     </div>
+
+    <!-- ONE-MONTH ZERO/NEGATIVE STOCK ALERT BANNER (Moved below per instruction) -->
+    @if($oneMonthDepletedProducts->count() > 0)
+    <div class="card border-danger-subtle bg-danger-subtle shadow-sm">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-danger text-white rounded-3 p-3 d-flex align-items-center justify-center flex-shrink-0" style="width: 48px; height: 48px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-danger mb-1">
+                            Critical Attention: One-Month Depleted Stock Alert ({{ $oneMonthDepletedProducts->count() }} Products)
+                        </h5>
+                        <p class="text-danger-emphasis small mb-0">
+                            These items have remained depleted (&le; 0 stock) for 30+ days. Per inventory policy, products remain active.
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <a href="{{ route('stock.index', ['status' => 'depleted_month']) }}" class="btn btn-danger btn-sm fw-bold whitespace-nowrap">
+                        Review Depleted Stock &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Compact Alert Items Grid -->
+            <div class="row g-2 mt-3">
+                @foreach($oneMonthDepletedProducts as $depProduct)
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="bg-white rounded-3 p-3 border d-flex justify-content-between align-items-center shadow-xs">
+                        <div>
+                            <span class="fw-bold text-dark small d-block text-truncate" style="max-width: 200px;">{{ $depProduct->title }}</span>
+                            <span class="font-monospace text-secondary small">SKU: {{ $depProduct->sku_code }}</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge {{ $depProduct->stock_quantity < 0 ? 'bg-danger text-white' : 'bg-warning text-dark' }} px-2 py-1 font-monospace">
+                                {{ $depProduct->stock_quantity }} units
+                            </span>
+                            <span class="text-secondary small d-block mt-0.5">{{ $depProduct->depleted_days }}d depleted</span>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 
 </div>
 @endsection
