@@ -231,5 +231,64 @@ class DatabaseSeeder extends Seeder
             'new_stock' => -3,
             'notes' => 'Oversold back-order stock',
         ]);
+
+        // 7. Seed Sample Sale Invoice
+        $customer1 = Customer::first();
+        $sale = \App\Models\Sale::create([
+            'customer_id' => $customer1->id,
+            'invoice_no' => 'INV-2026-0001',
+            'invoice_date' => Carbon::now()->subDays(2),
+            'subtotal' => $p1Selling * 2,
+            'discount' => 10.00,
+            'total_amount' => ($p1Selling * 2) - 10.00,
+            'notes' => 'Customer retail delivery',
+        ]);
+
+        $saleDetail = $sale->details()->create([
+            'product_id' => $p1->id,
+            'sku_code' => $p1->sku_code,
+            'product_title' => $p1->title,
+            'unit_price' => $p1Selling,
+            'quantity' => 2,
+            'total_amount' => $p1Selling * 2,
+        ]);
+
+        $p1->decrement('stock_quantity', 2);
+        $p1->stockMovements()->create([
+            'type' => 'sale',
+            'quantity_change' => -2,
+            'previous_stock' => 120,
+            'new_stock' => 118,
+            'notes' => 'Sales invoice #' . $sale->invoice_no,
+        ]);
+
+        // 8. Seed Sample Bill Return
+        $return = \App\Models\ReturnRecord::create([
+            'sale_id' => $sale->id,
+            'customer_id' => $customer1->id,
+            'return_no' => 'RET-2026-0001',
+            'return_date' => Carbon::now()->subDay(),
+            'total_amount' => $p1Selling,
+            'reason' => 'Customer requested size exchange',
+        ]);
+
+        $return->details()->create([
+            'sale_detail_id' => $saleDetail->id,
+            'product_id' => $p1->id,
+            'sku_code' => $p1->sku_code,
+            'product_title' => $p1->title,
+            'unit_price' => $p1Selling,
+            'quantity' => 1,
+            'total_amount' => $p1Selling,
+        ]);
+
+        $p1->increment('stock_quantity', 1);
+        $p1->stockMovements()->create([
+            'type' => 'return',
+            'quantity_change' => 1,
+            'previous_stock' => 118,
+            'new_stock' => 119,
+            'notes' => 'Customer return voucher #' . $return->return_no,
+        ]);
     }
 }

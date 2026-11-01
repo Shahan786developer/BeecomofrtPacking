@@ -3,142 +3,151 @@
 @section('title', 'Customers Directory')
 
 @section('breadcrumb')
-    <span class="text-slate-800 font-semibold">Customers</span>
+    <li class="breadcrumb-item active" aria-current="page">Customers</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Customer Accounts Directory</h1>
-            <p class="text-sm text-slate-500 mt-1">Manage client records, contact numbers, and purchasing histories.</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Customer Accounts Directory</h1>
+            <p class="text-secondary small mb-0">Manage customer profiles, phone numbers, and purchasing histories for sales invoices.</p>
         </div>
-        <button type="button" onclick="document.getElementById('new-customer-section').scrollIntoView({behavior: 'smooth'})" 
-            class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-sm flex items-center gap-2">
-            <i class="fa-solid fa-user-plus"></i> Add New Customer
-        </button>
+        <div>
+            <button type="button" onclick="document.getElementById('name-input').focus()" class="btn btn-primary shadow-sm">
+                <i class="bi bi-person-plus me-1"></i> Register New Customer
+            </button>
+        </div>
     </div>
 
     <!-- Layout Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="row g-4 align-items-start">
 
-        <!-- Add Customer Form (1 Col) -->
-        <div id="new-customer-section" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-4">
-            <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-                <i class="fa-solid fa-user-plus text-amber-500"></i> Register New Customer
-            </h3>
-            <form method="POST" action="{{ route('customers.store') }}" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Full Name / Business <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="name" required placeholder="e.g. Royal Garments Ltd."
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 font-semibold">
+        <!-- Add Customer Form (Col 4) -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-person-plus text-primary me-2"></i> Register Customer
+                    </h5>
                 </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ route('customers.store') }}" class="d-flex flex-column gap-3">
+                        @csrf
+                        <div>
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Full Name / Company <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="name-input" name="name" required placeholder="e.g. Royal Garments Ltd." class="form-control fw-bold">
+                        </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Phone Number
-                    </label>
-                    <input type="text" name="phone" placeholder="+92 300 1234567"
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 font-mono">
+                        <div>
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Phone Number
+                            </label>
+                            <input type="text" name="phone" placeholder="+92 300 1234567" class="form-control font-monospace">
+                        </div>
+
+                        <div>
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Email Address
+                            </label>
+                            <input type="email" name="email" placeholder="customer@domain.com" class="form-control">
+                        </div>
+
+                        <div>
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Address / City
+                            </label>
+                            <textarea name="address" rows="2" placeholder="Physical store or billing address" class="form-control"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary fw-bold mt-2">
+                            Save Customer
+                        </button>
+                    </form>
                 </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Email Address
-                    </label>
-                    <input type="email" name="email" placeholder="customer@domain.com"
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Address / City
-                    </label>
-                    <textarea name="address" rows="2" placeholder="Physical shop or billing location"
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400"></textarea>
-                </div>
-
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm transition-colors">
-                    Save Customer Account
-                </button>
-            </form>
+            </div>
         </div>
 
-        <!-- Customers Table (2 Cols) -->
-        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div class="p-4 sm:px-6 border-b border-slate-100 flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-base text-slate-900">Registered Customers</h3>
-                    <p class="text-xs text-slate-500">Foreign-key customer accounts available during invoice creation</p>
+        <!-- Customers Table (Col 8) -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">Registered Customers</h5>
+                        <span class="text-secondary small">Customer accounts selectable during invoice generation</span>
+                    </div>
+                    <span class="badge bg-light text-dark border px-2 py-1">
+                        {{ $customers->total() }} Customers
+                    </span>
                 </div>
-                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                    {{ $customers->total() }} Customers
-                </span>
-            </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                        <tr>
-                            <th class="p-4 pl-6">Customer Name</th>
-                            <th class="p-4">Contact</th>
-                            <th class="p-4">Location</th>
-                            <th class="p-4 text-center">Invoices</th>
-                            <th class="p-4 text-center">Returns</th>
-                            <th class="p-4 pr-6 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($customers as $c)
-                        <tr class="hover:bg-slate-50/80 transition-colors">
-                            <td class="p-4 pl-6 font-extrabold text-slate-900 text-sm">
-                                {{ $c->name }}
-                            </td>
-                            <td class="p-4 text-slate-600 font-mono">
-                                {{ $c->phone ?? ($c->email ?? '—') }}
-                            </td>
-                            <td class="p-4 text-slate-500 max-w-xs truncate">
-                                {{ $c->address ?? '—' }}
-                            </td>
-                            <td class="p-4 text-center font-bold text-indigo-700 font-mono">
-                                {{ $c->sales_count }}
-                            </td>
-                            <td class="p-4 text-center font-bold text-orange-600 font-mono">
-                                {{ $c->returns_count }}
-                            </td>
-                            <td class="p-4 pr-6 text-right">
-                                @if($c->sales_count == 0)
-                                <form method="POST" action="{{ route('customers.destroy', $c) }}" class="inline" onsubmit="return confirm('Delete customer?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-rose-500 hover:text-rose-700 p-1" title="Delete">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
-                                @else
-                                <span class="text-[10px] text-slate-400 italic">Active</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="p-8 text-center text-slate-400">No customers registered yet.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Customer Name</th>
+                                <th class="py-3 text-secondary text-uppercase fs-7">Contact</th>
+                                <th class="py-3 text-secondary text-uppercase fs-7">Location</th>
+                                <th class="py-3 text-center text-secondary text-uppercase fs-7">Invoices</th>
+                                <th class="py-3 text-center text-secondary text-uppercase fs-7">Returns</th>
+                                <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            @forelse($customers as $c)
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <span class="fw-bold text-dark d-block fs-6">{{ $c->name }}</span>
+                                </td>
+                                <td class="py-3 font-monospace small text-secondary">
+                                    {{ $c->phone ?? ($c->email ?? '—') }}
+                                </td>
+                                <td class="py-3 text-secondary small text-truncate" style="max-width: 180px;">
+                                    {{ $c->address ?? '—' }}
+                                </td>
+                                <td class="py-3 text-center">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1">
+                                        {{ $c->sales_count }}
+                                    </span>
+                                </td>
+                                <td class="py-3 text-center">
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle font-monospace px-2 py-1">
+                                        {{ $c->returns_count }}
+                                    </span>
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    @if($c->sales_count == 0)
+                                    <form method="POST" action="{{ route('customers.destroy', $c) }}" class="d-inline" onsubmit="return confirm('Delete customer?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    @else
+                                    <span class="badge bg-light text-secondary border small">Active</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-secondary">No customer accounts registered yet.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-            @if($customers->hasPages())
-            <div class="p-4 border-t border-slate-100">
-                {{ $customers->links() }}
+                @if($customers->hasPages())
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $customers->links() }}
+                </div>
+                @endif
             </div>
-            @endif
         </div>
 
     </div>

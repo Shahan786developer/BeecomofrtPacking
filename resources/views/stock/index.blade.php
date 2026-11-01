@@ -3,165 +3,204 @@
 @section('title', 'Warehouse Stock Levels')
 
 @section('breadcrumb')
-    <span class="text-slate-800 font-semibold">Stock Levels</span>
+    <li class="breadcrumb-item active" aria-current="page">Stock Levels</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
     <!-- Header & Action -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Stock & Inventory Levels</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Real-time inventory quantities, backorder tracking, and physical audit adjustments.</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Stock & Inventory Levels</h1>
+            <p class="text-secondary small mb-0">Real-time inventory quantities, backorder tracking, and physical audit adjustments.</p>
         </div>
-        <div class="flex items-center gap-2.5">
-            <a href="{{ route('stock.movements') }}" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5">
-                <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> Movement Ledger
+        <div class="d-flex gap-2">
+            <a href="{{ route('stock.movements') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-clock-history me-1"></i> Movement Ledger
             </a>
-            <a href="{{ route('products.create') }}" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5">
-                <i class="fa-solid fa-plus"></i> Intake New Stock
+            <a href="{{ route('products.create') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Intake New Stock
             </a>
         </div>
     </div>
 
     <!-- 5 Summary Filter Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        <a href="{{ route('stock.index') }}" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors {{ !request('status') ? 'ring-2 ring-slate-900' : '' }}">
-            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">All Products</span>
-            <h4 class="text-xl font-black text-slate-900 mt-1">{{ number_format($stats['total_products']) }}</h4>
-            <span class="text-[10px] text-slate-400 mt-0.5 block">Catalog items</span>
-        </a>
+    <div class="row g-3">
+        <div class="col-6 col-md-4 col-xl">
+            <a href="{{ route('stock.index') }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 {{ !request('status') ? 'border-primary border-2' : '' }}">
+                    <div class="card-body p-3">
+                        <span class="text-secondary text-uppercase fw-bold fs-7 d-block">All Products</span>
+                        <div class="h3 fw-black text-dark mb-0 mt-1">{{ number_format($stats['total_products']) }}</div>
+                        <span class="text-secondary small">Catalog items</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-        <a href="{{ route('stock.index', ['status' => 'in_stock']) }}" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors {{ request('status') === 'in_stock' ? 'ring-2 ring-emerald-500' : '' }}">
-            <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Positive Stock</span>
-            <h4 class="text-xl font-black text-emerald-600 mt-1">{{ number_format($stats['total_stock']) }}</h4>
-            <span class="text-[10px] text-slate-400 mt-0.5 block">Available units</span>
-        </a>
+        <div class="col-6 col-md-4 col-xl">
+            <a href="{{ route('stock.index', ['status' => 'in_stock']) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 {{ request('status') === 'in_stock' ? 'border-success border-2' : '' }}">
+                    <div class="card-body p-3">
+                        <span class="text-success text-uppercase fw-bold fs-7 d-block">Positive Stock</span>
+                        <div class="h3 fw-black text-success mb-0 mt-1">{{ number_format($stats['total_stock']) }}</div>
+                        <span class="text-secondary small">Available units</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-        <a href="{{ route('stock.index', ['status' => 'zero']) }}" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors {{ request('status') === 'zero' ? 'ring-2 ring-amber-500' : '' }}">
-            <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Zero Stock</span>
-            <h4 class="text-xl font-black text-amber-600 mt-1">{{ number_format($stats['zero_stock']) }}</h4>
-            <span class="text-[10px] text-slate-400 mt-0.5 block">0 units</span>
-        </a>
+        <div class="col-6 col-md-4 col-xl">
+            <a href="{{ route('stock.index', ['status' => 'zero']) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 {{ request('status') === 'zero' ? 'border-warning border-2' : '' }}">
+                    <div class="card-body p-3">
+                        <span class="text-warning text-uppercase fw-bold fs-7 d-block">Zero Stock</span>
+                        <div class="h3 fw-black text-warning mb-0 mt-1">{{ number_format($stats['zero_stock']) }}</div>
+                        <span class="text-secondary small">0 units in warehouse</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-        <a href="{{ route('stock.index', ['status' => 'negative']) }}" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors {{ request('status') === 'negative' ? 'ring-2 ring-rose-500' : '' }}">
-            <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wider">Negative Stock</span>
-            <h4 class="text-xl font-black text-rose-600 mt-1">{{ number_format($stats['negative_stock']) }}</h4>
-            <span class="text-[10px] text-slate-400 mt-0.5 block">Backorders</span>
-        </a>
+        <div class="col-6 col-md-4 col-xl">
+            <a href="{{ route('stock.index', ['status' => 'negative']) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 {{ request('status') === 'negative' ? 'border-danger border-2' : '' }}">
+                    <div class="card-body p-3">
+                        <span class="text-danger text-uppercase fw-bold fs-7 d-block">Negative Stock</span>
+                        <div class="h3 fw-black text-danger mb-0 mt-1">{{ number_format($stats['negative_stock']) }}</div>
+                        <span class="text-secondary small">Backorder units</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-        <a href="{{ route('stock.index', ['status' => 'depleted_month']) }}" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors {{ request('status') === 'depleted_month' ? 'ring-2 ring-amber-500' : '' }}">
-            <span class="text-[10px] font-bold text-amber-900 uppercase tracking-wider">Depleted 30d+</span>
-            <h4 class="text-xl font-black text-amber-600 mt-1">{{ number_format($stats['depleted_month']) }}</h4>
-            <span class="text-[10px] text-slate-400 mt-0.5 block">Alert status</span>
-        </a>
+        <div class="col-12 col-md-4 col-xl">
+            <a href="{{ route('stock.index', ['status' => 'depleted_month']) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 {{ request('status') === 'depleted_month' ? 'border-danger border-2' : '' }}">
+                    <div class="card-body p-3">
+                        <span class="text-danger text-uppercase fw-bold fs-7 d-block">Depleted 30d+</span>
+                        <div class="h3 fw-black text-danger mb-0 mt-1">{{ number_format($stats['depleted_month']) }}</div>
+                        <span class="text-secondary small">Critical attention</span>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-        <form method="GET" action="{{ route('stock.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Search Products</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Title, SKU, or Code..."
-                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
-                <select name="category_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400">
-                    <option value="">All Categories</option>
-                    @foreach($categories as $cat)
-                        <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2 px-3 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors">
-                    Filter Stock
-                </button>
-                @if(request()->anyFilled(['search', 'category_id', 'status']))
-                    <a href="{{ route('stock.index') }}" class="py-2 px-3 rounded-xl border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-colors">
-                        Clear
-                    </a>
-                @endif
-            </div>
-        </form>
+    <!-- Filters Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-3 p-md-4">
+            <form method="GET" action="{{ route('stock.index') }}" class="row g-3">
+                <div class="col-12 col-md-5">
+                    <label class="form-label small fw-bold text-secondary mb-1">Search Products</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Title, SKU, or Code..." class="form-control border-start-0 ps-0">
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Category</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        Filter Stock
+                    </button>
+                    @if(request()->anyFilled(['search', 'category_id', 'status']))
+                        <a href="{{ route('stock.index') }}" class="btn btn-outline-secondary" title="Clear Filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Products Stock Table -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[11px] tracking-wider">
+    <!-- Stock Table Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th class="p-4 pl-6">Product Title</th>
-                        <th class="p-4">SKU</th>
-                        <th class="p-4 text-center">Current Stock</th>
-                        <th class="p-4">Depletion Status</th>
-                        <th class="p-4 text-right">Selling Price</th>
-                        <th class="p-4 pr-6 text-right">Action</th>
+                        <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Product Title</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">SKU</th>
+                        <th class="py-3 text-center text-secondary text-uppercase fs-7">Current Stock</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Depletion Status</th>
+                        <th class="py-3 text-end text-secondary text-uppercase fs-7">Selling Price</th>
+                        <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="border-top-0">
                     @forelse($products as $product)
-                    <tr class="hover:bg-slate-50/70 transition-colors">
-                        <td class="p-4 pl-6">
-                            <a href="{{ route('products.show', $product) }}" class="font-bold text-sm text-slate-900 hover:text-amber-600 block">
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <a href="{{ route('products.show', $product) }}" class="fw-bold text-dark text-decoration-none d-block">
                                 {{ $product->title }}
                             </a>
-                            <span class="text-[11px] text-slate-400">Bill: {{ $product->bill_no }} • Code: {{ $product->product_code }}</span>
+                            <span class="text-secondary small">Bill: {{ $product->bill_no }} &bull; Code: {{ $product->product_code }}</span>
                         </td>
-                        <td class="p-4 font-mono font-bold text-slate-700">
-                            <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">{{ $product->sku_code }}</span>
+                        <td class="py-3">
+                            <span class="badge bg-light text-dark font-monospace border px-2 py-1">
+                                {{ $product->sku_code }}
+                            </span>
                         </td>
-                        <td class="p-4 text-center">
+                        <td class="py-3 text-center">
                             @if($product->stock_quantity > 0)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">
                                     {{ $product->stock_quantity }} units
                                 </span>
                             @elseif($product->stock_quantity === 0)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1">
                                     0 units (Zero)
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1">
                                     {{ $product->stock_quantity }} units (Negative)
                                 </span>
                             @endif
                         </td>
-                        <td class="p-4">
+                        <td class="py-3">
                             @if($product->stock_quantity <= 0 && $product->zero_stock_date)
                                 <div>
-                                    <span class="font-semibold text-slate-700">Depleted: {{ $product->zero_stock_date->format('d M Y') }}</span>
-                                    <span class="block text-[11px] text-slate-400">{{ $product->depleted_days }} days elapsed</span>
+                                    <span class="fw-bold text-danger small">Depleted: {{ $product->zero_stock_date->format('d M Y') }}</span>
+                                    <span class="text-secondary small d-block">({{ $product->depleted_days }} days elapsed)</span>
                                 </div>
                             @else
-                                <span class="text-emerald-700 font-semibold">In Stock</span>
+                                <span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> In Stock</span>
                             @endif
                         </td>
-                        <td class="p-4 text-right font-black text-slate-900">${{ number_format($product->selling_price, 2) }}</td>
-                        <td class="p-4 pr-6 text-right whitespace-nowrap">
-                            <div class="inline-flex items-center gap-2">
+                        <td class="py-3 text-end font-monospace fw-bold text-dark">
+                            ${{ number_format($product->selling_price, 2) }}
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <div class="btn-group btn-group-sm">
                                 <button type="button" onclick="openAdjustModal({{ $product->id }}, '{{ addslashes($product->title) }}', {{ $product->stock_quantity }})"
-                                    class="px-2.5 py-1 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1">
-                                    <i class="fa-solid fa-sliders text-slate-400"></i> Adjust
+                                    class="btn btn-outline-primary">
+                                    <i class="bi bi-sliders me-1"></i> Adjust
                                 </button>
-                                <a href="{{ route('products.movements', $product) }}" class="p-1 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800" title="Movements">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                <a href="{{ route('products.movements', $product) }}" class="btn btn-outline-secondary" title="View Movements">
+                                    <i class="bi bi-clock-history"></i>
                                 </a>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="p-8 text-center text-slate-400">No products found.</td>
+                        <td colspan="6" class="text-center py-5 text-secondary">No products found matching filters.</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
         @if($products->hasPages())
-        <div class="p-4 border-t border-slate-100">
+        <div class="card-footer bg-white border-0 py-3">
             {{ $products->links() }}
         </div>
         @endif
@@ -169,54 +208,62 @@
 
 </div>
 
-<!-- ADJUST MODAL -->
-<div id="adjust-stock-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-            <h3 class="font-bold text-slate-900 text-sm">Adjust Stock Count</h3>
-            <button type="button" onclick="closeAdjustModal()" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+<!-- ADJUST STOCK MODAL (Bootstrap 5) -->
+<div class="modal fade" id="adjustStockModal" tabindex="-1" aria-labelledby="adjustStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-dark" id="adjustStockModalLabel">
+                    <i class="bi bi-sliders text-primary me-2"></i> Adjust Stock Count
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="POST" id="adjust-stock-form" action="">
+                @csrf
+                <div class="modal-body p-4 d-flex flex-column gap-3">
+                    <div>
+                        <span class="text-secondary small fw-bold text-uppercase d-block">Product:</span>
+                        <h6 id="adjust-modal-title" class="fw-bold text-dark mb-0 mt-1"></h6>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border">
+                        <span class="text-secondary small fw-bold text-uppercase d-block">Current Stock Count:</span>
+                        <span id="adjust-modal-current" class="h5 fw-black text-dark mb-0 mt-1 d-block font-monospace"></span>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Adjustment Action <span class="text-danger">*</span>
+                        </label>
+                        <select name="adjustment_type" required class="form-select fw-semibold">
+                            <option value="add">Add Units to Inventory (+)</option>
+                            <option value="subtract">Subtract Units from Inventory (-)</option>
+                            <option value="set">Set Exact Count (Physical Audit)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Quantity of Units <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" name="quantity" required min="0" placeholder="Number of units" class="form-control fw-bold font-monospace">
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Adjustment Reason / Note <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="notes" required placeholder="e.g. Audit reconciliation, damaged goods" class="form-control">
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Save Adjustment</button>
+                </div>
+            </form>
         </div>
-
-        <form method="POST" id="adjust-stock-form" action="" class="space-y-4">
-            @csrf
-            <div>
-                <span class="block text-xs font-bold text-slate-500 uppercase">Product</span>
-                <h4 id="adjust-modal-title" class="text-sm font-black text-slate-900 mt-0.5"></h4>
-            </div>
-
-            <div>
-                <span class="block text-xs font-bold text-slate-500 uppercase">Current Stock</span>
-                <span id="adjust-modal-current" class="text-base font-bold text-slate-800"></span>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Adjustment Action <span class="text-rose-500">*</span></label>
-                <select name="adjustment_type" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 font-semibold">
-                    <option value="add">Add Units to Inventory (+)</option>
-                    <option value="subtract">Subtract Units from Inventory (-)</option>
-                    <option value="set">Set Exact Count (Physical Audit)</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Quantity <span class="text-rose-500">*</span></label>
-                <input type="number" name="quantity" required min="0" placeholder="Number of units"
-                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 font-bold">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Adjustment Reason <span class="text-rose-500">*</span></label>
-                <input type="text" name="notes" required placeholder="e.g. Audit reconciliation, damaged packaging"
-                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300">
-            </div>
-
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button type="button" onclick="closeAdjustModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-600">Cancel</button>
-                <button type="submit" class="px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 font-bold text-xs text-slate-950">Save Adjustment</button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -224,15 +271,17 @@
 
 @push('scripts')
 <script>
+    let adjustModalInstance = null;
+
     function openAdjustModal(productId, productTitle, currentStock) {
         document.getElementById('adjust-modal-title').textContent = productTitle;
         document.getElementById('adjust-modal-current').textContent = currentStock + ' units';
         document.getElementById('adjust-stock-form').action = `/stock/${productId}/adjust`;
-        document.getElementById('adjust-stock-modal').classList.remove('hidden');
-    }
 
-    function closeAdjustModal() {
-        document.getElementById('adjust-stock-modal').classList.add('hidden');
+        if (!adjustModalInstance) {
+            adjustModalInstance = new bootstrap.Modal(document.getElementById('adjustStockModal'));
+        }
+        adjustModalInstance.show();
     }
 </script>
 @endpush

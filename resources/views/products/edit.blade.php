@@ -3,146 +3,169 @@
 @section('title', 'Edit ' . $product->title)
 
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}" class="hover:text-amber-600">Products</a>
-    <span>/</span>
-    <span class="text-slate-800 font-semibold">Edit Product</span>
+    <li class="breadcrumb-item"><a href="{{ route('products.index') }}" class="text-decoration-none">Products</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('products.show', $product) }}" class="text-decoration-none">{{ $product->title }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Edit Product</li>
 @endsection
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10 d-flex flex-column gap-4">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between pb-2">
-        <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Edit Product</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Modify product details, category, or pricing rule. SKU is permanently locked.</p>
-        </div>
-        <a href="{{ route('products.show', $product) }}" class="px-3.5 py-2 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors">
-            <i class="fa-solid fa-arrow-left mr-1.5"></i> Back to Product
-        </a>
-    </div>
-
-    <!-- Edit Form -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 sm:p-8">
-        <form method="POST" action="{{ route('products.update', $product) }}" class="space-y-6">
-            @csrf
-            @method('PUT')
-
-            <!-- Row 1: Bill No, Category, Dozens -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div>
-                    <label for="bill_no" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Bill Number <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no', $product->bill_no) }}" required
-                        class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono">
-                </div>
-
-                <div>
-                    <label for="category_id" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Category <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="category_id" id="category_id" required class="searchable-select w-full">
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="dozen_id" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Dozens Unit <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="dozen_id" id="dozen_id" required class="searchable-select w-full">
-                        @foreach($dozens as $dozen)
-                            <option value="{{ $dozen->id }}" {{ old('dozen_id', $product->dozen_id) == $dozen->id ? 'selected' : '' }}>
-                                {{ $dozen->label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+        <!-- Header -->
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div>
+                <h1 class="h3 fw-bold text-dark mb-1">Edit Product</h1>
+                <p class="text-secondary small mb-0">Modify product details, category, or pricing rule. SKU is permanently locked.</p>
             </div>
-
-            <!-- Row 2: Product Code, 7-Digit Readonly SKU, Current Stock -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2 border-t border-slate-100">
-                <div>
-                    <label for="product_code" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Product Code <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="product_code" id="product_code" value="{{ old('product_code', $product->product_code) }}" required
-                        style="text-transform: uppercase;"
-                        class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400 font-mono font-bold tracking-wider">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                        SKU (Locked)
-                    </label>
-                    <input type="text" value="{{ $product->sku_code }}" readonly
-                        class="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-100 text-slate-700 border border-slate-300 font-mono font-bold tracking-widest cursor-not-allowed">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Current Warehouse Stock
-                    </label>
-                    <div class="px-3.5 py-2.5 text-sm rounded-xl bg-slate-100 border border-slate-200 font-extrabold text-slate-800">
-                        {{ $product->stock_quantity }} units
-                    </div>
-                </div>
-            </div>
-
-            <!-- Row 3: Actual Price, Pricing Rule, Selling Price -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2 border-t border-slate-100">
-                <div>
-                    <label for="actual_price" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Actual Price ($) <span class="text-rose-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold">$</span>
-                        <input type="number" step="0.01" min="0" name="actual_price" id="actual_price" value="{{ old('actual_price', $product->actual_price) }}" required
-                            class="w-full pl-8 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bold">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="pricing_rule_id" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Pricing Rule <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="pricing_rule_id" id="pricing_rule_id" required class="searchable-select w-full">
-                        @foreach($pricingRules as $rule)
-                            <option value="{{ $rule->id }}" {{ old('pricing_rule_id', $product->pricing_rule_id) == $rule->id ? 'selected' : '' }} data-percentage="{{ $rule->percentage }}">
-                                {{ $rule->name }} (+{{ number_format($rule->percentage, 0) }}%)
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Calculated Selling Price
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold">$</span>
-                        <input type="text" id="selling_price_display" value="{{ number_format($product->selling_price, 2) }}" readonly
-                            class="w-full pl-8 pr-3.5 py-2.5 text-sm rounded-xl bg-slate-100 text-slate-900 border border-slate-300 font-black cursor-not-allowed">
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                <a href="{{ route('products.show', $product) }}" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50">
-                    Cancel
+            <div>
+                <a href="{{ route('products.show', $product) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Product
                 </a>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-xs transition-colors">
-                    Update Product
-                </button>
             </div>
-        </form>
-    </div>
+        </div>
 
+        <!-- Edit Form Card -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" action="{{ route('products.update', $product) }}" class="d-flex flex-column gap-4">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- Section 1: Classification -->
+                    <div>
+                        <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
+                            <i class="bi bi-tag text-primary me-1"></i> 1. Product Classification
+                        </h6>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label for="bill_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Bill Number <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no', $product->bill_no) }}" required
+                                    class="form-control font-monospace fw-semibold">
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="category_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Category <span class="text-danger">*</span>
+                                </label>
+                                <select name="category_id" id="category_id" required class="searchable-select form-select">
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="dozen_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Dozens Unit <span class="text-danger">*</span>
+                                </label>
+                                <select name="dozen_id" id="dozen_id" required class="searchable-select form-select">
+                                    @foreach($dozens as $dozen)
+                                        <option value="{{ $dozen->id }}" {{ old('dozen_id', $product->dozen_id) == $dozen->id ? 'selected' : '' }}>
+                                            {{ $dozen->label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Codes & Current Stock -->
+                    <div>
+                        <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
+                            <i class="bi bi-upc text-primary me-1"></i> 2. Codes & Inventory Status
+                        </h6>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label for="product_code" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Product Code <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="product_code" id="product_code" value="{{ old('product_code', $product->product_code) }}" required
+                                    style="text-transform: uppercase;" class="form-control font-monospace fw-bold text-uppercase">
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    SKU Code (Locked)
+                                </label>
+                                <input type="text" value="{{ $product->sku_code }}" readonly
+                                    class="form-control font-monospace fw-bold bg-light text-primary fs-6 cursor-not-allowed">
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Current Warehouse Stock
+                                </label>
+                                <div class="form-control bg-light fw-bold font-monospace text-dark">
+                                    {{ $product->stock_quantity }} units
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Pricing -->
+                    <div>
+                        <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
+                            <i class="bi bi-cash-coin text-primary me-1"></i> 3. Pricing Configuration
+                        </h6>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label for="actual_price" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Actual Purchase Price ($) <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-secondary">$</span>
+                                    <input type="number" step="0.01" min="0" name="actual_price" id="actual_price" value="{{ old('actual_price', $product->actual_price) }}" required
+                                        class="form-control fw-bold font-monospace text-dark">
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="pricing_rule_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Pricing Rule <span class="text-danger">*</span>
+                                </label>
+                                <select name="pricing_rule_id" id="pricing_rule_id" required class="searchable-select form-select">
+                                    @foreach($pricingRules as $rule)
+                                        <option value="{{ $rule->id }}" {{ old('pricing_rule_id', $product->pricing_rule_id) == $rule->id ? 'selected' : '' }} data-percentage="{{ $rule->percentage }}">
+                                            {{ $rule->name }} (+{{ number_format($rule->percentage, 0) }}%)
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Calculated Selling Price
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-secondary">$</span>
+                                    <input type="text" id="selling_price_display" value="{{ number_format($product->selling_price, 2) }}" readonly
+                                        class="form-control fw-black text-dark font-monospace fs-6 bg-light cursor-not-allowed">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-top d-flex justify-content-end gap-2">
+                        <a href="{{ route('products.show', $product) }}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                            <i class="bi bi-save me-1"></i> Update Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
 </div>
 @endsection
 

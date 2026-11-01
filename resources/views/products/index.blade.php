@@ -3,169 +3,177 @@
 @section('title', 'Product Catalog')
 
 @section('breadcrumb')
-    <span class="text-slate-800 font-semibold">Products</span>
+    <li class="breadcrumb-item active" aria-current="page">Products</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
     <!-- Header & Action -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Product Catalog</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Manage registered merchandise, automatic SKUs, selling prices, and stock.</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Product Catalog</h1>
+            <p class="text-secondary small mb-0">Manage registered merchandise, automatic SKUs, selling prices, and stock.</p>
         </div>
-        <div class="flex items-center gap-2.5">
-            <a href="{{ route('barcode.index') }}" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5">
-                <i class="fa-solid fa-barcode text-slate-400"></i> Barcode Studio
+        <div class="d-flex gap-2">
+            <a href="{{ route('barcode.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-upc-scan me-1"></i> Barcode Studio
             </a>
-            <a href="{{ route('products.create') }}" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-xs transition-colors flex items-center gap-1.5">
-                <i class="fa-solid fa-plus"></i> Register Product
+            <a href="{{ route('products.create') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Register Product
             </a>
         </div>
     </div>
 
-    <!-- Search & Filters -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-        <form method="GET" action="{{ route('products.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Search Products</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Title, SKU, Bill, or Code..." 
-                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400">
-            </div>
+    <!-- Search & Filters Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-3 p-md-4">
+            <form method="GET" action="{{ route('products.index') }}" class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Search Products</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Title, SKU, Bill, or Code..." class="form-control border-start-0 ps-0">
+                    </div>
+                </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
-                <select name="category_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400">
-                    <option value="">All Categories</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">Category</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Stock Status</label>
-                <select name="stock_status" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-400">
-                    <option value="">All Stock Levels</option>
-                    <option value="in_stock" {{ request('stock_status') === 'in_stock' ? 'selected' : '' }}>In Stock (> 0)</option>
-                    <option value="zero" {{ request('stock_status') === 'zero' ? 'selected' : '' }}>Zero Stock (= 0)</option>
-                    <option value="negative" {{ request('stock_status') === 'negative' ? 'selected' : '' }}>Negative Stock (< 0)</option>
-                    <option value="depleted_month" {{ request('stock_status') === 'depleted_month' ? 'selected' : '' }}>Depleted 30+ Days</option>
-                </select>
-            </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">Stock Status</label>
+                    <select name="stock_status" class="form-select">
+                        <option value="">All Stock Levels</option>
+                        <option value="in_stock" {{ request('stock_status') === 'in_stock' ? 'selected' : '' }}>In Stock (> 0)</option>
+                        <option value="zero" {{ request('stock_status') === 'zero' ? 'selected' : '' }}>Zero Stock (= 0)</option>
+                        <option value="negative" {{ request('stock_status') === 'negative' ? 'selected' : '' }}>Negative Stock (< 0)</option>
+                        <option value="depleted_month" {{ request('stock_status') === 'depleted_month' ? 'selected' : '' }}>Depleted 30+ Days</option>
+                    </select>
+                </div>
 
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2 px-3 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors">
-                    Filter
-                </button>
-                @if(request()->anyFilled(['search', 'category_id', 'stock_status']))
-                    <a href="{{ route('products.index') }}" class="py-2 px-3 rounded-xl border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-colors">
-                        Clear
-                    </a>
-                @endif
-            </div>
-        </form>
+                <div class="col-12 col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        Filter
+                    </button>
+                    @if(request()->anyFilled(['search', 'category_id', 'stock_status']))
+                        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary" title="Clear Filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Products Table -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[11px] tracking-wider">
+    <!-- Products Table Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th class="p-4 pl-6">Product Title</th>
-                        <th class="p-4">SKU</th>
-                        <th class="p-4">Bill No</th>
-                        <th class="p-4 text-right">Actual Price</th>
-                        <th class="p-4">Pricing Rule</th>
-                        <th class="p-4 text-right">Selling Price</th>
-                        <th class="p-4 text-center">Available Stock</th>
-                        <th class="p-4 pr-6 text-right">Actions</th>
+                        <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Product Title</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">SKU</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Bill No</th>
+                        <th class="py-3 text-end text-secondary text-uppercase fs-7">Actual Price</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Pricing Rule</th>
+                        <th class="py-3 text-end text-secondary text-uppercase fs-7">Selling Price</th>
+                        <th class="py-3 text-center text-secondary text-uppercase fs-7">Available Stock</th>
+                        <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="border-top-0">
                     @forelse($products as $product)
-                    <tr class="hover:bg-slate-50/70 transition-colors">
+                    <tr>
                         <!-- Dynamic Unified Title (Requirement #1) -->
-                        <td class="p-4 pl-6">
-                            <a href="{{ route('products.show', $product) }}" class="font-bold text-sm text-slate-900 hover:text-amber-600 block">
+                        <td class="ps-4 py-3">
+                            <a href="{{ route('products.show', $product) }}" class="fw-bold text-dark text-decoration-none d-block">
                                 {{ $product->title }}
                             </a>
-                            <span class="text-[11px] text-slate-400 mt-0.5 block">
-                                Code: {{ $product->product_code }} • {{ $product->dozen->label }}
+                            <span class="text-secondary small">
+                                Code: {{ $product->product_code }} &bull; {{ $product->dozen->label }}
                             </span>
                         </td>
 
                         <!-- 7-Digit Numeric SKU -->
-                        <td class="p-4">
-                            <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                        <td class="py-3">
+                            <span class="badge bg-light text-dark font-monospace border px-2 py-1">
                                 {{ $product->sku_code }}
                             </span>
                         </td>
 
                         <!-- Bill No -->
-                        <td class="p-4 font-mono text-slate-600">
+                        <td class="py-3 font-monospace text-secondary small">
                             {{ $product->bill_no }}
                         </td>
 
                         <!-- Actual Price -->
-                        <td class="p-4 text-right font-medium text-slate-700">
+                        <td class="py-3 text-end font-monospace text-secondary">
                             ${{ number_format($product->actual_price, 2) }}
                         </td>
 
                         <!-- Pricing Rule -->
-                        <td class="p-4">
-                            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                        <td class="py-3">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                                 {{ $product->pricingRule->name }}
                             </span>
                         </td>
 
                         <!-- Selling Price -->
-                        <td class="p-4 text-right">
-                            <span class="font-black text-sm text-slate-900">
+                        <td class="py-3 text-end">
+                            <span class="fw-black text-dark font-monospace fs-6">
                                 ${{ number_format($product->selling_price, 2) }}
                             </span>
                         </td>
 
                         <!-- Stock Quantity -->
-                        <td class="p-4 text-center">
+                        <td class="py-3 text-center">
                             @if($product->stock_quantity > 0)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">
                                     {{ $product->stock_quantity }} units
                                 </span>
                             @elseif($product->stock_quantity == 0)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                    0 (Zero)
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1">
+                                    0 units (Zero)
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                    {{ $product->stock_quantity }} (Negative)
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1">
+                                    {{ $product->stock_quantity }} units (Negative)
                                 </span>
                             @endif
                         </td>
 
                         <!-- Actions -->
-                        <td class="p-4 pr-6 text-right whitespace-nowrap">
-                            <div class="inline-flex items-center gap-1.5">
-                                <a href="{{ route('barcode.index', ['product_id' => $product->id]) }}" class="p-1.5 rounded-lg border border-slate-200 hover:bg-amber-50 hover:text-amber-700 text-slate-500" title="Print Barcode">
-                                    <i class="fa-solid fa-barcode"></i>
+                        <td class="pe-4 py-3 text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ route('barcode.index', ['product_id' => $product->id]) }}" class="btn btn-outline-primary" title="Print Barcode">
+                                    <i class="bi bi-upc-scan"></i>
                                 </a>
-                                <a href="{{ route('products.movements', $product) }}" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500" title="Movements">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                <a href="{{ route('products.movements', $product) }}" class="btn btn-outline-secondary" title="Stock Movements">
+                                    <i class="bi bi-clock-history"></i>
                                 </a>
-                                <a href="{{ route('products.edit', $product) }}" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500" title="Edit">
-                                    <i class="fa-solid fa-pen-to-square"></i>
+                                <a href="{{ route('products.edit', $product) }}" class="btn btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
                                 </a>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="p-8 text-center text-slate-400">
-                            No products found matching your search.
+                        <td colspan="8" class="text-center py-5 text-secondary">
+                            <i class="bi bi-box-seam text-secondary display-6 d-block mb-3"></i>
+                            <h6 class="fw-bold text-dark">No products found matching your search.</h6>
+                            <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm mt-2">
+                                <i class="bi bi-plus-lg me-1"></i> Register First Product
+                            </a>
                         </td>
                     </tr>
                     @endforelse
@@ -174,7 +182,7 @@
         </div>
 
         @if($products->hasPages())
-        <div class="p-4 border-t border-slate-100">
+        <div class="card-footer bg-white border-0 py-3">
             {{ $products->links() }}
         </div>
         @endif

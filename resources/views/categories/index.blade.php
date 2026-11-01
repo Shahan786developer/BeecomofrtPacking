@@ -3,118 +3,128 @@
 @section('title', 'Product Categories')
 
 @section('breadcrumb')
-    <span class="text-slate-800 font-semibold">Categories</span>
+    <li class="breadcrumb-item active" aria-current="page">Categories</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <!-- Header & Action -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Product Categories</h1>
-            <p class="text-sm text-slate-500 mt-1">Manage master product lines (first part of unified product titles).</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Product Categories</h1>
+            <p class="text-secondary small mb-0">Manage master product lines (the first prefix segment of the unified product title).</p>
         </div>
-        <a href="{{ route('products.create') }}" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-sm flex items-center gap-2">
-            <i class="fa-solid fa-plus"></i> Register Product with Category
-        </a>
+        <div>
+            <a href="{{ route('products.create') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Register Product with Category
+            </a>
+        </div>
     </div>
 
     <!-- Grid Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="row g-4 align-items-start">
 
-        <!-- Add Category Form -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-4">
-            <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-                <i class="fa-solid fa-folder-plus text-amber-500"></i> New Category
-            </h3>
-            <form method="POST" action="{{ route('categories.store') }}" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Category Name <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="name" required placeholder="e.g. Silk Touch, Active Sport"
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 font-semibold">
-                    <p class="text-[11px] text-slate-400 mt-0.5">Appears as prefix in combined Product Title</p>
+        <!-- Add Category Form (Col 4) -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-folder-plus text-primary me-2"></i> New Category
+                    </h5>
                 </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ route('categories.store') }}" class="d-flex flex-column gap-3">
+                        @csrf
+                        <div>
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Category Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="name" required placeholder="e.g. Silk Touch, Active Sport" class="form-control fw-bold">
+                            <div class="form-text small text-secondary">Appears as prefix in combined Product Title</div>
+                        </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Description (Optional)
-                    </label>
-                    <textarea name="description" rows="2" placeholder="Fabric, material, or line notes"
-                        class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400"></textarea>
+                        <div>
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Description (Optional)
+                            </label>
+                            <textarea name="description" rows="2" placeholder="Fabric, material, or line notes" class="form-control"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary fw-bold mt-2">
+                            Save Category
+                        </button>
+                    </form>
                 </div>
-
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm transition-colors">
-                    Save Category
-                </button>
-            </form>
+            </div>
         </div>
 
-        <!-- Categories Table -->
-        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div class="p-4 sm:px-6 border-b border-slate-100 flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-base text-slate-900">Registered Categories</h3>
-                    <p class="text-xs text-slate-500">Searchable foreign-key categories</p>
+        <!-- Categories Table (Col 8) -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">Registered Categories</h5>
+                        <span class="text-secondary small">Categories selectable during product registration</span>
+                    </div>
+                    <span class="badge bg-light text-dark border px-2 py-1">
+                        {{ $categories->total() }} Categories
+                    </span>
                 </div>
-                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                    {{ $categories->total() }} Categories
-                </span>
-            </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                        <tr>
-                            <th class="p-4 pl-6">Category Name</th>
-                            <th class="p-4">Description</th>
-                            <th class="p-4 text-center">Assigned Products</th>
-                            <th class="p-4 pr-6 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($categories as $cat)
-                        <tr class="hover:bg-slate-50/80 transition-colors">
-                            <td class="p-4 pl-6 font-extrabold text-slate-900 text-sm">
-                                {{ $cat->name }}
-                            </td>
-                            <td class="p-4 text-slate-500">
-                                {{ $cat->description ?? '—' }}
-                            </td>
-                            <td class="p-4 text-center font-bold text-indigo-700 font-mono">
-                                {{ $cat->products_count }} products
-                            </td>
-                            <td class="p-4 pr-6 text-right">
-                                @if($cat->products_count == 0)
-                                <form method="POST" action="{{ route('categories.destroy', $cat) }}" class="inline" onsubmit="return confirm('Delete this category?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-rose-500 hover:text-rose-700 p-1" title="Delete">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
-                                @else
-                                <span class="text-[10px] text-slate-400 italic">In Use</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="p-8 text-center text-slate-400">No categories found.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Category Name</th>
+                                <th class="py-3 text-secondary text-uppercase fs-7">Description</th>
+                                <th class="py-3 text-center text-secondary text-uppercase fs-7">Assigned Products</th>
+                                <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            @forelse($categories as $cat)
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <span class="fw-bold text-dark d-block fs-6">{{ $cat->name }}</span>
+                                </td>
+                                <td class="py-3 text-secondary small">
+                                    {{ $cat->description ?? '—' }}
+                                </td>
+                                <td class="py-3 text-center">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1">
+                                        {{ $cat->products_count }} products
+                                    </span>
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    @if($cat->products_count == 0)
+                                    <form method="POST" action="{{ route('categories.destroy', $cat) }}" class="d-inline" onsubmit="return confirm('Delete category?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    @else
+                                    <span class="badge bg-light text-secondary border small">In Use</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary">No categories registered yet.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-            @if($categories->hasPages())
-            <div class="p-4 border-t border-slate-100">
-                {{ $categories->links() }}
+                @if($categories->hasPages())
+                <div class="card-footer bg-white border-0 py-3">
+                    {{ $categories->links() }}
+                </div>
+                @endif
             </div>
-            @endif
         </div>
 
     </div>

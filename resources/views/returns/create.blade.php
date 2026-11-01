@@ -3,116 +3,125 @@
 @section('title', 'Process Bill Return')
 
 @section('breadcrumb')
-    <a href="{{ route('returns.index') }}" class="hover:text-amber-600">Bill Returns</a>
-    <span>/</span>
-    <span class="text-slate-800 font-semibold">New Return</span>
+    <li class="breadcrumb-item"><a href="{{ route('returns.index') }}" class="text-decoration-none">Bill Returns</a></li>
+    <li class="breadcrumb-item active" aria-current="page">New Return</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
     <!-- Header -->
-    <div class="flex items-center justify-between pb-2">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Process Bill Return</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Select original sales invoice, scan returned merchandise, and restore warehouse inventory.</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Process Bill Return</h1>
+            <p class="text-secondary small mb-0">Select original sales invoice, scan returned merchandise, and restore warehouse inventory.</p>
         </div>
-        <a href="{{ route('returns.index') }}" class="px-3.5 py-2 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors">
-            <i class="fa-solid fa-arrow-left mr-1.5"></i> Back to Returns
-        </a>
+        <div>
+            <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Returns
+            </a>
+        </div>
     </div>
 
     <!-- MAIN FORM -->
-    <form method="POST" action="{{ route('returns.store') }}" id="return-form" class="space-y-6">
+    <form method="POST" action="{{ route('returns.store') }}" id="return-form" class="d-flex flex-column gap-4">
         @csrf
 
         <!-- INVOICE SELECTION CARD -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <!-- 1. Original Invoice -->
+                    <div class="col-12 col-md-5">
+                        <label for="sale_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Original Invoice <span class="text-danger">*</span>
+                        </label>
+                        <select name="sale_id" id="sale_id" required class="searchable-select form-select">
+                            <option value="">Select Invoice...</option>
+                            @foreach($sales as $sale)
+                                <option value="{{ $sale->id }}" {{ (isset($selectedSaleId) && $selectedSaleId == $sale->id) ? 'selected' : ($loop->first ? 'selected' : '') }}>
+                                    {{ $sale->invoice_no }} — {{ $sale->customer->name }} (${{ number_format($sale->total_amount, 2) }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <!-- 1. Original Invoice -->
-                <div>
-                    <label for="sale_id" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Original Invoice <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="sale_id" id="sale_id" required class="searchable-select w-full" placeholder="Search invoice or customer...">
-                        <option value="">Select Invoice...</option>
-                        @foreach($sales as $sale)
-                            <option value="{{ $sale->id }}" {{ (isset($selectedSaleId) && $selectedSaleId == $sale->id) ? 'selected' : ($loop->first ? 'selected' : '') }}>
-                                {{ $sale->invoice_no }} — {{ $sale->customer->name }} (${{ number_format($sale->total_amount, 2) }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <!-- 2. Return Number -->
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <label for="return_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Return Number <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="return_no" id="return_no" value="{{ old('return_no', $nextReturnNo) }}" required class="form-control font-monospace fw-bold bg-light">
+                    </div>
+
+                    <!-- 3. Return Date -->
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <label for="return_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Return Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" name="return_date" id="return_date" value="{{ old('return_date', $today) }}" required class="form-control fw-semibold">
+                    </div>
                 </div>
-
-                <!-- 2. Return Number -->
-                <div>
-                    <label for="return_no" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Return Number <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="return_no" id="return_no" value="{{ old('return_no', $nextReturnNo) }}" required
-                        class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 font-mono font-bold text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-400">
-                </div>
-
-                <!-- 3. Return Date -->
-                <div>
-                    <label for="return_date" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Return Date <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="date" name="return_date" id="return_date" value="{{ old('return_date', $today) }}" required
-                        class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 font-semibold focus:ring-2 focus:ring-amber-400">
-                </div>
-
             </div>
         </div>
 
         <!-- SCAN RETURNED PRODUCT BARCODE -->
-        <div class="bg-slate-900 rounded-2xl p-5 text-white shadow-sm border border-slate-800 space-y-3">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-barcode"></i> Scan Returned Product
-                </span>
-                <span class="text-[11px] text-slate-400">Scan 7-digit SKU to match item</span>
-            </div>
+        <div class="card border-0 shadow-sm bg-warning-subtle border border-warning-subtle">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold text-uppercase fs-7 text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-upc-scan fs-5 text-warning-emphasis"></i> Scan Returned Product (SKU Barcode)
+                    </span>
+                    <span class="badge bg-warning text-dark fw-bold">Return Scanner Active</span>
+                </div>
 
-            <div class="max-w-md relative">
-                <input type="text" id="return_scanner_input" placeholder="Scan or enter returned 7-digit SKU..."
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 font-mono font-bold text-sm tracking-wider focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400">
-                <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-orange-400"></i>
-            </div>
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-md-6">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-0 text-warning-emphasis"><i class="bi bi-upc"></i></span>
+                            <input type="text" id="return_scanner_input" placeholder="Scan or enter returned 7-digit SKU..." class="form-control border-0 font-monospace fw-bold text-dark">
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-secondary small">
+                            Scanning an SKU automatically selects the line item and checks eligible quantity against the invoice.
+                        </span>
+                    </div>
+                </div>
 
-            <div id="return-scanner-feedback" class="text-xs text-orange-400 font-medium hidden">
-                <i class="fa-solid fa-check-circle mr-1"></i> <span id="return-feedback-text"></span>
+                <div id="return-scanner-feedback" class="mt-2 text-warning-emphasis small d-none">
+                    <i class="bi bi-check-circle-fill me-1"></i> <span id="return-feedback-text"></span>
+                </div>
             </div>
         </div>
 
         <!-- ITEMS RETURN TABLE (Requirement #5) -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-            <div class="p-4 px-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 class="font-bold text-sm text-slate-900">Merchandise on Selected Invoice</h3>
-                <span id="invoice-items-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold text-dark mb-0">Merchandise on Selected Invoice</h5>
+                <span id="invoice-items-count-badge" class="badge bg-light text-dark border px-2 py-1">
                     Loading items...
                 </span>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs" id="return-items-table">
-                    <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[11px]">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="return-items-table">
+                    <thead class="table-light">
                         <tr>
-                            <th class="p-4 pl-6 text-center w-12">Return?</th>
-                            <th class="p-4">Product Title</th>
-                            <th class="p-4">SKU</th>
-                            <th class="p-4 text-center">Sold</th>
-                            <th class="p-4 text-center">Already Returned</th>
-                            <th class="p-4 text-center">Eligible for Return</th>
-                            <th class="p-4 text-right">Selling Rate ($)</th>
-                            <th class="p-4 text-center w-28">Return Qty</th>
-                            <th class="p-4 pr-6 text-right">Refund Subtotal ($)</th>
+                            <th class="ps-4 py-3 text-center" style="width: 60px;">Return?</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7">Product Description (Unified Title)</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7">SKU</th>
+                            <th class="py-3 text-center text-secondary text-uppercase fs-7">Sold</th>
+                            <th class="py-3 text-center text-secondary text-uppercase fs-7">Already Returned</th>
+                            <th class="py-3 text-center text-secondary text-uppercase fs-7">Eligible</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Rate ($)</th>
+                            <th class="py-3 text-center text-secondary text-uppercase fs-7" style="width: 120px;">Return Qty</th>
+                            <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Refund ($)</th>
                         </tr>
                     </thead>
-                    <tbody id="return-items-body" class="divide-y divide-slate-100">
+                    <tbody id="return-items-body" class="border-top-0">
                         <tr>
-                            <td colspan="9" class="p-8 text-center text-slate-400">
+                            <td colspan="9" class="text-center py-5 text-secondary">
                                 Select an invoice to load merchandise items.
                             </td>
                         </tr>
@@ -121,37 +130,34 @@
             </div>
 
             <!-- REASON & TOTALS -->
-            <div class="p-6 bg-slate-50 border-t border-slate-200">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-                    <div class="lg:col-span-7 space-y-2">
-                        <label for="reason" class="block text-xs font-bold text-slate-700">
+            <div class="card-footer bg-light border-top p-4">
+                <div class="row g-4 items-start">
+                    <div class="col-12 col-lg-7">
+                        <label for="reason" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Reason for Return
                         </label>
-                        <textarea name="reason" id="reason" rows="3" placeholder="Optional explanation..."
-                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 bg-white"></textarea>
+                        <textarea name="reason" id="reason" rows="3" placeholder="Optional explanation or customer return feedback..." class="form-control bg-white"></textarea>
                     </div>
 
-                    <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-                        <div class="flex items-center justify-between text-xs text-slate-600">
-                            <span>Units Returned:</span>
-                            <span id="total-qty-return-display" class="font-bold text-slate-900">0 units</span>
-                        </div>
+                    <div class="col-12 col-lg-5">
+                        <div class="card border-0 shadow-sm p-4 bg-white d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between align-items-center text-secondary">
+                                <span>Units Returned:</span>
+                                <span id="total-qty-return-display" class="fw-bold font-monospace text-dark fs-6">0 units</span>
+                            </div>
 
-                        <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
-                            <span class="text-sm font-bold text-slate-900">Total Refund:</span>
-                            <span id="total-return-amount-display" class="text-2xl font-black text-orange-600 font-mono">$0.00</span>
-                        </div>
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <span class="h5 fw-bold text-dark mb-0">Total Refund:</span>
+                                <span id="total-return-amount-display" class="h3 fw-black text-danger font-monospace mb-0">$0.00</span>
+                            </div>
 
-                        <button type="submit" id="btn-submit-return" disabled
-                            class="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs shadow-xs transition-colors flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-rotate-left"></i> Confirm Return & Restore Stock
-                        </button>
+                            <button type="submit" id="btn-submit-return" disabled class="btn btn-warning btn-lg fw-bold w-100 shadow-sm mt-2">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Confirm Return & Restore Stock
+                            </button>
+                        </div>
                     </div>
-
                 </div>
             </div>
-
         </div>
 
     </form>
@@ -177,7 +183,7 @@
         function loadItems() {
             let saleId = saleSelect.tomselect ? saleSelect.tomselect.getValue() : saleSelect.value;
             if (!saleId) {
-                returnItemsBody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Please select an invoice first.</td></tr>`;
+                returnItemsBody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-secondary">Please select an invoice first.</td></tr>`;
                 countBadge.textContent = 'No Invoice Selected';
                 return;
             }
@@ -230,8 +236,8 @@
             returnScannerInput.value = '';
 
             feedbackText.textContent = `Matched '${item.product_title}'. Added to return.`;
-            feedbackBox.classList.remove('hidden');
-            setTimeout(() => { feedbackBox.classList.add('hidden'); }, 3000);
+            feedbackBox.classList.remove('d-none');
+            setTimeout(() => { feedbackBox.classList.add('d-none'); }, 3000);
         } else {
             alert(`SKU '${sku}' was not found on this invoice.`);
         }
@@ -256,7 +262,7 @@
 
     function renderReturnTable() {
         if (currentInvoiceItems.length === 0) {
-            returnItemsBody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">No items on this invoice.</td></tr>`;
+            returnItemsBody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-secondary">No items on this invoice.</td></tr>`;
             countBadge.textContent = '0 Items';
             btnSubmit.disabled = true;
             calcTotals();
@@ -276,37 +282,37 @@
             const lineRefund = isChecked ? (item.return_qty * item.unit_price).toFixed(2) : '0.00';
 
             html += `
-            <tr class="${isChecked ? 'bg-orange-50/70' : 'hover:bg-slate-50'} transition-colors">
-                <td class="p-4 pl-6 text-center">
+            <tr class="${isChecked ? 'table-warning' : ''}">
+                <td class="ps-4 py-3 text-center">
                     <input type="checkbox" ${isChecked ? 'checked' : ''} ${!isEligible ? 'disabled' : ''}
                         onchange="toggleSelect(${idx})"
-                        class="rounded text-orange-500 focus:ring-orange-400 w-4 h-4 cursor-pointer">
+                        class="form-check-input">
                     ${isChecked ? `<input type="hidden" name="items[${idx}][sale_detail_id]" value="${item.sale_detail_id}">` : ''}
                 </td>
-                <td class="p-4 font-bold text-slate-900 text-sm">
-                    ${item.product_title}
+                <td class="py-3">
+                    <span class="fw-bold text-dark d-block fs-6">${item.product_title}</span>
                 </td>
-                <td class="p-4 font-mono font-bold text-slate-700">
-                    <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">${item.sku_code}</span>
+                <td class="py-3">
+                    <span class="badge bg-light text-dark font-monospace border px-2 py-1">${item.sku_code}</span>
                 </td>
-                <td class="p-4 text-center font-bold text-slate-700">${item.quantity_sold}</td>
-                <td class="p-4 text-center text-slate-500">${item.returned_quantity}</td>
-                <td class="p-4 text-center">
+                <td class="py-3 text-center font-bold text-dark">${item.quantity_sold}</td>
+                <td class="py-3 text-center text-secondary">${item.returned_quantity}</td>
+                <td class="py-3 text-center">
                     ${isEligible 
-                        ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800">${item.eligible_quantity} units</span>`
-                        : `<span class="text-slate-400 text-xs">Fully Returned</span>`
+                        ? `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">${item.eligible_quantity} units</span>`
+                        : `<span class="badge bg-light text-secondary border small">Fully Returned</span>`
                     }
                 </td>
-                <td class="p-4 text-right font-bold text-slate-800">$${item.unit_price.toFixed(2)}</td>
-                <td class="p-4 text-center">
+                <td class="py-3 text-end font-monospace fw-bold text-secondary">$${item.unit_price.toFixed(2)}</td>
+                <td class="py-3 text-center">
                     ${isChecked 
                         ? `<input type="number" name="items[${idx}][quantity]" value="${item.return_qty}" min="1" max="${item.eligible_quantity}" required
                             onchange="updateReturnQty(${idx}, this.value)"
-                            class="w-20 px-2 py-1 text-center font-bold rounded-lg border border-orange-400 focus:ring-2 focus:ring-orange-400">`
-                        : `<span class="text-slate-400">—</span>`
+                            class="form-control form-control-sm text-center fw-bold font-monospace mx-auto" style="max-width: 80px;">`
+                        : `<span class="text-secondary">—</span>`
                     }
                 </td>
-                <td class="p-4 pr-6 text-right font-black text-sm ${isChecked ? 'text-orange-600' : 'text-slate-400'}">
+                <td class="pe-4 py-3 text-end font-monospace fw-bold fs-6 ${isChecked ? 'text-danger' : 'text-secondary'}">
                     $${lineRefund}
                 </td>
             </tr>

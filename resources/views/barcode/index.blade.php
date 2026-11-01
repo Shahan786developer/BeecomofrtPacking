@@ -3,162 +3,167 @@
 @section('title', 'Thermal Barcode Generator')
 
 @section('breadcrumb')
-    <span class="text-slate-800 font-semibold">Barcode Studio</span>
+    <li class="breadcrumb-item active" aria-current="page">Barcode Studio</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Thermal Barcode Generator</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Generate Code39 barcode labels formatted for 32 mm × 22 mm thermal sticker rolls.</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Thermal Barcode Generator</h1>
+            <p class="text-secondary small mb-0">Generate Code39 barcode labels formatted for 32 mm &times; 22 mm thermal sticker rolls.</p>
         </div>
-        <a href="{{ route('barcode.settings') }}" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5">
-            <i class="fa-solid fa-gear text-slate-400"></i> Setup & Origins
-        </a>
+        <div>
+            <a href="{{ route('barcode.settings') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-gear me-1"></i> Setup & Origins
+            </a>
+        </div>
     </div>
 
     <!-- Main Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div class="row g-4 items-start">
 
-        <!-- Controls (7 Cols) -->
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-7 space-y-6">
-            <h2 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
-                Label Generation Details
-            </h2>
-
-            <form method="POST" action="{{ route('barcode.print') }}" target="_blank" id="barcode-form" class="space-y-5">
-                @csrf
-
-                <!-- Product Selection -->
-                <div>
-                    <label for="product_select" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        Select Product <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="product_id" id="product_select" required class="searchable-select w-full" placeholder="Search product title, code, or SKU...">
-                        <option value="">Choose a product...</option>
-                        @foreach($products as $prod)
-                            <option value="{{ $prod->id }}"
-                                {{ (isset($selectedProduct) && $selectedProduct->id == $prod->id) ? 'selected' : '' }}
-                                data-title="{{ $prod->title }}"
-                                data-sku="{{ $prod->sku_code }}"
-                                data-code="{{ $prod->product_code }}"
-                                data-stock="{{ $prod->stock_quantity }}"
-                                data-price="{{ $prod->selling_price }}">
-                                {{ $prod->title }} — [SKU: {{ $prod->sku_code }}] (Stock: {{ $prod->stock_quantity }})
-                            </option>
-                        @endforeach
-                    </select>
+        <!-- Controls (Col 7) -->
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="fw-bold text-dark mb-0">Label Generation Details</h5>
                 </div>
 
-                <!-- Second Line Description (Combined with Product Code) -->
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label for="description_id" class="block text-xs font-bold text-slate-700">
-                            Origin / Description <span class="text-rose-500">*</span>
-                        </label>
-                        <a href="{{ route('barcode.settings') }}" class="text-[11px] font-bold text-amber-600 hover:underline">
-                            + Manage Origins
-                        </a>
-                    </div>
-                    <select name="description_id" id="description_id" required class="searchable-select w-full" placeholder="Select origin...">
-                        @foreach($descriptions as $desc)
-                            <option value="{{ $desc->id }}" 
-                                {{ $desc->is_default ? 'selected' : '' }}
-                                data-name="{{ $desc->name }}">
-                                {{ $desc->name }} {{ $desc->is_default ? '(Default)' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="text-[11px] text-slate-500 mt-1 block">
-                        Preview on 2nd line: <strong id="preview-second-line-text" class="text-slate-900 font-mono">INDIA AA-01</strong>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ route('barcode.print') }}" target="_blank" id="barcode-form" class="d-flex flex-column gap-4">
+                        @csrf
+
+                        <!-- Product Selection -->
+                        <div>
+                            <label for="product_select" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Select Product <span class="text-danger">*</span>
+                            </label>
+                            <select name="product_id" id="product_select" required class="searchable-select form-select">
+                                <option value="">Choose a product...</option>
+                                @foreach($products as $prod)
+                                    <option value="{{ $prod->id }}"
+                                        {{ (isset($selectedProduct) && $selectedProduct->id == $prod->id) ? 'selected' : '' }}
+                                        data-title="{{ $prod->title }}"
+                                        data-sku="{{ $prod->sku_code }}"
+                                        data-code="{{ $prod->product_code }}"
+                                        data-stock="{{ $prod->stock_quantity }}"
+                                        data-price="{{ $prod->selling_price }}">
+                                        {{ $prod->title }} — [SKU: {{ $prod->sku_code }}] (Stock: {{ $prod->stock_quantity }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Second Line Description (Combined with Product Code) -->
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="description_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                    Origin / Description <span class="text-danger">*</span>
+                                </label>
+                                <a href="{{ route('barcode.settings') }}" class="text-primary text-decoration-none small fw-bold">
+                                    + Manage Origins
+                                </a>
+                            </div>
+                            <select name="description_id" id="description_id" required class="searchable-select form-select">
+                                @foreach($descriptions as $desc)
+                                    <option value="{{ $desc->id }}" 
+                                        {{ $desc->is_default ? 'selected' : '' }}
+                                        data-name="{{ $desc->name }}">
+                                        {{ $desc->name }} {{ $desc->is_default ? '(Default)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text small text-secondary mt-1">
+                                Second line preview: <strong id="preview-second-line-text" class="text-dark font-monospace">INDIA AA-01</strong>
+                            </div>
+                        </div>
+
+                        <!-- Stock and Print Quantity -->
+                        <div class="row g-3 pt-2 border-top">
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Available Stock</label>
+                                <input type="text" id="available_stock_display" value="120 units" readonly class="form-control fw-bold font-monospace bg-light">
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label for="print_quantity" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Stickers to Print <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" name="quantity" id="print_quantity" value="120" min="1" max="1000" required class="form-control fw-bold font-monospace">
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">Standard 32 mm &times; 22 mm Thermal Roll</span>
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                                <i class="bi bi-printer me-1"></i> Print Stickers
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Preview (Col 5) -->
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">Label Live Preview</h5>
+                    <span class="badge bg-light text-dark border font-monospace px-2 py-1">
+                        32 mm &times; 22 mm
                     </span>
                 </div>
 
-                <!-- Stock and Print Quantity -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Available Stock</label>
-                        <input type="text" id="available_stock_display" value="120 units" readonly
-                            class="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-100 border border-slate-200 font-bold text-slate-800 cursor-not-allowed">
+                <div class="card-body p-4 d-flex flex-column align-items-center">
+                    <!-- Preview Card Area -->
+                    <div class="p-4 bg-light rounded-3 border w-100 d-flex justify-content-center align-items-center" style="min-height: 220px;">
+                        
+                        <div id="thermal-sticker-box" class="thermal-label-container shadow-sm border bg-white" style="transform: scale(2.2); transform-origin: center;">
+                            <!-- Line 1: Brand -->
+                            <div id="label-brand" class="fw-black text-uppercase text-dark" style="font-size: 8px; letter-spacing: 0.5px;">
+                                {{ $config->brand_name }}
+                            </div>
+
+                            <!-- Line 2: Origin + Code -->
+                            <div id="label-desc" class="fw-bold text-uppercase text-dark" style="font-size: 7.5px; white-space: nowrap; overflow: hidden; margin-top: -2px;">
+                                INDIA AA-01
+                            </div>
+
+                            <!-- Line 3: Code39 Barcode -->
+                            <div class="w-100 d-flex justify-content-center align-items-center my-auto overflow-hidden">
+                                <svg id="barcode-svg" style="max-width: 100%; max-height: 8mm;"></svg>
+                            </div>
+
+                            <!-- Line 4: Human-readable 7-digit SKU -->
+                            <div id="label-sku" class="fw-bold font-monospace text-dark" style="font-size: 8px; letter-spacing: 1.5px; margin-top: -2px;">
+                                1000001
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <label for="print_quantity" class="block text-xs font-bold text-slate-700 mb-1.5">
-                            Number of Stickers to Print <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="number" name="quantity" id="print_quantity" value="120" min="1" max="1000" required
-                            class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 font-bold">
+                    <!-- Specs summary -->
+                    <div class="w-100 mt-4 pt-3 border-top small text-secondary d-flex flex-column gap-1">
+                        <div class="d-flex justify-content-between">
+                            <span>Barcode Standard:</span>
+                            <strong class="text-dark">Code39 1D</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Dimensions:</span>
+                            <strong class="text-dark">32 mm &times; 22 mm</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Typography:</span>
+                            <strong class="text-dark">Arabic Transparent / Arial</strong>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-xs text-slate-500 font-medium">Standard 32 mm × 22 mm Thermal Roll</span>
-                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-xs transition-colors flex items-center gap-2">
-                        <i class="fa-solid fa-print"></i> Print Stickers
-                    </button>
-                </div>
-
-            </form>
-        </div>
-
-        <!-- Live Preview (5 Cols) -->
-        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col items-center">
-            <div class="w-full flex items-center justify-between border-b border-slate-100 pb-3 mb-5">
-                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Label Live Preview
-                </h3>
-                <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                    32 mm × 22 mm
-                </span>
-            </div>
-
-            <!-- Preview Card -->
-            <div class="p-8 bg-slate-50 rounded-2xl border border-slate-200/80 w-full flex items-center justify-center min-h-[180px]">
-                
-                <div id="thermal-sticker-box" class="thermal-label-container shadow-md border border-slate-300 bg-white" style="transform: scale(2.2); transform-origin: center;">
-                    <!-- Line 1: BEE COMFORT -->
-                    <div id="label-brand" class="font-extrabold text-[8px] tracking-wider uppercase text-black">
-                        {{ $config->brand_name }}
-                    </div>
-
-                    <!-- Line 2: Product Description (e.g. INDIA AA-01) -->
-                    <div id="label-desc" class="font-bold text-[7.5px] uppercase text-black -mt-0.5 tracking-tight whitespace-nowrap overflow-hidden">
-                        INDIA AA-01
-                    </div>
-
-                    <!-- Line 3: Code39 Barcode -->
-                    <div class="w-full flex items-center justify-center my-auto overflow-hidden">
-                        <svg id="barcode-svg" class="max-w-full max-h-[8mm]"></svg>
-                    </div>
-
-                    <!-- Line 4: Human-readable 7-digit SKU -->
-                    <div id="label-sku" class="font-bold text-[8px] font-mono tracking-widest text-black -mt-0.5">
-                        1000001
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Specs summary -->
-            <div class="w-full mt-6 pt-4 border-t border-slate-100 text-xs text-slate-500 space-y-1">
-                <div class="flex justify-between">
-                    <span>Barcode Format:</span>
-                    <strong class="text-slate-800">Code39 1D</strong>
-                </div>
-                <div class="flex justify-between">
-                    <span>Dimensions:</span>
-                    <strong class="text-slate-800">32 mm × 22 mm</strong>
-                </div>
-                <div class="flex justify-between">
-                    <span>Font Family:</span>
-                    <strong class="text-slate-800">Arabic Transparent (Size 8)</strong>
                 </div>
             </div>
-
         </div>
 
     </div>

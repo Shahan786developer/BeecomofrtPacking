@@ -3,101 +3,114 @@
 @section('title', 'Bill Returns')
 
 @section('breadcrumb')
-    <span class="text-slate-800 font-semibold">Bill Returns</span>
+    <li class="breadcrumb-item active" aria-current="page">Bill Returns</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
     <!-- Header & Action -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Customer Bill Returns</h1>
-            <p class="text-sm text-slate-500 mt-1">Process invoice merchandise returns, validate quantities against sales, and restore stock.</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Customer Bill Returns</h1>
+            <p class="text-secondary small mb-0">Process customer merchandise returns, validate quantities against invoices, and restore inventory.</p>
         </div>
-        <a href="{{ route('returns.create') }}" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-md shadow-amber-400/20 transition-all flex items-center gap-2">
-            <i class="fa-solid fa-rotate-left"></i> Process New Return
-        </a>
+        <div>
+            <a href="{{ route('returns.create') }}" class="btn btn-primary btn-lg shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Process New Return
+            </a>
+        </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-        <form method="GET" action="{{ route('returns.index') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">Search Return / Invoice</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Return #, Invoice #, or customer..."
-                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">From Date</label>
-                <input type="date" name="from_date" value="{{ request('from_date') }}"
-                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">To Date</label>
-                <input type="date" name="to_date" value="{{ request('to_date') }}"
-                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400">
-            </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2 px-3 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors">
-                    Filter Returns
-                </button>
-                @if(request()->anyFilled(['search', 'from_date', 'to_date']))
-                    <a href="{{ route('returns.index') }}" class="py-2 px-3 rounded-xl border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-colors">
-                        Clear
-                    </a>
-                @endif
-            </div>
-        </form>
+    <!-- Filters Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-3 p-md-4">
+            <form method="GET" action="{{ route('returns.index') }}" class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Search Return / Invoice</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Return #, Invoice #, or customer..." class="form-control border-start-0 ps-0">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">From Date</label>
+                    <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">To Date</label>
+                    <input type="date" name="to_date" value="{{ request('to_date') }}" class="form-control">
+                </div>
+                <div class="col-12 col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        Filter
+                    </button>
+                    @if(request()->anyFilled(['search', 'from_date', 'to_date']))
+                        <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary" title="Clear Filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Returns Table -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+    <!-- Returns Table Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th class="p-4 pl-6">Return No</th>
-                        <th class="p-4">Original Invoice</th>
-                        <th class="p-4">Customer</th>
-                        <th class="p-4">Return Date</th>
-                        <th class="p-4 text-center">Items Returned</th>
-                        <th class="p-4 text-right">Return Amount</th>
-                        <th class="p-4 pr-6 text-right">Actions</th>
+                        <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Return No</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Original Invoice</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Customer</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Return Date</th>
+                        <th class="py-3 text-center text-secondary text-uppercase fs-7">Units Returned</th>
+                        <th class="py-3 text-end text-secondary text-uppercase fs-7">Refund Amount</th>
+                        <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="border-top-0">
                     @forelse($returns as $ret)
-                    <tr class="hover:bg-slate-50/80 transition-colors">
-                        <td class="p-4 pl-6">
-                            <a href="{{ route('returns.show', $ret) }}" class="font-extrabold text-sm text-orange-600 hover:text-orange-800">
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <a href="{{ route('returns.show', $ret) }}" class="fw-bold text-danger text-decoration-none font-monospace fs-6">
                                 {{ $ret->return_no }}
                             </a>
                         </td>
-                        <td class="p-4 font-mono font-bold text-slate-700">
-                            <a href="{{ route('sales.show', $ret->sale) }}" class="text-indigo-600 hover:underline">
+                        <td class="py-3">
+                            <a href="{{ route('sales.show', $ret->sale) }}" class="text-primary fw-bold text-decoration-none font-monospace">
                                 {{ $ret->sale->invoice_no }}
                             </a>
                         </td>
-                        <td class="p-4 font-bold text-slate-900">{{ $ret->customer->name }}</td>
-                        <td class="p-4 text-slate-600 font-medium">{{ $ret->return_date->format('d M Y') }}</td>
-                        <td class="p-4 text-center font-bold text-slate-700">
-                            {{ $ret->details->sum('quantity') }} unit(s)
+                        <td class="py-3 fw-bold text-dark">
+                            {{ $ret->customer->name }}
                         </td>
-                        <td class="p-4 text-right font-black text-sm text-orange-600">${{ number_format($ret->total_amount, 2) }}</td>
-                        <td class="p-4 pr-6 text-right">
-                            <a href="{{ route('returns.show', $ret) }}" class="px-2.5 py-1 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-xs inline-flex items-center gap-1">
-                                <i class="fa-solid fa-eye text-slate-400"></i> Receipt
+                        <td class="py-3 text-secondary">
+                            {{ $ret->return_date->format('d M Y') }}
+                        </td>
+                        <td class="py-3 text-center">
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">
+                                +{{ $ret->details->sum('quantity') }} unit(s)
+                            </span>
+                        </td>
+                        <td class="py-3 text-end">
+                            <span class="fw-bold text-danger font-monospace fs-6">${{ number_format($ret->total_amount, 2) }}</span>
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <a href="{{ route('returns.show', $ret) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-text me-1"></i> Receipt
                             </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="p-10 text-center text-slate-400">
-                            <i class="fa-solid fa-rotate-left text-3xl mb-2 text-slate-300"></i>
-                            <p class="font-medium">No customer bill returns recorded yet.</p>
-                            <a href="{{ route('returns.create') }}" class="inline-block mt-3 px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold text-xs">
-                                Process First Return
+                        <td colspan="7" class="text-center py-5 text-secondary">
+                            <i class="bi bi-arrow-counterclockwise text-secondary display-6 d-block mb-3"></i>
+                            <h6 class="fw-bold text-dark">No customer bill returns recorded yet</h6>
+                            <p class="small text-secondary mb-3">When merchandise is returned, process it against the original sales invoice.</p>
+                            <a href="{{ route('returns.create') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i> Process First Return
                             </a>
                         </td>
                     </tr>
@@ -107,7 +120,7 @@
         </div>
 
         @if($returns->hasPages())
-        <div class="p-4 border-t border-slate-100">
+        <div class="card-footer bg-white border-0 py-3">
             {{ $returns->links() }}
         </div>
         @endif

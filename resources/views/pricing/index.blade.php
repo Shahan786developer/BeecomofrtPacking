@@ -3,245 +3,258 @@
 @section('title', 'Pricing Configurations')
 
 @section('breadcrumb')
-    <span class="text-slate-800 font-semibold">Pricing Rules</span>
+    <li class="breadcrumb-item active" aria-current="page">Pricing Rules</li>
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Pricing Configurations</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Configure percentage tiers and category-based pricing used during product registration.</p>
+            <h1 class="h3 fw-bold text-dark mb-1">Pricing Configurations</h1>
+            <p class="text-secondary small mb-0">Configure percentage tiers and category-based pricing used during product registration.</p>
         </div>
     </div>
 
     <!-- SECTION 1: PERCENTAGE PRICING RULES -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="text-base font-bold text-slate-900">Percentage Pricing Tiers</h2>
-                <p class="text-xs text-slate-500">Configured percentage markup options. The designated default appears automatically on product registration.</p>
+                <h5 class="fw-bold text-dark mb-0">Percentage Pricing Tiers</h5>
+                <span class="text-secondary small">Markup percentage options. The designated default is pre-selected on product registration.</span>
             </div>
-            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
+            <span class="badge bg-light text-dark border px-2 py-1">
                 {{ $percentageRules->count() }} Tiers
             </span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div class="card-body p-4">
+            <div class="row g-4 align-items-start">
 
-            <!-- New Percentage Form -->
-            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Add Percentage Rule</h3>
-                <form method="POST" action="{{ route('pricing.percentage.store') }}" class="space-y-3.5">
-                    @csrf
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Rule Name <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" placeholder="e.g. Retail 22%" required
-                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 bg-white">
+                <!-- New Percentage Form (Col 4) -->
+                <div class="col-12 col-lg-4">
+                    <div class="p-4 bg-light rounded-3 border">
+                        <h6 class="fw-bold text-secondary text-uppercase mb-3">Add Percentage Rule</h6>
+                        <form method="POST" action="{{ route('pricing.percentage.store') }}" class="d-flex flex-column gap-3">
+                            @csrf
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Rule Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="name" placeholder="e.g. Retail 22%" required class="form-control fw-bold bg-white">
+                            </div>
+
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Markup Percentage (%) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" min="0" max="1000" name="percentage" placeholder="e.g. 22" required class="form-control font-monospace fw-bold bg-white">
+                            </div>
+
+                            <!-- Boolean Yes/No Option (Requirement #8) -->
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Set as Default Rule?</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="is_default" id="defaultYes" value="1">
+                                        <label class="form-check-label small fw-semibold" for="defaultYes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="is_default" id="defaultNo" value="0" checked>
+                                        <label class="form-check-label small fw-semibold" for="defaultNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Description (Optional)</label>
+                                <input type="text" name="description" placeholder="Notes or remarks" class="form-control bg-white">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary fw-bold mt-2">
+                                Add Percentage Rule
+                            </button>
+                        </form>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Markup Percentage (%) <span class="text-rose-500">*</span></label>
-                        <input type="number" step="0.01" min="0" max="1000" name="percentage" placeholder="e.g. 22" required
-                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 bg-white font-bold">
+                <!-- Existing Percentage Records List (Col 8) -->
+                <div class="col-12 col-lg-8">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3 py-3 text-secondary text-uppercase fs-7">Rule Name</th>
+                                    <th class="py-3 text-center text-secondary text-uppercase fs-7">Markup</th>
+                                    <th class="py-3 text-center text-secondary text-uppercase fs-7">Status</th>
+                                    <th class="py-3 text-secondary text-uppercase fs-7">Products</th>
+                                    <th class="pe-3 py-3 text-end text-secondary text-uppercase fs-7">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-top-0">
+                                @forelse($percentageRules as $pRule)
+                                <tr>
+                                    <td class="ps-3 py-3">
+                                        <span class="fw-bold text-dark d-block">{{ $pRule->name }}</span>
+                                        @if($pRule->description)
+                                            <span class="text-secondary small">{{ $pRule->description }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 text-center font-monospace fw-bold text-primary fs-6">
+                                        +{{ number_format($pRule->percentage, 2) }}%
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        @if($pRule->is_default)
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                <i class="bi bi-star-fill text-warning me-1"></i> Default Rule
+                                            </span>
+                                        @else
+                                            <form method="POST" action="{{ route('pricing.default', $pRule) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-link btn-sm text-secondary text-decoration-none p-0 small">
+                                                    Make Default
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 font-monospace text-secondary small">
+                                        {{ $pRule->products->count() }} items
+                                    </td>
+                                    <td class="pe-3 py-3 text-end">
+                                        @if(!$pRule->is_default)
+                                        <form method="POST" action="{{ route('pricing.destroy', $pRule) }}" class="d-inline" onsubmit="return confirm('Delete this pricing rule?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        @else
+                                        <span class="text-secondary small fst-italic">Default</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-secondary">No percentage pricing rules found.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
+                </div>
 
-                    <!-- Boolean Yes/No Option (Requirement #8) -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Set as Default Rule?</label>
-                        <div class="flex items-center gap-4 text-xs font-semibold text-slate-700 pt-1">
-                            <label class="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="is_default" value="1" class="text-amber-500 focus:ring-amber-400">
-                                <span>Yes</span>
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="is_default" value="0" checked class="text-amber-500 focus:ring-amber-400">
-                                <span>No</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Description (Optional)</label>
-                        <input type="text" name="description" placeholder="Notes or remarks"
-                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 bg-white">
-                    </div>
-
-                    <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-xs transition-colors">
-                        Add Percentage Rule
-                    </button>
-                </form>
             </div>
-
-            <!-- Existing Percentage Records List -->
-            <div class="lg:col-span-2 overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[11px]">
-                        <tr>
-                            <th class="p-3">Rule Name</th>
-                            <th class="p-3 text-center">Markup</th>
-                            <th class="p-3 text-center">Status</th>
-                            <th class="p-3">Products</th>
-                            <th class="p-3 pr-4 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($percentageRules as $pRule)
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 font-bold text-slate-900">
-                                {{ $pRule->name }}
-                                @if($pRule->description)
-                                    <span class="block text-[11px] text-slate-400 font-normal">{{ $pRule->description }}</span>
-                                @endif
-                            </td>
-                            <td class="p-3 text-center font-black text-slate-900 text-sm">
-                                +{{ number_format($pRule->percentage, 2) }}%
-                            </td>
-                            <td class="p-3 text-center">
-                                @if($pRule->is_default)
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                        <i class="fa-solid fa-check text-[9px]"></i> Default Rule
-                                    </span>
-                                @else
-                                    <form method="POST" action="{{ route('pricing.default', $pRule) }}" class="inline">
-                                        @csrf
-                                        <button type="submit" class="text-[11px] font-bold text-slate-500 hover:text-amber-600 hover:underline">
-                                            Make Default
-                                        </button>
-                                    </form>
-                                @endif
-                            </td>
-                            <td class="p-3 text-slate-600 font-mono">
-                                {{ $pRule->products->count() }} items
-                            </td>
-                            <td class="p-3 pr-4 text-right">
-                                @if(!$pRule->is_default)
-                                <form method="POST" action="{{ route('pricing.destroy', $pRule) }}" class="inline" onsubmit="return confirm('Delete this pricing rule?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-rose-500 hover:text-rose-700 text-xs" title="Delete">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
-                                @else
-                                <span class="text-[10px] text-slate-400 italic">Default</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="p-6 text-center text-slate-400">No percentage pricing rules found.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
         </div>
     </div>
 
     <!-- SECTION 2: CATEGORY PRICING RULES -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="text-base font-bold text-slate-900">Category Pricing Configurations</h2>
-                <p class="text-xs text-slate-500">Category-specific pricing rules linked through searchable foreign-key category selection.</p>
+                <h5 class="fw-bold text-dark mb-0">Category Pricing Configurations</h5>
+                <span class="text-secondary small">Category-specific pricing rules linked through searchable foreign-key category selection.</span>
             </div>
-            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
+            <span class="badge bg-light text-dark border px-2 py-1">
                 {{ $categoryRules->count() }} Rules
             </span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div class="card-body p-4">
+            <div class="row g-4 align-items-start">
 
-            <!-- New Category Pricing Form -->
-            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Add Category Rule</h3>
-                <form method="POST" action="{{ route('pricing.category.store') }}" class="space-y-3.5">
-                    @csrf
+                <!-- New Category Pricing Form (Col 4) -->
+                <div class="col-12 col-lg-4">
+                    <div class="p-4 bg-light rounded-3 border">
+                        <h6 class="fw-bold text-secondary text-uppercase mb-3">Add Category Rule</h6>
+                        <form method="POST" action="{{ route('pricing.category.store') }}" class="d-flex flex-column gap-3">
+                            @csrf
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Category <span class="text-danger">*</span>
+                                </label>
+                                <select name="category_id" required class="searchable-select form-select">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Category <span class="text-rose-500">*</span></label>
-                        <select name="category_id" required class="searchable-select w-full" placeholder="Select category...">
-                            <option value="">Select Category</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                            @endforeach
-                        </select>
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Markup Percentage (%) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" min="0" max="1000" name="percentage" placeholder="e.g. 40" required class="form-control font-monospace fw-bold bg-white">
+                            </div>
+
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Rule Name (Optional)</label>
+                                <input type="text" name="name" placeholder="Leave empty for auto-name" class="form-control bg-white">
+                            </div>
+
+                            <div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Description (Optional)</label>
+                                <input type="text" name="description" placeholder="Notes" class="form-control bg-white">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary fw-bold mt-2">
+                                Add Category Rule
+                            </button>
+                        </form>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Markup Percentage (%) <span class="text-rose-500">*</span></label>
-                        <input type="number" step="0.01" min="0" max="1000" name="percentage" placeholder="e.g. 40" required
-                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 bg-white font-bold">
+                <!-- Existing Category Rules Table (Col 8) -->
+                <div class="col-12 col-lg-8">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3 py-3 text-secondary text-uppercase fs-7">Category</th>
+                                    <th class="py-3 text-secondary text-uppercase fs-7">Rule Name</th>
+                                    <th class="py-3 text-center text-secondary text-uppercase fs-7">Markup</th>
+                                    <th class="py-3 text-secondary text-uppercase fs-7">Products</th>
+                                    <th class="pe-3 py-3 text-end text-secondary text-uppercase fs-7">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-top-0">
+                                @forelse($categoryRules as $cRule)
+                                <tr>
+                                    <td class="ps-3 py-3 fw-bold text-dark">
+                                        {{ $cRule->category->name ?? 'Unassigned' }}
+                                    </td>
+                                    <td class="py-3 text-secondary">
+                                        {{ $cRule->name }}
+                                    </td>
+                                    <td class="py-3 text-center font-monospace fw-bold text-primary fs-6">
+                                        +{{ number_format($cRule->percentage, 2) }}%
+                                    </td>
+                                    <td class="py-3 font-monospace text-secondary small">
+                                        {{ $cRule->products->count() }} items
+                                    </td>
+                                    <td class="pe-3 py-3 text-end">
+                                        <form method="POST" action="{{ route('pricing.destroy', $cRule) }}" class="d-inline" onsubmit="return confirm('Delete this category rule?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-secondary">No category pricing rules configured yet.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Rule Name (Optional)</label>
-                        <input type="text" name="name" placeholder="Leave empty for auto-name"
-                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 bg-white">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Description (Optional)</label>
-                        <input type="text" name="description" placeholder="Notes"
-                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-400 bg-white">
-                    </div>
-
-                    <button type="submit" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-xs transition-colors">
-                        Add Category Rule
-                    </button>
-                </form>
             </div>
-
-            <!-- Existing Category Rules Table -->
-            <div class="lg:col-span-2 overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[11px]">
-                        <tr>
-                            <th class="p-3">Category</th>
-                            <th class="p-3">Rule Name</th>
-                            <th class="p-3 text-center">Markup</th>
-                            <th class="p-3">Products</th>
-                            <th class="p-3 pr-4 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($categoryRules as $cRule)
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 font-bold text-slate-900">
-                                {{ $cRule->category->name ?? 'Unassigned' }}
-                            </td>
-                            <td class="p-3 text-slate-700 font-medium">
-                                {{ $cRule->name }}
-                            </td>
-                            <td class="p-3 text-center font-black text-slate-900 text-sm">
-                                +{{ number_format($cRule->percentage, 2) }}%
-                            </td>
-                            <td class="p-3 text-slate-600 font-mono">
-                                {{ $cRule->products->count() }} items
-                            </td>
-                            <td class="p-3 pr-4 text-right">
-                                <form method="POST" action="{{ route('pricing.destroy', $cRule) }}" class="inline" onsubmit="return confirm('Delete this category rule?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-rose-500 hover:text-rose-700 text-xs" title="Delete">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="p-6 text-center text-slate-400">No category pricing rules configured yet.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
         </div>
     </div>
 
