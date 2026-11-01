@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Dashboard
-Route::get('/', [DashboardController::class, 'index'])->name('home');
+// Main Entry & Dashboard
+Route::get('/', [ProductController::class, 'index'])->name('home');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // Products
