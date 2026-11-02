@@ -444,4 +444,136 @@ class BeeComfortTest extends TestCase
         $createPage->assertStatus(200);
         $createPage->assertSee('18 pieces');
     }
+
+    /**
+     * Test Cash Receipt Voucher (CRV) Flow and Real-time Balance Calculation:
+     * User scenario: Customer has 2800 bill, pays 1000 via CRV, remaining balance is 1800.
+     */
+    public function test_cash_receipt_voucher_crv_and_customer_balance_calculation(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Al-Karam Garments',
+            'owner_name' => 'Sheikh Waqas',
+            'phone' => '03001234567',
+            'city' => 'Lahore',
+        ]);
+
+        $product = Product::first();
+
+        // 1. Create Sale Invoice of Rs. 2,800.00
+        $sale = Sale::create([
+            'bill_type' => 'bee_comfort',
+            'invoice_no' => 'INV-TEST-2800',
+            'customer_id' => $customer->id,
+            'invoice_date' => Carbon::today(),
+            'subtotal' => 2800.00,
+            'discount_amount' => 0.00,
+            'total_amount' => 2800.00,
+        ]);
+
+        SaleDetail::create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'product_title' => $product->title,
+            'sku_code' => $product->sku_code,
+            'quantity' => 1,
+            'unit_price' => 2800.00,
+            'total_amount' => 2800.00,
+        ]);
+
+        // Customer has Rs. 2800.00 pending
+        $customer->refresh();
+        $this->assertEquals(2800.00, $customer->total_invoiced);
+        $this->assertEquals(0.00, $customer->total_paid);
+        $this->assertEquals(2800.00, $customer->balance_due);
+
+        // 2. Customer pays Rs. 1,000.00 via Cash Receipt Voucher (CRV)
+        $voucherNo = \App\Models\CashReceipt::generateNextVoucherNo();
+        $this->assertStringStartsWith('CRV-', $voucherNo);
+
+        $response = $this->post(route('receipts.store'), [
+            'voucher_no' => $voucherNo,
+            'customer_id' => $customer->id,
+            'amount' => 1000.00,
+            'payment_date' => Carbon::today()->format('Y-m-d'),
+            'payment_method' => 'cash',
+            'notes' => 'Advance partial bill payment',
+        ]);
+
+        $response->assertRedirect();
+
+        // 3. Verify Customer balance is now exactly Rs. 1,800.00
+        $customer->refresh();
+        $this->assertEquals(2800.00, $customer->total_invoiced);
+        $this->assertEquals(1000.00, $customer->total_paid);
+        $this->assertEquals(1800.00, $customer->balance_due);
+
+        // 4. Verify Customer Ledger includes the CRV entry and correct Running Balance
+        $ledgerResponse = $this->get(route('customers.ledger', $customer));
+        $ledgerResponse->assertStatus(200);
+        $ledgerResponse->assertSee($voucherNo);
+        $ledgerResponse->assertSee('1,800.00');
+    }
+
+    /**
+     * Test Company Profile Settings update and dynamic Sale Invoice print branding
+     */
+    public function test_company_profile_settings_and_dynamic_invoice_print(): void
+    {
+        $updateResponse = $this->post(route('settings.company.update'), [
+            'company_name' => 'Bee Comfort Premium Garments',
+            'tagline' => 'Wholesale Packaging Solutions',
+            'warehouse_address' => 'Plot #45, Industrial Estate, Faisalabad',
+            'phone_primary' => '+92 321 7654321',
+            'email' => 'sales@beecomfort.com',
+            'invoice_terms' => 'Custom Terms: Goods once sold cannot be returned without original barcode tag.',
+        ]);
+
+        $updateResponse->assertRedirect(route('settings.company'));
+
+        $company = \App\Models\CompanyProfile::getActive();
+        $this->assertEquals('Bee Comfort Premium Garments', $company->company_name);
+        $this->assertEquals('+92 321 7654321', $company->phone_primary);
+
+        // Verify print view for sale uses updated company profile
+        $sale = Sale::first();
+        if ($sale) {
+            $printResponse = $this->get(route('sales.print', $sale));
+            $printResponse->assertStatus(200);
+            $printResponse->assertSee('Bee Comfort Premium Garments');
+            $printResponse->assertSee('+92 321 7654321');
+            $printResponse->assertSee('Plot #45, Industrial Estate, Faisalabad');
+        }
+    }
+
+    /**
+     * Test Printable Customer Statement View
+     */
+    public function test_customer_printable_statement(): void
+    {
+        $customer = Customer::first();
+        $response = $this->get(route('customers.print-statement', $customer));
+        $response->assertStatus(200);
+        $response->assertSee('STATEMENT');
+        $response->assertSee($customer->name);
+    }
+
+    /**
+     * Test Locked Sale Return flow when initiated from Sale Invoice
+     */
+    public function test_locked_sale_return_flow(): void
+    {
+        $sale = Sale::first();
+        if ($sale) {
+            $response = $this->get(route('returns.create', [
+                'sale_id' => $sale->id,
+                'return_type' => $sale->bill_type ?? 'bee_comfort',
+            ]));
+
+            $response->assertStatus(200);
+            $response->assertSee($sale->invoice_no);
+            $response->assertSee($sale->customer->name);
+            $response->assertSee('Locked to Original Invoice');
+        }
+    }
 }

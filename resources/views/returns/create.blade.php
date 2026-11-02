@@ -30,53 +30,102 @@
         <!-- INVOICE SELECTION CARD -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <div class="row g-3">
-                    <!-- 0. Return Category -->
-                    <div class="col-12 col-md-3">
-                        <label for="return_type" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Return Category <span class="text-danger">*</span>
-                        </label>
-                        <select name="return_type" id="return_type" required class="form-select fw-bold border-warning text-dark" onchange="window.location.href='{{ route('returns.create') }}?return_type=' + this.value">
-                            <option value="bee_comfort" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'bee_comfort') ? 'selected' : '' }}>
-                                Bee Comfort Return
-                            </option>
-                            <option value="china" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'china') ? 'selected' : '' }}>
-                                China Return
-                            </option>
-                        </select>
-                    </div>
+                @if(isset($selectedSale))
+                    <!-- Locked Mode: Return initiated directly from Sales Invoice -->
+                    <input type="hidden" name="return_type" value="{{ $returnType }}">
+                    <input type="hidden" name="sale_id" value="{{ $selectedSale->id }}">
 
-                    <!-- 1. Original Invoice -->
-                    <div class="col-12 col-md-4">
-                        <label for="sale_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Original Invoice <span class="text-danger">*</span>
-                        </label>
-                        <select name="sale_id" id="sale_id" required class="searchable-select form-select">
-                            <option value="">Select Invoice...</option>
-                            @foreach($sales as $sale)
-                                <option value="{{ $sale->id }}" {{ (isset($selectedSaleId) && $selectedSaleId == $sale->id) ? 'selected' : ($loop->first ? 'selected' : '') }}>
-                                    {{ $sale->invoice_no }} — {{ $sale->customer->name }} (Rs. {{ number_format($sale->total_amount, 2) }})
+                    <div class="row g-3 align-items-center">
+                        <div class="col-12 col-md-3">
+                            <span class="form-label small fw-bold text-secondary text-uppercase d-block mb-1">Return Category</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge {{ $returnType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }} px-3 py-2 fs-7">
+                                    <i class="bi bi-tag-fill me-1"></i> {{ $returnType === 'china' ? 'China Return' : 'Bee Comfort Return' }}
+                                </span>
+                                <i class="bi bi-lock-fill text-muted" title="Locked to Original Invoice"></i>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <span class="form-label small fw-bold text-secondary text-uppercase d-block mb-1">Original Invoice (Locked)</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold font-monospace text-primary fs-6">{{ $selectedSale->invoice_no }}</span>
+                                <span class="badge bg-light text-secondary border font-monospace">Rs. {{ number_format($selectedSale->total_amount, 2) }}</span>
+                                <i class="bi bi-lock-fill text-muted" title="Locked to Original Invoice"></i>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <span class="form-label small fw-bold text-secondary text-uppercase d-block mb-1">Billed Customer (Locked)</span>
+                            <div class="fw-bold text-dark fs-6">{{ $selectedSale->customer->name }}</div>
+                            @if($selectedSale->customer->owner_name)
+                                <span class="text-secondary small d-block">Owner: <strong class="text-dark">{{ $selectedSale->customer->owner_name }}</strong></span>
+                            @endif
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label for="return_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">Return No</label>
+                                    <input type="text" name="return_no" id="return_no" value="{{ old('return_no', $nextReturnNo) }}" required class="form-control font-monospace fw-bold bg-light form-control-sm">
+                                </div>
+                                <div class="col-6">
+                                    <label for="return_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">Date</label>
+                                    <input type="date" name="return_date" id="return_date" value="{{ old('return_date', $today) }}" required class="form-control form-control-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <!-- Manual Mode: Select from available invoices -->
+                    <div class="row g-3">
+                        <!-- 0. Return Category -->
+                        <div class="col-12 col-md-3">
+                            <label for="return_type" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Return Category <span class="text-danger">*</span>
+                            </label>
+                            <select name="return_type" id="return_type" required class="form-select fw-bold border-warning text-dark" onchange="window.location.href='{{ route('returns.create') }}?return_type=' + this.value">
+                                <option value="bee_comfort" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'bee_comfort') ? 'selected' : '' }}>
+                                    Bee Comfort Return
                                 </option>
-                            @endforeach
-                        </select>
-                    </div>
+                                <option value="china" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'china') ? 'selected' : '' }}>
+                                    China Return
+                                </option>
+                            </select>
+                        </div>
 
-                    <!-- 2. Return Number -->
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <label for="return_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Return Number <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" name="return_no" id="return_no" value="{{ old('return_no', $nextReturnNo) }}" required class="form-control font-monospace fw-bold bg-light">
-                    </div>
+                        <!-- 1. Original Invoice -->
+                        <div class="col-12 col-md-4">
+                            <label for="sale_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Original Invoice <span class="text-danger">*</span>
+                            </label>
+                            <select name="sale_id" id="sale_id" required class="searchable-select form-select">
+                                <option value="">Select Invoice...</option>
+                                @foreach($sales as $sale)
+                                    <option value="{{ $sale->id }}" {{ (isset($selectedSaleId) && $selectedSaleId == $sale->id) ? 'selected' : ($loop->first ? 'selected' : '') }}>
+                                        {{ $sale->invoice_no }} — {{ $sale->customer->name }} (Rs. {{ number_format($sale->total_amount, 2) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <!-- 3. Return Date -->
-                    <div class="col-12 col-sm-6 col-md-2">
-                        <label for="return_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Return Date <span class="text-danger">*</span>
-                        </label>
-                        <input type="date" name="return_date" id="return_date" value="{{ old('return_date', $today) }}" required class="form-control fw-semibold">
+                        <!-- 2. Return Number -->
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <label for="return_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Return Number <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="return_no" id="return_no" value="{{ old('return_no', $nextReturnNo) }}" required class="form-control font-monospace fw-bold bg-light">
+                        </div>
+
+                        <!-- 3. Return Date -->
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label for="return_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Return Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" name="return_date" id="return_date" value="{{ old('return_date', $today) }}" required class="form-control fw-semibold">
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
 
@@ -196,7 +245,14 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         function loadItems() {
-            let saleId = saleSelect.tomselect ? saleSelect.tomselect.getValue() : saleSelect.value;
+            let saleId = null;
+            if (saleSelect) {
+                saleId = saleSelect.tomselect ? saleSelect.tomselect.getValue() : saleSelect.value;
+            } else {
+                const hiddenSale = document.querySelector('input[name="sale_id"]');
+                if (hiddenSale) saleId = hiddenSale.value;
+            }
+
             if (!saleId) {
                 returnItemsBody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-secondary">Please select an invoice first.</td></tr>`;
                 countBadge.textContent = 'No Invoice Selected';
@@ -221,7 +277,11 @@
         }
 
         setTimeout(() => {
-            if (saleSelect.tomselect) saleSelect.tomselect.on('change', loadItems);
+            if (saleSelect && saleSelect.tomselect) {
+                saleSelect.tomselect.on('change', loadItems);
+            } else if (saleSelect) {
+                saleSelect.addEventListener('change', loadItems);
+            }
             loadItems();
         }, 300);
 

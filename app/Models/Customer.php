@@ -31,4 +31,47 @@ class Customer extends Model
     {
         return $this->hasMany(ReturnRecord::class);
     }
+
+    public function cashReceipts(): HasMany
+    {
+        return $this->hasMany(CashReceipt::class);
+    }
+
+    public function getTotalInvoicedAttribute(): float
+    {
+        return (float) $this->sales()->sum('total_amount');
+    }
+
+    public function getTotalReturnedAttribute(): float
+    {
+        return (float) $this->returns()->sum('total_amount');
+    }
+
+    public function getTotalPaidAttribute(): float
+    {
+        return (float) $this->cashReceipts()->sum('amount');
+    }
+
+    public function getBalanceDueAttribute(): float
+    {
+        $due = $this->total_invoiced - ($this->total_paid + $this->total_returned);
+        return round(max(0, $due), 2);
+    }
+
+    /**
+     * Approximate days pending since oldest invoice
+     */
+    public function getPendingDaysAttribute(): int
+    {
+        if ($this->balance_due <= 0) {
+            return 0;
+        }
+
+        $oldestInvoice = $this->sales()->orderBy('invoice_date', 'asc')->first();
+        if ($oldestInvoice && $oldestInvoice->invoice_date) {
+            return (int) $oldestInvoice->invoice_date->diffInDays(now());
+        }
+
+        return 0;
+    }
 }

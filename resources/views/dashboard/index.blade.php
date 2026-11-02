@@ -13,9 +13,12 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Executive Dashboard</h1>
-            <p class="text-secondary small mb-0">Real-time inventory levels, customer billing, and stock depletion tracking.</p>
+            <p class="text-secondary small mb-0">Real-time inventory levels, customer billing, cash receipts, and pending receivables tracking.</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('receipts.create') }}" class="btn btn-success fw-bold shadow-sm">
+                <i class="bi bi-cash-stack me-1"></i> Receive Cash (CRV)
+            </a>
             <a href="{{ route('sales.create') }}" class="btn btn-primary shadow-sm">
                 <i class="bi bi-cart-plus me-1"></i> New Sales Invoice
             </a>
@@ -25,27 +28,27 @@
         </div>
     </div>
 
-    <!-- SUMMARY METRICS -->
+    <!-- PRIMARY SUMMARY METRICS -->
     <div class="row g-3">
         <!-- 1. Total Products -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-secondary small fw-bold text-uppercase">Total Products</span>
+                        <span class="text-secondary small fw-bold text-uppercase">Total Catalog</span>
                         <div class="rounded-3 bg-primary-subtle text-primary p-2">
                             <i class="bi bi-boxes fs-5"></i>
                         </div>
                     </div>
                     <div>
                         <div class="h2 fw-black text-dark mb-1 font-monospace">{{ number_format($totalProducts) }}</div>
-                        <span class="text-secondary small">Active merchandise catalog</span>
+                        <span class="text-secondary small">Active merchandise items</span>
                     </div>
                     <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
                         <a href="{{ route('products.index') }}" class="small fw-bold text-primary text-decoration-none">
-                            View Products &rarr;
+                            View Catalog &rarr;
                         </a>
-                        <span class="text-secondary small">Catalog</span>
+                        <span class="text-secondary small">Products</span>
                     </div>
                 </div>
             </div>
@@ -57,17 +60,17 @@
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-secondary small fw-bold text-uppercase">Total Stock</span>
-                        <div class="rounded-3 bg-success-subtle text-success p-2">
+                        <div class="rounded-3 bg-info-subtle text-info p-2">
                             <i class="bi bi-box-seam fs-5"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black text-success mb-1 font-monospace">{{ number_format($totalStockQuantity) }}</div>
-                        <span class="text-secondary small">Total physical warehouse units</span>
+                        <div class="h2 fw-black text-dark mb-1 font-monospace">{{ number_format($totalStockQuantity) }}</div>
+                        <span class="text-secondary small">Physical warehouse units</span>
                     </div>
                     <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                        <a href="{{ route('stock.index') }}" class="small fw-bold text-success text-decoration-none">
-                            Warehouse Levels &rarr;
+                        <a href="{{ route('stock.index') }}" class="small fw-bold text-info text-decoration-none">
+                            Warehouse Stock &rarr;
                         </a>
                         <span class="text-secondary small">Units</span>
                     </div>
@@ -75,110 +78,240 @@
             </div>
         </div>
 
-        <!-- 3. Zero / Negative Stock -->
+        <!-- 3. Total Cash Received (CRV) -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 bg-success-subtle border border-success-subtle">
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-secondary small fw-bold text-uppercase">Out / Backorder</span>
-                        <div class="rounded-3 bg-warning-subtle text-warning p-2">
-                            <i class="bi bi-exclamation-triangle fs-5"></i>
+                        <span class="text-success small fw-bold text-uppercase">Cash Received (CRV)</span>
+                        <div class="rounded-3 bg-success text-white p-2">
+                            <i class="bi bi-cash-coin fs-5"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black text-dark mb-1 font-monospace">
-                            {{ $zeroStockCount }} <span class="fs-6 fw-normal text-secondary">zero</span> / 
-                            <span class="text-danger">{{ $negativeStockCount }}</span> <span class="fs-6 fw-normal text-secondary">neg</span>
-                        </div>
-                        <span class="text-secondary small">Zero stock &amp; backorders</span>
+                        <div class="h2 fw-black text-success mb-1 font-monospace">Rs. {{ number_format($totalCashReceived, 2) }}</div>
+                        <span class="text-success-emphasis small">Total customer payments</span>
                     </div>
                     <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                        <a href="{{ route('stock.index', ['status' => 'zero']) }}" class="small fw-bold text-warning-emphasis text-decoration-none">
-                            Review Items &rarr;
+                        <a href="{{ route('receipts.index') }}" class="small fw-bold text-success text-decoration-none">
+                            View All CRVs &rarr;
                         </a>
-                        <span class="text-secondary small">Audited</span>
+                        <span class="text-success small">Collected</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 4. Total Sales Revenue -->
+        <!-- 4. Outstanding Pending Receivables (Alert) -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 {{ $totalReceivables > 0 ? 'bg-danger-subtle border border-danger-subtle' : '' }}">
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-secondary small fw-bold text-uppercase">Total Sales</span>
-                        <div class="rounded-3 bg-primary-subtle text-primary p-2">
-                            <i class="bi bi-cash-stack fs-5"></i>
+                        <span class="{{ $totalReceivables > 0 ? 'text-danger' : 'text-secondary' }} small fw-bold text-uppercase">Pending Receivables</span>
+                        <div class="rounded-3 {{ $totalReceivables > 0 ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary' }} p-2">
+                            <i class="bi bi-clock-history fs-5"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black text-primary mb-1 font-monospace">Rs. {{ number_format($totalSalesAmount, 2) }}</div>
-                        <span class="text-secondary small">{{ $totalSalesCount }} Customer Invoices</span>
+                        <div class="h2 fw-black {{ $totalReceivables > 0 ? 'text-danger' : 'text-dark' }} mb-1 font-monospace">Rs. {{ number_format($totalReceivables, 2) }}</div>
+                        <span class="{{ $totalReceivables > 0 ? 'text-danger' : 'text-secondary' }} small">{{ $pendingCustomers->count() }} Customers with due balance</span>
                     </div>
                     <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                        <a href="{{ route('sales.index') }}" class="small fw-bold text-primary text-decoration-none">
-                            View Invoices &rarr;
+                        <a href="#receivables-section" class="small fw-bold text-danger text-decoration-none">
+                            Customer Aging &rarr;
                         </a>
-                        <span class="text-secondary small">Revenue</span>
+                        <span class="text-danger small">Overdue</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SECONDARY METRICS ROW -->
-    <div class="row g-3">
-        <!-- Customer Returns -->
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-3 d-flex justify-content-between align-items-center">
+    <!-- TOP 10 SELLING PRODUCTS & TOP CUSTOMERS VISUALIZATION -->
+    <div class="row g-4">
+        <!-- Top 10 Selling Products Bar Graph (8 Cols) -->
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                     <div>
-                        <span class="text-secondary small fw-bold text-uppercase d-block">Customer Returns</span>
-                        <div class="h4 fw-bold text-danger mb-0 font-monospace">Rs. {{ number_format($totalReturnAmount, 2) }}</div>
-                        <span class="text-secondary small">{{ $totalReturnsCount }} returns processed</span>
+                        <h5 class="fw-bold text-dark mb-0">Top 10 Selling Products</h5>
+                        <span class="text-secondary small">Volume (units) sold across all customer invoices</span>
                     </div>
-                    <div class="rounded-3 bg-danger-subtle text-danger p-2">
-                        <i class="bi bi-arrow-counterclockwise fs-4"></i>
-                    </div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2.5 py-1">
+                        Ranked by Sold Qty
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    @if(count($topProductsLabels) > 0)
+                        <div style="height: 320px;">
+                            <canvas id="topProductsBarChart"></canvas>
+                        </div>
+                    @else
+                        <div class="text-center py-5 text-secondary">
+                            <i class="bi bi-bar-chart fs-1 d-block mb-2 text-muted"></i>
+                            <p class="mb-0">No sales transactions recorded yet to rank products.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <!-- Net Realized Sales -->
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-3 d-flex justify-content-between align-items-center">
+        <!-- Top Customers Ranking (4 Cols) -->
+        <div class="col-12 col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                     <div>
-                        <span class="text-secondary small fw-bold text-uppercase d-block">Net Realized Sales</span>
-                        <div class="h4 fw-bold text-success mb-0 font-monospace">Rs. {{ number_format(max(0, $totalSalesAmount - $totalReturnAmount), 2) }}</div>
-                        <span class="text-secondary small">Sales minus Returns</span>
+                        <h5 class="fw-bold text-dark mb-0">Top Customers</h5>
+                        <span class="text-secondary small">Highest volume client accounts</span>
                     </div>
-                    <div class="rounded-3 bg-success-subtle text-success p-2">
-                        <i class="bi bi-wallet2 fs-4"></i>
-                    </div>
+                    <a href="{{ route('customers.index') }}" class="btn btn-sm btn-outline-primary">All &rarr;</a>
                 </div>
-            </div>
-        </div>
-
-        <!-- Active Customers -->
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="text-secondary small fw-bold text-uppercase d-block">Registered Customers</span>
-                        <div class="h4 fw-bold text-dark mb-0 font-monospace">{{ number_format($totalCustomers) }}</div>
-                        <span class="text-secondary small">Client profiles</span>
-                    </div>
-                    <div class="rounded-3 bg-primary-subtle text-primary p-2">
-                        <i class="bi bi-people fs-4"></i>
-                    </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @forelse($topCustomers as $index => $c)
+                        <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge {{ $index == 0 ? 'bg-warning text-dark' : ($index == 1 ? 'bg-secondary text-white' : ($index == 2 ? 'bg-bronze text-white bg-dark' : 'bg-light text-secondary border')) }} rounded-circle p-2 fw-bold" style="width: 28px; height: 28px; display:inline-flex; align-items:center; justify-content:center;">
+                                    {{ $index + 1 }}
+                                </span>
+                                <div>
+                                    <a href="{{ route('customers.ledger', $c) }}" class="fw-bold text-dark text-decoration-none d-block">
+                                        {{ $c->name }}
+                                    </a>
+                                    <span class="text-secondary fs-7">{{ $c->sales_count }} bills &bull; {{ $c->city ?: 'Pakistan' }}</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-dark font-monospace small">Rs. {{ number_format($c->total_purchased, 2) }}</div>
+                                @if($c->balance_due > 0)
+                                    <span class="badge bg-danger-subtle text-danger fs-8">Due: Rs. {{ number_format($c->balance_due, 2) }}</span>
+                                @else
+                                    <span class="badge bg-success-subtle text-success fs-8">Clear</span>
+                                @endif
+                            </div>
+                        </li>
+                        @empty
+                        <li class="list-group-item text-center py-4 text-secondary">
+                            No customers with sales recorded.
+                        </li>
+                        @endforelse
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CHARTS SECTION -->
+    <!-- CUSTOMER PENDING RECEIVABLES & AGING BREAKDOWN SECTION -->
+    <div id="receivables-section">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold text-danger mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Customer Pending Receivables &amp; Aging Ledger
+                    </h5>
+                    <span class="text-secondary small">Clients with outstanding unpaid balances, overdue duration, and quick payment vouchers.</span>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge bg-danger text-white fs-7 px-3 py-1.5 font-monospace">
+                        Total Due: Rs. {{ number_format($totalReceivables, 2) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4 py-3 text-secondary text-uppercase fs-7" style="width: 25%;">Customer &amp; Owner</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7" style="width: 15%;">Contact</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 13%;">Total Invoiced</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 13%;">Paid via CRV</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 14%;">Balance Due</th>
+                            <th class="py-3 text-center text-secondary text-uppercase fs-7" style="width: 10%;">Aging</th>
+                            <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7" style="width: 10%;">Quick Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        @forelse($pendingCustomers as $pc)
+                        <tr>
+                            <!-- Customer & Owner -->
+                            <td class="ps-4 py-3">
+                                <a href="{{ route('customers.ledger', $pc) }}" class="fw-bold text-dark text-decoration-none d-block">
+                                    {{ $pc->name }}
+                                </a>
+                                @if($pc->owner_name)
+                                    <span class="text-secondary fs-7"><i class="bi bi-person me-1"></i>Owner: {{ $pc->owner_name }}</span>
+                                @endif
+                            </td>
+
+                            <!-- Contact -->
+                            <td class="py-3 text-secondary small">
+                                <div><i class="bi bi-telephone me-1 text-primary"></i>{{ $pc->phone ?: '—' }}</div>
+                                @if($pc->city)<span class="fs-7 text-muted">{{ $pc->city }}</span>@endif
+                            </td>
+
+                            <!-- Total Invoiced -->
+                            <td class="py-3 text-end font-monospace small">
+                                Rs. {{ number_format($pc->total_invoiced, 2) }}
+                            </td>
+
+                            <!-- Paid via CRV -->
+                            <td class="py-3 text-end font-monospace small text-success fw-bold">
+                                Rs. {{ number_format($pc->total_paid, 2) }}
+                            </td>
+
+                            <!-- Balance Due -->
+                            <td class="py-3 text-end font-monospace fw-bold text-danger fs-6">
+                                Rs. {{ number_format($pc->balance_due, 2) }}
+                            </td>
+
+                            <!-- Aging Days Overdue -->
+                            <td class="py-3 text-center">
+                                @php $days = $pc->pending_days; @endphp
+                                @if($days >= 45)
+                                    <span class="badge bg-danger text-white font-monospace px-2 py-1">
+                                        <i class="bi bi-fire me-1"></i>{{ $days }}d overdue
+                                    </span>
+                                @elseif($days >= 30)
+                                    <span class="badge bg-warning text-dark font-monospace px-2 py-1">
+                                        {{ $days }}d pending
+                                    </span>
+                                @elseif($days > 0)
+                                    <span class="badge bg-light text-dark border font-monospace px-2 py-1">
+                                        {{ $days }}d recent
+                                    </span>
+                                @else
+                                    <span class="badge bg-light text-muted font-monospace px-2 py-1">0d</span>
+                                @endif
+                            </td>
+
+                            <!-- Action: Receive Cash -->
+                            <td class="pe-4 py-3 text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{{ route('receipts.create', ['customer_id' => $pc->id]) }}" class="btn btn-sm btn-success fw-bold py-1 px-2.5" title="Record Cash Receipt Voucher">
+                                        <i class="bi bi-cash-stack me-1"></i> Pay
+                                    </a>
+                                    <a href="{{ route('customers.ledger', $pc) }}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="View Full Ledger">
+                                        <i class="bi bi-journal-text"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-success fw-semibold">
+                                <i class="bi bi-check-circle-fill fs-3 d-block mb-2 text-success"></i>
+                                Excellent! All customer accounts are currently fully settled. No pending receivables.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SALES & RETURNS 7-DAY ACTIVITY & CATEGORY BREAKDOWN -->
     <div class="row g-4">
         <!-- Sales & Returns Activity (7 Cols) -->
         <div class="col-12 col-lg-8">
@@ -304,7 +437,7 @@
         </div>
     </div>
 
-    <!-- ONE-MONTH ZERO/NEGATIVE STOCK ALERT BANNER (Moved below per instruction) -->
+    <!-- ONE-MONTH ZERO/NEGATIVE STOCK ALERT BANNER -->
     @if($oneMonthDepletedProducts->count() > 0)
     <div class="card border-danger-subtle bg-danger-subtle shadow-sm">
         <div class="card-body p-4">
@@ -358,6 +491,57 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // 1. Top 10 Selling Products Bar Chart
+        const topProdCtx = document.getElementById('topProductsBarChart')?.getContext('2d');
+        if (topProdCtx) {
+            new Chart(topProdCtx, {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($topProductsLabels) !!},
+                    datasets: [{
+                        label: 'Sold Quantity (Units)',
+                        data: {!! json_encode($topProductsQtys) !!},
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 6,
+                        barPercentage: 0.65,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', // horizontal bar chart for clear product title readability!
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.parsed.x + ' units sold';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { precision: 0 }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { weight: '600', size: 11 },
+                                callback: function(val, index) {
+                                    let label = this.getLabelForValue(val);
+                                    return label.length > 25 ? label.substr(0, 25) + '...' : label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Sales vs Returns Activity Chart
         const trendCtx = document.getElementById('salesTrendChart')?.getContext('2d');
         if (trendCtx) {
             new Chart(trendCtx, {
@@ -397,6 +581,7 @@
             });
         }
 
+        // 3. Category Stock Doughnut Chart
         const catCtx = document.getElementById('categoryStockChart')?.getContext('2d');
         if (catCtx) {
             const catData = {!! json_encode($categoriesStock) !!};

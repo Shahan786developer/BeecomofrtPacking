@@ -3,7 +3,9 @@
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarcodeController;
+use App\Http\Controllers\CashReceiptController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DozenController;
@@ -87,8 +89,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/{product}/adjust', [StockController::class, 'adjust'])->name('adjust');
     });
 
+    // Cash Receipts Voucher (CRV)
+    Route::resource('receipts', CashReceiptController::class);
+
+    // Company Profile & Invoice Branding Settings
+    Route::get('/settings/company', [CompanyProfileController::class, 'edit'])->name('settings.company');
+    Route::post('/settings/company', [CompanyProfileController::class, 'update'])->name('settings.company.update');
+
     // Customers & Customer Ledger History
+    Route::get('/reports/customer-ledger', [CustomerController::class, 'report'])->name('customers.report');
     Route::get('/customers/{customer}/ledger', [CustomerController::class, 'ledger'])->name('customers.ledger');
+    Route::get('/customers/{customer}/print-statement', [CustomerController::class, 'printStatement'])->name('customers.print-statement');
     Route::get('/customers/{customer}', [CustomerController::class, 'ledger'])->name('customers.show');
     Route::resource('customers', CustomerController::class)->except(['create', 'show', 'edit']);
 

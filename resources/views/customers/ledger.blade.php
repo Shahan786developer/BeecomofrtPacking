@@ -5,7 +5,7 @@
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('customers.index') }}" class="text-decoration-none">Customers</a></li>
     <li class="breadcrumb-item"><a href="{{ route('customers.index') }}" class="text-decoration-none">{{ $customer->name }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Ledger &amp; Purchase History</li>
+    <li class="breadcrumb-item active" aria-current="page">Ledger &amp; Financial History</li>
 @endsection
 
 @section('content')
@@ -21,6 +21,15 @@
                         <span class="text-secondary small">
                             <i class="bi bi-calendar3 me-1"></i> Customer Since: <strong>{{ $customer->created_at ? $customer->created_at->format('d M Y') : 'Active' }}</strong>
                         </span>
+                        @if($customer->balance_due > 0)
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold px-2 py-1">
+                                <i class="bi bi-exclamation-circle me-1"></i> Balance Pending
+                            </span>
+                        @else
+                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold px-2 py-1">
+                                <i class="bi bi-check-circle me-1"></i> Clear Account
+                            </span>
+                        @endif
                     </div>
                     <h1 class="h3 fw-bold text-dark mb-1">{{ $customer->name }}</h1>
                     @if($customer->owner_name)
@@ -54,141 +63,205 @@
                     </div>
                 </div>
 
+                <!-- Action Buttons: Receive Cash, New Invoice, Statement Print -->
                 <div class="d-flex flex-wrap gap-2 no-print">
-                    <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i> All Customers
+                    <a href="{{ route('receipts.create', ['customer_id' => $customer->id, 'redirect_to' => 'customer_ledger']) }}" class="btn btn-success fw-bold shadow-sm">
+                        <i class="bi bi-cash-stack me-1"></i> Receive Cash (CRV)
                     </a>
-                    <a href="{{ route('sales.create') }}" class="btn btn-primary fw-bold shadow-sm">
+                    <a href="{{ route('sales.create', ['customer_id' => $customer->id]) }}" class="btn btn-primary fw-bold shadow-sm">
                         <i class="bi bi-cart-plus me-1"></i> New Invoice
                     </a>
-                    <button type="button" onclick="window.print()" class="btn btn-outline-dark fw-bold">
+                    <a href="{{ route('customers.print-statement', ['customer' => $customer->id, 'start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank" class="btn btn-outline-dark fw-bold">
                         <i class="bi bi-printer me-1"></i> Print Statement
-                    </button>
+                    </a>
+                    <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 2. HIGH-LEVEL SUMMARY METRIC CARDS (Requirement: total qty, return qty, amounts above cards) -->
+    <!-- 2. DATE RANGE & CUSTOMER SWITCHER FILTER BAR -->
+    <div class="card border-0 shadow-sm no-print">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ route('customers.ledger', $customer) }}" class="row g-2 align-items-end">
+                <!-- Customer Switcher -->
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Switch Customer Account</label>
+                    <select name="customer_switch" class="form-select form-select-sm" onchange="if(this.value) window.location.href='/customers/' + this.value + '/ledger'">
+                        @foreach($allCustomers as $c)
+                            <option value="{{ $c->id }}" {{ $c->id == $customer->id ? 'selected' : '' }}>
+                                {{ $c->name }} {{ $c->city ? '(' . $c->city . ')' : '' }} — Due: Rs. {{ number_format($c->balance_due, 2) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Start Date -->
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-bold text-secondary mb-1">Start Date</label>
+                    <input type="date" name="start_date" value="{{ $startDate }}" class="form-control form-control-sm">
+                </div>
+
+                <!-- End Date -->
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-bold text-secondary mb-1">End Date</label>
+                    <input type="date" name="end_date" value="{{ $endDate }}" class="form-control form-control-sm">
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-12 col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary fw-bold flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i> Filter Ledger
+                    </button>
+                    @if($startDate || $endDate || request('type') || request('search'))
+                        <a href="{{ route('customers.ledger', $customer) }}" class="btn btn-sm btn-outline-secondary" title="Reset Filters">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. FINANCIAL SUMMARY METRIC CARDS -->
     <div class="row g-3">
-        <!-- Total Invoices -->
-        <div class="col-6 col-md-3 col-xl">
+        <!-- Lifetime Invoiced & Total Invoices -->
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
                     <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Total Invoices</span>
-                    <h3 class="fw-bold text-dark mb-0">{{ $totalInvoicesCount }}</h3>
-                    <span class="text-secondary fs-7">Sales Bills Created</span>
+                    <h3 class="fw-bold text-dark mb-0 font-monospace fs-4">Rs. {{ number_format($lifetimeInvoiced, 2) }}</h3>
+                    <span class="text-secondary fs-7">Total Purchased: {{ $customer->sales()->count() }} bills</span>
                 </div>
             </div>
         </div>
 
-        <!-- Total Units Purchased -->
-        <div class="col-6 col-md-3 col-xl">
-            <div class="card border-0 shadow-sm h-100">
+        <!-- Cash Received via CRV -->
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 bg-success-subtle border border-success-subtle">
                 <div class="card-body p-3">
-                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Total Purchased</span>
-                    <h3 class="fw-bold text-primary mb-0">{{ number_format($totalPurchasedQty) }} <small class="fs-6 fw-normal text-secondary">units</small></h3>
-                    <span class="text-secondary fs-7">Gross Items Billed</span>
+                    <span class="text-success small fw-bold text-uppercase d-block mb-1">Cash Received (CRV)</span>
+                    <h3 class="fw-bold text-success mb-0 font-monospace fs-4">Rs. {{ number_format($lifetimePaid, 2) }}</h3>
+                    <span class="text-success-emphasis fs-7">Payments Collected</span>
                 </div>
             </div>
         </div>
 
-        <!-- Total Invoiced Amount -->
-        <div class="col-6 col-md-3 col-xl">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3">
-                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Total Invoiced</span>
-                    <h3 class="fw-black text-dark mb-0 font-monospace fs-4">Rs. {{ number_format($totalInvoicedAmount, 2) }}</h3>
-                    <span class="text-secondary fs-7">Gross Billing Value</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Return Quantity & Count -->
-        <div class="col-6 col-md-3 col-xl">
+        <!-- Bill Returns Refunded -->
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
                     <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Total Returns</span>
-                    <h3 class="fw-bold text-danger mb-0">{{ number_format($totalReturnedQty) }} <small class="fs-6 fw-normal text-secondary">units</small></h3>
-                    <span class="text-danger fs-7">{{ $totalReturnsCount }} Return Voucher(s)</span>
+                    <h3 class="fw-bold text-danger mb-0 font-monospace fs-4">Rs. {{ number_format($lifetimeReturned, 2) }}</h3>
+                    <span class="text-danger fs-7">Credit Notes Adjusted</span>
                 </div>
             </div>
         </div>
 
-        <!-- Total Refund Amount -->
-        <div class="col-6 col-md-3 col-xl">
-            <div class="card border-0 shadow-sm h-100">
+        <!-- Balance Due / Remaining Outstanding -->
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 {{ $lifetimeBalanceDue > 0 ? 'bg-danger-subtle border border-danger-subtle' : 'bg-light' }}">
                 <div class="card-body p-3">
-                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Total Refunded</span>
-                    <h3 class="fw-black text-danger mb-0 font-monospace fs-4">Rs. {{ number_format($totalRefundedAmount, 2) }}</h3>
-                    <span class="text-danger fs-7">Credit Notes Issued</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Net Purchased / Balance -->
-        <div class="col-12 col-md-6 col-xl">
-            <div class="card border-0 shadow-sm h-100 bg-primary-subtle border border-primary-subtle">
-                <div class="card-body p-3">
-                    <span class="text-primary small fw-bold text-uppercase d-block mb-1">Net Customer Spend</span>
-                    <h3 class="fw-black text-primary mb-0 font-monospace fs-4">Rs. {{ number_format($netBalance, 2) }}</h3>
-                    <span class="text-primary-emphasis fs-7 fw-semibold">Net Retained: {{ number_format($netUnitsKept) }} units</span>
+                    <span class="{{ $lifetimeBalanceDue > 0 ? 'text-danger' : 'text-secondary' }} small fw-bold text-uppercase d-block mb-1">Remaining Balance Due</span>
+                    <h3 class="fw-black {{ $lifetimeBalanceDue > 0 ? 'text-danger' : 'text-dark' }} mb-0 font-monospace fs-4">
+                        Rs. {{ number_format($lifetimeBalanceDue, 2) }}
+                    </h3>
+                    @if($lifetimeBalanceDue > 0)
+                        <span class="text-danger fw-bold fs-7">
+                            <i class="bi bi-clock-history me-1"></i> Pending Payment
+                        </span>
+                    @else
+                        <span class="text-success fw-bold fs-7">
+                            <i class="bi bi-check-all me-1"></i> All Paid Up
+                        </span>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. CONTROLS: LIVE SEARCH & TYPE FILTER -->
+    @if($startDate || $endDate)
+    <!-- Period Specific Summary Banner (When Date Filter is active) -->
+    <div class="alert alert-info border-0 shadow-sm py-2 px-3 d-flex flex-wrap justify-content-between align-items-center mb-0">
+        <div>
+            <i class="bi bi-info-circle me-1"></i>
+            Filtered Period: <strong>{{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d M Y') : 'Start' }}</strong> to <strong>{{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d M Y') : 'Today' }}</strong>
+            &bull; Opening Balance: <strong>Rs. {{ number_format($openingBalance, 2) }}</strong>
+        </div>
+        <div>
+            Period Debits: <strong class="text-dark">Rs. {{ number_format($rangeDebits, 2) }}</strong> &bull;
+            Period Credits: <strong class="text-success">Rs. {{ number_format($rangeCredits, 2) }}</strong> &bull;
+            Period Closing: <strong class="text-primary font-monospace">Rs. {{ number_format($closingBalance, 2) }}</strong>
+        </div>
+    </div>
+    @endif
+
+    <!-- 4. SEARCH & TRANSACTION TYPE FILTER PILLS -->
     <div class="card border-0 shadow-sm no-print">
         <div class="card-body p-3">
             <div class="row g-2 align-items-center">
                 <!-- Search Bar -->
-                <div class="col-12 col-md-7 col-lg-8">
+                <div class="col-12 col-md-6 col-lg-7">
                     <form method="GET" action="{{ route('customers.ledger', $customer) }}" class="d-flex gap-2">
-                        @if(request('type'))
-                            <input type="hidden" name="type" value="{{ request('type') }}">
-                        @endif
+                        @if($startDate)<input type="hidden" name="start_date" value="{{ $startDate }}">@endif
+                        @if($endDate)<input type="hidden" name="end_date" value="{{ $endDate }}">@endif
+                        @if(request('type'))<input type="hidden" name="type" value="{{ request('type') }}">@endif
+                        
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 text-secondary">
                                 <i class="bi bi-search"></i>
                             </span>
                             <input type="text" name="search" value="{{ $search ?? '' }}" 
-                                placeholder="Search by invoice #, return #, product, or date..." 
+                                placeholder="Search by voucher #, invoice #, CRV, note, product..." 
                                 class="form-control border-start-0 ps-0" autocomplete="off">
                         </div>
                         <button type="submit" class="btn btn-primary fw-bold px-3">Search</button>
-                        <a href="{{ route('customers.ledger', $customer) }}" class="btn btn-outline-secondary btn-clear-search {{ !empty($search) ? '' : 'd-none' }}" title="Clear Search">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
+                        @if(!empty($search))
+                            <a href="{{ route('customers.ledger', array_merge(['customer' => $customer->id], request()->except('search'))) }}" class="btn btn-outline-secondary" title="Clear Search">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        @endif
                     </form>
                 </div>
 
                 <!-- Transaction Type Filter Pills -->
-                <div class="col-12 col-md-5 col-lg-4 d-flex justify-content-md-end gap-1">
-                    <a href="{{ route('customers.ledger', ['customer' => $customer, 'search' => request('search')]) }}" 
+                <div class="col-12 col-md-6 col-lg-5 d-flex justify-content-md-end gap-1 flex-wrap">
+                    @php
+                        $baseParams = ['customer' => $customer->id];
+                        if($startDate) $baseParams['start_date'] = $startDate;
+                        if($endDate) $baseParams['end_date'] = $endDate;
+                        if($search) $baseParams['search'] = $search;
+                    @endphp
+                    <a href="{{ route('customers.ledger', $baseParams) }}" 
                         class="btn btn-sm {{ empty($typeFilter) ? 'btn-primary' : 'btn-outline-secondary' }} fw-bold">
                         All ({{ $allTransactions->count() }})
                     </a>
-                    <a href="{{ route('customers.ledger', ['customer' => $customer, 'type' => 'sale', 'search' => request('search')]) }}" 
+                    <a href="{{ route('customers.ledger', array_merge($baseParams, ['type' => 'sale'])) }}" 
                         class="btn btn-sm {{ $typeFilter === 'sale' ? 'btn-primary' : 'btn-outline-secondary' }} fw-bold">
-                        Invoices ({{ $totalInvoicesCount }})
+                        Invoices ({{ $allTransactions->where('type', 'sale')->count() }})
                     </a>
-                    <a href="{{ route('customers.ledger', ['customer' => $customer, 'type' => 'return', 'search' => request('search')]) }}" 
+                    <a href="{{ route('customers.ledger', array_merge($baseParams, ['type' => 'receipt'])) }}" 
+                        class="btn btn-sm {{ $typeFilter === 'receipt' ? 'btn-success' : 'btn-outline-secondary' }} fw-bold">
+                        CRV ({{ $allTransactions->where('type', 'receipt')->count() }})
+                    </a>
+                    <a href="{{ route('customers.ledger', array_merge($baseParams, ['type' => 'return'])) }}" 
                         class="btn btn-sm {{ $typeFilter === 'return' ? 'btn-danger' : 'btn-outline-secondary' }} fw-bold">
-                        Returns ({{ $totalReturnsCount }})
+                        Returns ({{ $allTransactions->where('type', 'return')->count() }})
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 4. COMPLETE CHRONOLOGICAL LEDGER & HISTORY TABLE -->
+    <!-- 5. COMPLETE CHRONOLOGICAL LEDGER TABLE -->
     <div id="table-container">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="fw-bold text-dark mb-0">Customer Transaction History &amp; Ledger</h5>
-                    <span class="text-secondary small">Comprehensive chronologically ordered audit log of all bills, returns, and item changes.</span>
+                    <span class="text-secondary small">Comprehensive audit log of Invoices (Debits), Payments (Credits via CRV), and Returns with Running Balance.</span>
                 </div>
                 <span class="badge bg-light text-dark border px-2.5 py-1.5 font-monospace">
                     {{ $filteredTransactions->count() }} Entries
@@ -199,35 +272,54 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4 py-3 text-secondary text-uppercase fs-7" style="width: 17%;">Date &amp; Time</th>
+                            <th class="ps-4 py-3 text-secondary text-uppercase fs-7" style="width: 15%;">Date &amp; Time</th>
                             <th class="py-3 text-secondary text-uppercase fs-7" style="width: 12%;">Type</th>
-                            <th class="py-3 text-secondary text-uppercase fs-7" style="width: 16%;">Voucher #</th>
-                            <th class="py-3 text-secondary text-uppercase fs-7" style="width: 25%;">Purchased / Returned Merchandise</th>
-                            <th class="py-3 text-center text-secondary text-uppercase fs-7" style="width: 8%;">Quantity</th>
-                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 11%;">Debit (Rs.)</th>
-                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 11%;">Credit (Rs.)</th>
-                            <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7 no-print" style="width: 10%;">Actions</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7" style="width: 15%;">Voucher #</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7" style="width: 25%;">Details / Merchandise</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 11%;">Debit (Sale)</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 11%;">Credit (Paid/Ret)</th>
+                            <th class="py-3 text-end text-secondary text-uppercase fs-7" style="width: 12%;">Running Balance</th>
+                            <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7 no-print" style="width: 8%;">Action</th>
                         </tr>
                     </thead>
                     <tbody class="border-top-0">
+                        @if($openingBalance > 0 && $startDate)
+                        <tr class="table-light">
+                            <td class="ps-4 py-3 font-monospace small">
+                                <strong>{{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}</strong>
+                            </td>
+                            <td class="py-3">
+                                <span class="badge bg-secondary text-uppercase fw-bold px-2 py-1">Opening</span>
+                            </td>
+                            <td class="py-3 font-monospace text-muted">—</td>
+                            <td class="py-3 text-dark fw-semibold">Balance Brought Forward</td>
+                            <td class="py-3 text-end font-monospace text-muted">—</td>
+                            <td class="py-3 text-end font-monospace text-muted">—</td>
+                            <td class="py-3 text-end font-monospace fw-bold text-dark">
+                                Rs. {{ number_format($openingBalance, 2) }}
+                            </td>
+                            <td class="pe-4 py-3 text-end no-print">—</td>
+                        </tr>
+                        @endif
+
                         @forelse($filteredTransactions as $tx)
                         <tr>
-                            <!-- Date & Exact Time -->
+                            <!-- Date & Time -->
                             <td class="ps-4 py-3 font-monospace small">
                                 <strong class="text-dark d-block">{{ $tx['date_time']->format('d M Y') }}</strong>
-                                <span class="text-secondary fs-7"><i class="bi bi-clock me-1"></i>{{ $tx['date_time']->format('h:i:s A') }}</span>
+                                <span class="text-secondary fs-7"><i class="bi bi-clock me-1"></i>{{ $tx['date_time']->format('h:i A') }}</span>
                             </td>
 
-                            <!-- Transaction Type Badge -->
+                            <!-- Type Badge -->
                             <td class="py-3">
                                 <span class="badge {{ $tx['badge_class'] }} text-uppercase fw-bold px-2 py-1">
                                     {{ $tx['type_label'] }}
                                 </span>
                             </td>
 
-                            <!-- Document / Voucher No -->
+                            <!-- Voucher / Doc No -->
                             <td class="py-3">
-                                <a href="{{ $tx['view_url'] }}" class="font-monospace fw-bold text-decoration-none {{ $tx['type'] === 'sale' ? 'text-primary' : 'text-danger' }}">
+                                <a href="{{ $tx['view_url'] }}" class="font-monospace fw-bold text-decoration-none {{ $tx['type'] === 'sale' ? 'text-primary' : ($tx['type'] === 'return' ? 'text-danger' : 'text-success') }}">
                                     {{ $tx['doc_no'] }}
                                 </a>
                                 @if(!empty($tx['related_doc_no']))
@@ -237,19 +329,37 @@
                                 @endif
                             </td>
 
-                            <!-- Merchandise Items Summary -->
+                            <!-- Details / Items / Notes -->
                             <td class="py-3">
-                                @if(!empty($tx['items']) && count($tx['items']) > 0)
-                                    <ul class="list-unstyled mb-0 small">
-                                        @foreach($tx['items'] as $item)
-                                            <li class="text-dark">
-                                                <strong class="text-dark">{{ $item['name'] }}</strong>
-                                                <span class="text-secondary"> &bull; {{ $item['quantity'] }} pcs @ Rs. {{ number_format($item['unit_price'], 2) }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
+                                @if($tx['type'] === 'sale')
+                                    @if(!empty($tx['items']) && count($tx['items']) > 0)
+                                        <ul class="list-unstyled mb-0 small">
+                                            @foreach($tx['items'] as $item)
+                                                <li class="text-dark">
+                                                    <strong>{{ $item['name'] }}</strong>
+                                                    <span class="text-secondary"> &bull; {{ $item['quantity'] }} pcs @ Rs. {{ number_format($item['unit_price'], 2) }}</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <span class="text-secondary small">Sale Invoice</span>
+                                    @endif
+                                @elseif($tx['type'] === 'return')
+                                    @if(!empty($tx['items']) && count($tx['items']) > 0)
+                                        <ul class="list-unstyled mb-0 small">
+                                            @foreach($tx['items'] as $item)
+                                                <li class="text-danger">
+                                                    <strong>{{ $item['name'] }}</strong>
+                                                    <span class="text-secondary"> &bull; {{ $item['quantity'] }} pcs returned</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <span class="text-secondary small">Merchandise Return</span>
+                                    @endif
                                 @else
-                                    <span class="text-secondary small">No item details recorded.</span>
+                                    <!-- CRV Receipt -->
+                                    <span class="fw-semibold text-success"><i class="bi bi-cash me-1"></i>Payment Received</span>
                                 @endif
 
                                 @if(!empty($tx['notes']))
@@ -259,41 +369,42 @@
                                 @endif
                             </td>
 
-                            <!-- Total Units -->
-                            <td class="py-3 text-center">
-                                <span class="badge {{ $tx['type'] === 'sale' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }} font-monospace px-2 py-1">
-                                    {{ $tx['quantity_formatted'] }} pcs
-                                </span>
-                            </td>
-
-                            <!-- Debit (Sale Billed) -->
+                            <!-- Debit -->
                             <td class="py-3 text-end font-monospace fw-bold {{ $tx['debit'] > 0 ? 'text-dark' : 'text-muted' }}">
                                 {{ $tx['debit'] > 0 ? 'Rs. ' . number_format($tx['debit'], 2) : '—' }}
                             </td>
 
-                            <!-- Credit (Return Refunded) -->
-                            <td class="py-3 text-end font-monospace fw-bold {{ $tx['credit'] > 0 ? 'text-danger' : 'text-muted' }}">
+                            <!-- Credit -->
+                            <td class="py-3 text-end font-monospace fw-bold {{ $tx['credit'] > 0 ? ($tx['type'] === 'receipt' ? 'text-success' : 'text-danger') : 'text-muted' }}">
                                 {{ $tx['credit'] > 0 ? 'Rs. ' . number_format($tx['credit'], 2) : '—' }}
+                            </td>
+
+                            <!-- Running Balance -->
+                            <td class="py-3 text-end font-monospace fw-bold {{ $tx['running_balance'] > 0 ? 'text-primary' : 'text-secondary' }}">
+                                Rs. {{ number_format($tx['running_balance'], 2) }}
                             </td>
 
                             <!-- Actions -->
                             <td class="pe-4 py-3 text-end no-print">
-                                <div class="d-inline-flex gap-1">
-                                    <a href="{{ $tx['view_url'] }}" class="btn btn-sm btn-outline-info" title="View Document">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                </div>
+                                <a href="{{ $tx['view_url'] }}" class="btn btn-sm btn-outline-info" title="View Document">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                             </td>
                         </tr>
                         @empty
                         <tr>
                             <td colspan="8" class="text-center py-5 text-secondary">
                                 <i class="bi bi-journal-x fs-1 d-block mb-2 text-muted"></i>
-                                <h6 class="fw-bold text-dark">No transaction records found for this customer.</h6>
-                                <p class="small text-secondary mb-3">Invoices and returns generated for this customer will automatically appear here with full date, time, and quantity audit.</p>
-                                <a href="{{ route('sales.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-cart-plus me-1"></i> Create First Sale
-                                </a>
+                                <h6 class="fw-bold text-dark">No transaction records found.</h6>
+                                <p class="small text-secondary mb-3">Sales, returns, and cash receipts for this customer will automatically appear here.</p>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ route('sales.create', ['customer_id' => $customer->id]) }}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-cart-plus me-1"></i> Create Sale
+                                    </a>
+                                    <a href="{{ route('receipts.create', ['customer_id' => $customer->id]) }}" class="btn btn-success btn-sm">
+                                        <i class="bi bi-cash-stack me-1"></i> Receive Cash
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         @endforelse
@@ -302,20 +413,18 @@
                     <tfoot class="table-light border-top">
                         <tr class="fw-bold">
                             <td colspan="4" class="ps-4 py-3 text-uppercase text-secondary fs-7">
-                                Account Total Summary
-                            </td>
-                            <td class="py-3 text-center font-monospace">
-                                {{ number_format($netUnitsKept) }} pcs net
+                                Lifetime Account Total
                             </td>
                             <td class="py-3 text-end font-monospace text-dark">
-                                Rs. {{ number_format($totalInvoicedAmount, 2) }}
+                                Rs. {{ number_format($lifetimeInvoiced, 2) }}
+                            </td>
+                            <td class="py-3 text-end font-monospace text-success">
+                                Rs. {{ number_format($lifetimePaid + $lifetimeReturned, 2) }}
                             </td>
                             <td class="py-3 text-end font-monospace text-danger">
-                                Rs. {{ number_format($totalRefundedAmount, 2) }}
+                                Due: Rs. {{ number_format($lifetimeBalanceDue, 2) }}
                             </td>
-                            <td class="pe-4 py-3 text-end no-print font-monospace text-primary">
-                                Net: Rs. {{ number_format($netBalance, 2) }}
-                            </td>
+                            <td class="pe-4 py-3 text-end no-print"></td>
                         </tr>
                     </tfoot>
                     @endif

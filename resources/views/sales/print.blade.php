@@ -460,11 +460,13 @@
             <!-- Header -->
             <div class="inv-header">
                 <div>
-                    <div class="brand-title">Bee Comfort</div>
-                    <div class="brand-tagline">Packing &amp; Retail Garment Solutions</div>
+                    <div class="brand-title">{{ $company->name ?? 'Bee Comfort' }}</div>
+                    @if(!empty($company->tagline))
+                        <div class="brand-tagline">{{ $company->tagline }}</div>
+                    @endif
                     <div class="brand-contact">
-                        Warehouse &bull; Pakistan<br>
-                        Phone / WhatsApp: Customer Care &bull; orders@beecomfort.com
+                        {{ $company->address ?? 'Warehouse • Pakistan' }}<br>
+                        Phone / WhatsApp: {{ $company->phone ?? 'Customer Care' }} &bull; {{ $company->email ?? 'orders@beecomfort.com' }}
                     </div>
                 </div>
 
@@ -597,9 +599,9 @@
             <div class="summary-section">
                 <!-- Notes -->
                 <div class="notes-box">
-                    <div class="notes-title">Notes / Remarks</div>
+                    <div class="notes-title">Notes &amp; Terms</div>
                     <div class="notes-content">
-                        {{ $sale->notes ?: 'Thank you for your business. Please inspect goods upon receipt.' }}
+                        {{ $sale->notes ?: ($company->terms_conditions ?? 'Thank you for your business. Please inspect goods upon receipt.') }}
                     </div>
                 </div>
 
@@ -650,7 +652,7 @@
             </div>
 
             <div class="doc-footer">
-                Bee Comfort Inventory &bull; Commercial Bill &bull; This is an official computer-generated invoice receipt.
+                {{ $company->name ?? 'Bee Comfort' }} &bull; Commercial Bill &bull; This is an official computer-generated invoice receipt.
             </div>
         </div>
 

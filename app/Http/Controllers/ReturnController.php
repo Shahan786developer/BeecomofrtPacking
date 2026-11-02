@@ -57,9 +57,23 @@ class ReturnController extends Controller
 
     public function create(Request $request)
     {
-        $returnType = $request->input('return_type', 'bee_comfort');
-        if (!in_array($returnType, ['bee_comfort', 'china'])) {
-            $returnType = 'bee_comfort';
+        $selectedSaleId = $request->input('sale_id');
+        $selectedSale = null;
+        if ($selectedSaleId) {
+            $selectedSale = Sale::with(['customer', 'details' => function ($q) {
+                $q->whereColumn('quantity', '>', 'returned_quantity');
+            }, 'details.product.category', 'details.product.dozen'])->find($selectedSaleId);
+
+            if ($selectedSale) {
+                $returnType = $selectedSale->bill_type ?? 'bee_comfort';
+            }
+        }
+
+        if (!isset($returnType)) {
+            $returnType = $request->input('return_type', 'bee_comfort');
+            if (!in_array($returnType, ['bee_comfort', 'china'])) {
+                $returnType = 'bee_comfort';
+            }
         }
 
         $nextReturnNo = ReturnRecord::generateNextReturnNo($returnType);
@@ -76,9 +90,7 @@ class ReturnController extends Controller
         ->orderBy('id', 'desc')
         ->get();
 
-        $selectedSaleId = $request->input('sale_id');
-
-        return view('returns.create', compact('nextReturnNo', 'today', 'sales', 'selectedSaleId', 'returnType'));
+        return view('returns.create', compact('nextReturnNo', 'today', 'sales', 'selectedSaleId', 'selectedSale', 'returnType'));
     }
 
     public function store(Request $request)

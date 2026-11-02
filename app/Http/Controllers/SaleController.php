@@ -163,7 +163,8 @@ class SaleController extends Controller
     public function print(Sale $sale)
     {
         $sale->load(['customer', 'details.product.category', 'details.product.dozen']);
-        return view('sales.print', compact('sale'));
+        $company = \App\Models\CompanyProfile::getActive();
+        return view('sales.print', compact('sale', 'company'));
     }
 
     public function show(Sale $sale)

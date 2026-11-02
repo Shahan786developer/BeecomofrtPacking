@@ -295,10 +295,16 @@
                 <span>Bill Returns</span>
             </a>
 
-            <!-- Page 5: Customers -->
-            <a href="{{ route('customers.index', 'customers.ledger') }}" class="sidebar-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
+            <!-- Page 5: Cash Receipts Voucher (CRV) -->
+            <a href="{{ route('receipts.index') }}" class="sidebar-link {{ request()->routeIs('receipts.*') ? 'active' : '' }}">
+                <i class="bi bi-cash-coin"></i>
+                <span>Cash Receipts (CRV)</span>
+            </a>
+
+            <!-- Page 6: Customers & Ledgers -->
+            <a href="{{ route('customers.index') }}" class="sidebar-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
                 <i class="bi bi-people"></i>
-                <span>Customers</span>
+                <span>Customers & Ledger</span>
             </a>
 
             <!-- Secondary Links (Tools & Print) -->
@@ -316,6 +322,7 @@
                     <span>Settings & Config</span>
                 </button>
                 <ul class="dropdown-menu shadow border-0 p-2">
+                    <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('settings.company') }}"><i class="bi bi-building me-2 text-primary"></i> Company Profile</a></li>
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('pricing.index') }}"><i class="bi bi-tag me-2 text-primary"></i> Pricing Rules</a></li>
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('categories.index') }}"><i class="bi bi-folder me-2 text-primary"></i> Product Categories</a></li>
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('dozens.index') }}"><i class="bi bi-boxes me-2 text-primary"></i> Dozens Units</a></li>

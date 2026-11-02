@@ -80,6 +80,38 @@ class DashboardController extends Controller
                 ];
             });
 
+        // 1. Top 10 Selling Products (Bar Chart Data)
+        $topProducts = \App\Models\SaleDetail::select(
+            'product_title',
+            DB::raw('SUM(quantity) as total_qty'),
+            DB::raw('SUM(total_amount) as total_revenue')
+        )
+        ->groupBy('product_title')
+        ->orderByDesc('total_qty')
+        ->take(10)
+        ->get();
+
+        $topProductsLabels = $topProducts->pluck('product_title')->toArray();
+        $topProductsQtys = $topProducts->pluck('total_qty')->map(fn($q) => (int)$q)->toArray();
+        $topProductsRevenues = $topProducts->pluck('total_revenue')->map(fn($r) => (float)$r)->toArray();
+
+        // 2. Top Customers (Purchases Breakdown)
+        $topCustomers = Customer::withSum('sales as total_purchased', 'total_amount')
+            ->withSum('cashReceipts as total_paid', 'amount')
+            ->withCount('sales')
+            ->orderByDesc('total_purchased')
+            ->take(10)
+            ->get();
+
+        $topCustomersLabels = $topCustomers->pluck('name')->toArray();
+        $topCustomersPurchases = $topCustomers->pluck('total_purchased')->map(fn($p) => (float)($p ?? 0))->toArray();
+
+        // 3. Customer Receivables & Aging Breakdown
+        $allCustomers = Customer::with(['sales', 'cashReceipts', 'returns'])->get();
+        $pendingCustomers = $allCustomers->filter(fn($c) => $c->balance_due > 0)->sortByDesc('balance_due')->values();
+        $totalReceivables = (float) $pendingCustomers->sum('balance_due');
+        $totalCashReceived = (float) \App\Models\CashReceipt::sum('amount');
+
         return view('dashboard.index', compact(
             'totalProducts',
             'totalStockQuantity',
@@ -90,6 +122,8 @@ class DashboardController extends Controller
             'totalReturnsCount',
             'totalSalesAmount',
             'totalReturnAmount',
+            'totalReceivables',
+            'totalCashReceived',
             'oneMonthDepletedProducts',
             'allDepletedProducts',
             'recentSales',
@@ -97,7 +131,15 @@ class DashboardController extends Controller
             'chartDates',
             'salesTrend',
             'returnsTrend',
-            'categoriesStock'
+            'categoriesStock',
+            'topProducts',
+            'topProductsLabels',
+            'topProductsQtys',
+            'topProductsRevenues',
+            'topCustomers',
+            'topCustomersLabels',
+            'topCustomersPurchases',
+            'pendingCustomers'
         ));
     }
 }
