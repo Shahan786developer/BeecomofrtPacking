@@ -30,7 +30,7 @@
         <div class="card-body p-3 d-flex flex-column gap-3">
             <div class="row g-2 align-items-center">
                 <!-- Search Functionality Above -->
-                <div class="col-12 col-md-6 col-lg-7">
+                <div class="col-12 col-md-9 col-lg-10">
                     <form method="GET" action="{{ route('returns.index') }}" class="d-flex gap-2">
                         @if(request('return_type'))
                             <input type="hidden" name="return_type" value="{{ request('return_type') }}">
@@ -52,13 +52,10 @@
                     </form>
                 </div>
 
-                <!-- Action Buttons: Both Bee Comfort & China Return Buttons -->
-                <div class="col-12 col-md-6 col-lg-5 d-flex justify-content-md-end gap-2 flex-wrap">
-                    <a href="{{ route('returns.create', ['return_type' => 'bee_comfort']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Bee Comfort Return
-                    </a>
-                    <a href="{{ route('returns.create', ['return_type' => 'china']) }}" class="btn btn-danger btn-sm fw-bold shadow-sm">
-                        <i class="bi bi-box-seam me-1"></i> China Return
+                <!-- Sales Link -->
+                <div class="col-12 col-md-3 col-lg-2 d-flex justify-content-md-end">
+                    <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary btn-sm fw-bold w-100">
+                        <i class="bi bi-receipt me-1"></i> Sales Invoices
                     </a>
                 </div>
             </div>

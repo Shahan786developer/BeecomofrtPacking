@@ -30,7 +30,7 @@
         <div class="card-body p-3 d-flex flex-column gap-3">
             <div class="row g-2 align-items-center">
                 <!-- Search Functionality Above -->
-                <div class="col-12 col-md-6 col-lg-7">
+                <div class="col-12 col-md-9 col-lg-10">
                     <form method="GET" action="{{ route('sales.index') }}" class="d-flex gap-2">
                         @if(request('bill_type'))
                             <input type="hidden" name="bill_type" value="{{ request('bill_type') }}">
@@ -52,16 +52,10 @@
                     </form>
                 </div>
 
-                <!-- Action Buttons: Both Bee Comfort & China Bill Buttons -->
-                <div class="col-12 col-md-6 col-lg-5 d-flex justify-content-md-end gap-2 flex-wrap">
-                    <a href="{{ route('sales.create', ['bill_type' => 'bee_comfort']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm">
-                        <i class="bi bi-cart-plus me-1"></i> Bee Comfort Bill
-                    </a>
-                    <a href="{{ route('sales.create', ['bill_type' => 'china']) }}" class="btn btn-danger btn-sm fw-bold shadow-sm">
-                        <i class="bi bi-box-seam me-1"></i> China Bill
-                    </a>
-                    <a href="{{ route('returns.create', ['return_type' => request('bill_type') === 'china' ? 'china' : 'bee_comfort']) }}" class="btn btn-outline-warning btn-sm fw-bold">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Return
+                <!-- Bill Returns Link -->
+                <div class="col-12 col-md-3 col-lg-2 d-flex justify-content-md-end">
+                    <a href="{{ route('returns.index') }}" class="btn btn-outline-warning btn-sm fw-bold w-100">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Returns List
                     </a>
                 </div>
             </div>

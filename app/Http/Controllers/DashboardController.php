@@ -112,6 +112,128 @@ class DashboardController extends Controller
         $totalReceivables = (float) $pendingCustomers->sum('balance_due');
         $totalCashReceived = (float) \App\Models\CashReceipt::sum('amount');
 
+        // 4. Gross Profit & Actual Price vs Selling Price Analysis
+        // Profit = Sold Quantity * (Selling Price - Actual Price) net of returns
+        $saleDetailsWithCost = \App\Models\SaleDetail::join('products', 'sale_details.product_id', '=', 'products.id')
+            ->select(
+                'sale_details.quantity',
+                'sale_details.unit_price',
+                'sale_details.total_amount',
+                'products.actual_price',
+                'products.parent_category'
+            )
+            ->get();
+
+        $grossSalesRevenue = 0.0;
+        $grossSalesCost = 0.0;
+
+        $bcRevenue = 0.0;
+        $bcCost = 0.0;
+        $bcQty = 0;
+
+        $chRevenue = 0.0;
+        $chCost = 0.0;
+        $chQty = 0;
+
+        foreach ($saleDetailsWithCost as $sd) {
+            $rev = (float) $sd->total_amount;
+            $cost = (float) ($sd->quantity * $sd->actual_price);
+            $qty = (int) $sd->quantity;
+
+            $grossSalesRevenue += $rev;
+            $grossSalesCost += $cost;
+
+            $isChina = strtolower(str_replace(' ', '', $sd->parent_category ?? '')) === 'china';
+            if ($isChina) {
+                $chRevenue += $rev;
+                $chCost += $cost;
+                $chQty += $qty;
+            } else {
+                $bcRevenue += $rev;
+                $bcCost += $cost;
+                $bcQty += $qty;
+            }
+        }
+
+        // Factor in returns to ensure accurate net profit
+        $returnDetailsWithCost = \App\Models\ReturnDetail::join('products', 'return_details.product_id', '=', 'products.id')
+            ->select(
+                'return_details.quantity',
+                'return_details.unit_price',
+                'return_details.total_amount',
+                'products.actual_price',
+                'products.parent_category'
+            )
+            ->get();
+
+        $refundRevenue = 0.0;
+        $refundCost = 0.0;
+
+        foreach ($returnDetailsWithCost as $rd) {
+            $ref = (float) $rd->total_amount;
+            $c = (float) ($rd->quantity * $rd->actual_price);
+            $refundRevenue += $ref;
+            $refundCost += $c;
+
+            $isChina = strtolower(str_replace(' ', '', $rd->parent_category ?? '')) === 'china';
+            if ($isChina) {
+                $chRevenue -= $ref;
+                $chCost -= $c;
+                $chQty -= (int) $rd->quantity;
+            } else {
+                $bcRevenue -= $ref;
+                $bcCost -= $c;
+                $bcQty -= (int) $rd->quantity;
+            }
+        }
+
+        $totalRealizedRevenue = max(0, $grossSalesRevenue - $refundRevenue);
+        $totalCostOfGoodsSold = max(0, $grossSalesCost - $refundCost);
+        $totalGrossProfit = max(0, $totalRealizedRevenue - $totalCostOfGoodsSold);
+        $profitMarginPercent = $totalRealizedRevenue > 0 ? (($totalGrossProfit / $totalRealizedRevenue) * 100) : 0;
+
+        $bcRevenue = max(0, $bcRevenue);
+        $bcCost = max(0, $bcCost);
+        $bcProfit = max(0, $bcRevenue - $bcCost);
+        $bcQty = max(0, $bcQty);
+
+        $chRevenue = max(0, $chRevenue);
+        $chCost = max(0, $chCost);
+        $chProfit = max(0, $chRevenue - $chCost);
+        $chQty = max(0, $chQty);
+
+        // Product-wise comparison: Top 5 Bee Comfort vs Top 5 China
+        $topBeeComfortProducts = \App\Models\SaleDetail::join('products', 'sale_details.product_id', '=', 'products.id')
+            ->where(function ($q) {
+                $q->where('products.parent_category', 'Bee Comfort')
+                  ->orWhere('products.parent_category', 'bee_comfort')
+                  ->orWhereNull('products.parent_category');
+            })
+            ->select(
+                'sale_details.product_title',
+                DB::raw('SUM(sale_details.quantity) as total_qty'),
+                DB::raw('SUM(sale_details.total_amount) as total_revenue')
+            )
+            ->groupBy('sale_details.product_title')
+            ->orderByDesc('total_qty')
+            ->take(5)
+            ->get();
+
+        $topChinaProducts = \App\Models\SaleDetail::join('products', 'sale_details.product_id', '=', 'products.id')
+            ->where(function ($q) {
+                $q->where('products.parent_category', 'China')
+                  ->orWhere('products.parent_category', 'china');
+            })
+            ->select(
+                'sale_details.product_title',
+                DB::raw('SUM(sale_details.quantity) as total_qty'),
+                DB::raw('SUM(sale_details.total_amount) as total_revenue')
+            )
+            ->groupBy('sale_details.product_title')
+            ->orderByDesc('total_qty')
+            ->take(5)
+            ->get();
+
         return view('dashboard.index', compact(
             'totalProducts',
             'totalStockQuantity',
@@ -124,6 +246,20 @@ class DashboardController extends Controller
             'totalReturnAmount',
             'totalReceivables',
             'totalCashReceived',
+            'totalGrossProfit',
+            'totalCostOfGoodsSold',
+            'profitMarginPercent',
+            'totalRealizedRevenue',
+            'bcRevenue',
+            'bcCost',
+            'bcProfit',
+            'bcQty',
+            'chRevenue',
+            'chCost',
+            'chProfit',
+            'chQty',
+            'topBeeComfortProducts',
+            'topChinaProducts',
             'oneMonthDepletedProducts',
             'allDepletedProducts',
             'recentSales',

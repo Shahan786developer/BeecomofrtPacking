@@ -13,7 +13,7 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Executive Dashboard</h1>
-            <p class="text-secondary small mb-0">Real-time inventory levels, customer billing, cash receipts, and pending receivables tracking.</p>
+            <p class="text-secondary small mb-0">Real-time inventory levels, customer billing, gross profit, and Bee Comfort vs China comparison.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('receipts.create') }}" class="btn btn-success fw-bold shadow-sm">
@@ -42,99 +42,237 @@
         </div>
     </div>
 
-    <!-- PRIMARY SUMMARY METRICS -->
+    <!-- PRIMARY SUMMARY METRICS: INVENTORY, SALES, PROFIT & CASH -->
     <div class="row g-3">
         <!-- 1. Total Products -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-secondary small fw-bold text-uppercase">Total Catalog</span>
-                        <div class="rounded-3 bg-primary-subtle text-primary p-2">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-secondary small fw-bold text-uppercase">Catalog Items</span>
+                        <div class="rounded-3 bg-primary-subtle text-primary p-1.5">
                             <i class="bi bi-boxes fs-5"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black text-dark mb-1 font-monospace">{{ number_format($totalProducts) }}</div>
-                        <span class="text-secondary small">Active merchandise items</span>
-                    </div>
-                    <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                        <a href="{{ route('products.index') }}" class="small fw-bold text-primary text-decoration-none">
-                            View Catalog &rarr;
-                        </a>
-                        <span class="text-secondary small">Products</span>
+                        <div class="h3 fw-black text-dark mb-0 font-monospace">{{ number_format($totalProducts) }}</div>
+                        <span class="text-secondary fs-7">Active products</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. Total Stock Units -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <!-- 2. Total Warehouse Stock -->
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="text-secondary small fw-bold text-uppercase">Total Stock</span>
-                        <div class="rounded-3 bg-info-subtle text-info p-2">
+                        <div class="rounded-3 bg-info-subtle text-info p-1.5">
                             <i class="bi bi-box-seam fs-5"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black text-dark mb-1 font-monospace">{{ number_format($totalStockQuantity) }}</div>
-                        <span class="text-secondary small">Physical warehouse units</span>
-                    </div>
-                    <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                        <a href="{{ route('stock.index') }}" class="small fw-bold text-info text-decoration-none">
-                            Warehouse Stock &rarr;
-                        </a>
-                        <span class="text-secondary small">Units</span>
+                        <div class="h3 fw-black text-dark mb-0 font-monospace">{{ number_format($totalStockQuantity) }}</div>
+                        <span class="text-secondary fs-7">Physical units in stock</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. Total Cash Received (CRV) -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <!-- 3. Net Realized Sales -->
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-secondary small fw-bold text-uppercase">Net Sales</span>
+                        <div class="rounded-3 bg-primary-subtle text-primary p-1.5">
+                            <i class="bi bi-receipt fs-5"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="h4 fw-black text-primary mb-0 font-monospace">Rs. {{ number_format($totalRealizedRevenue, 2) }}</div>
+                        <span class="text-secondary fs-7">{{ $totalSalesCount }} bills (net of returns)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Gross Profit (Actual Price vs Selling Price) -->
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm h-100 bg-success-subtle border border-success-subtle">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-success small fw-bold text-uppercase">Cash Received (CRV)</span>
-                        <div class="rounded-3 bg-success text-white p-2">
-                            <i class="bi bi-cash-coin fs-5"></i>
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-success small fw-bold text-uppercase">Gross Profit</span>
+                        <div class="rounded-3 bg-success text-white p-1.5">
+                            <i class="bi bi-graph-up-arrow fs-6"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black text-success mb-1 font-monospace">Rs. {{ number_format($totalCashReceived, 2) }}</div>
-                        <span class="text-success-emphasis small">Total customer payments</span>
-                    </div>
-                    <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                        <a href="{{ route('receipts.index') }}" class="small fw-bold text-success text-decoration-none">
-                            View All CRVs &rarr;
-                        </a>
-                        <span class="text-success small">Collected</span>
+                        <div class="h4 fw-black text-success mb-0 font-monospace">Rs. {{ number_format($totalGrossProfit, 2) }}</div>
+                        <span class="text-success-emphasis fs-7 fw-semibold">
+                            {{ number_format($profitMarginPercent, 1) }}% Margin (Cost: Rs. {{ number_format($totalCostOfGoodsSold, 0) }})
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 4. Outstanding Pending Receivables (Alert) -->
-        <div class="col-12 col-sm-6 col-xl-3">
+        <!-- 5. Pending Receivables -->
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm h-100 {{ $totalReceivables > 0 ? 'bg-danger-subtle border border-danger-subtle' : '' }}">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="{{ $totalReceivables > 0 ? 'text-danger' : 'text-secondary' }} small fw-bold text-uppercase">Pending Receivables</span>
-                        <div class="rounded-3 {{ $totalReceivables > 0 ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary' }} p-2">
-                            <i class="bi bi-clock-history fs-5"></i>
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="{{ $totalReceivables > 0 ? 'text-danger' : 'text-secondary' }} small fw-bold text-uppercase">Due Receivables</span>
+                        <div class="rounded-3 {{ $totalReceivables > 0 ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary' }} p-1.5">
+                            <i class="bi bi-clock-history fs-6"></i>
                         </div>
                     </div>
                     <div>
-                        <div class="h2 fw-black {{ $totalReceivables > 0 ? 'text-danger' : 'text-dark' }} mb-1 font-monospace">Rs. {{ number_format($totalReceivables, 2) }}</div>
-                        <span class="{{ $totalReceivables > 0 ? 'text-danger' : 'text-secondary' }} small">{{ $pendingCustomers->count() }} Customers with due balance</span>
+                        <div class="h4 fw-black {{ $totalReceivables > 0 ? 'text-danger' : 'text-dark' }} mb-0 font-monospace">Rs. {{ number_format($totalReceivables, 2) }}</div>
+                        <span class="{{ $totalReceivables > 0 ? 'text-danger' : 'text-secondary' }} fs-7">{{ $pendingCustomers->count() }} clients with due balance</span>
                     </div>
-                    <div class="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                        <a href="#receivables-section" class="small fw-bold text-danger text-decoration-none">
-                            Customer Aging &rarr;
-                        </a>
-                        <span class="text-danger small">Overdue</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BEE COMFORT VS CHINA COMPARISON SECTION -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-bar-chart-line-fill text-primary me-1"></i> Bee Comfort vs China — Performance &amp; Revenue Comparison
+                </h5>
+                <span class="text-secondary small">Compare sales turnover, item costs, and gross profitability between Bee Comfort and China lines.</span>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1">
+                    Bee Comfort: {{ number_format($bcQty) }} pcs sold
+                </span>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1">
+                    China: {{ number_format($chQty) }} pcs sold
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- 1. Category Financial Summary Cards -->
+            <div class="row g-3 mb-4">
+                <!-- Bee Comfort Card -->
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-primary-subtle border border-primary-subtle">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-primary-subtle">
+                            <span class="badge bg-primary text-white text-uppercase fw-bold">
+                                <i class="bi bi-shield-check me-1"></i> Bee Comfort Bills
+                            </span>
+                            <span class="text-primary font-monospace fw-bold">{{ number_format($bcQty) }} Units Sold</span>
+                        </div>
+                        <div class="row g-2 text-dark text-center">
+                            <div class="col-4">
+                                <span class="text-secondary fs-8 text-uppercase d-block mb-1">Sales Revenue</span>
+                                <strong class="fs-6 font-monospace text-primary">Rs. {{ number_format($bcRevenue, 2) }}</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-secondary fs-8 text-uppercase d-block mb-1">Total Cost</span>
+                                <strong class="fs-6 font-monospace text-secondary">Rs. {{ number_format($bcCost, 2) }}</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-secondary fs-8 text-uppercase d-block mb-1">Gross Profit</span>
+                                <strong class="fs-6 font-monospace text-success">Rs. {{ number_format($bcProfit, 2) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- China Card -->
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-danger-subtle border border-danger-subtle">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-danger-subtle">
+                            <span class="badge bg-danger text-white text-uppercase fw-bold">
+                                <i class="bi bi-box-seam me-1"></i> China Bills
+                            </span>
+                            <span class="text-danger font-monospace fw-bold">{{ number_format($chQty) }} Units Sold</span>
+                        </div>
+                        <div class="row g-2 text-dark text-center">
+                            <div class="col-4">
+                                <span class="text-secondary fs-8 text-uppercase d-block mb-1">Sales Revenue</span>
+                                <strong class="fs-6 font-monospace text-danger">Rs. {{ number_format($chRevenue, 2) }}</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-secondary fs-8 text-uppercase d-block mb-1">Total Cost</span>
+                                <strong class="fs-6 font-monospace text-secondary">Rs. {{ number_format($chCost, 2) }}</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-secondary fs-8 text-uppercase d-block mb-1">Gross Profit</span>
+                                <strong class="fs-6 font-monospace text-success">Rs. {{ number_format($chProfit, 2) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Chart + Product-wise Comparison Lists -->
+            <div class="row g-4 align-items-center">
+                <!-- Grouped Bar Chart comparing Revenue, Cost, Profit -->
+                <div class="col-12 col-lg-7">
+                    <div class="card border p-3 h-100 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-dark small text-uppercase">Revenue &amp; Profit Comparison (Rs.)</span>
+                            <div class="d-flex gap-3 small">
+                                <span class="text-primary fw-semibold">&bull; Revenue</span>
+                                <span class="text-secondary fw-semibold">&bull; Cost</span>
+                                <span class="text-success fw-semibold">&bull; Profit</span>
+                            </div>
+                        </div>
+                        <div style="height: 250px;">
+                            <canvas id="categoryComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product-wise Difference Lists -->
+                <div class="col-12 col-lg-5">
+                    <div class="d-flex flex-column gap-2.5">
+                        <!-- Top Bee Comfort Products -->
+                        <div class="border rounded p-2.5 bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
+                                <span class="fw-bold text-primary small text-uppercase">
+                                    <i class="bi bi-tag-fill me-1"></i> Top Bee Comfort Products
+                                </span>
+                                <span class="text-secondary fs-8">Units &bull; Revenue</span>
+                            </div>
+                            <ul class="list-unstyled mb-0 small">
+                                @forelse($topBeeComfortProducts as $bp)
+                                    <li class="d-flex justify-content-between py-1 border-bottom border-light">
+                                        <span class="text-dark fw-semibold text-truncate" style="max-width: 180px;">{{ $bp->product_title }}</span>
+                                        <span class="font-monospace text-dark">{{ $bp->total_qty }} pcs &bull; <strong>Rs. {{ number_format($bp->total_revenue) }}</strong></span>
+                                    </li>
+                                @empty
+                                    <li class="text-muted py-1">No Bee Comfort sales recorded yet.</li>
+                                @endforelse
+                            </ul>
+                        </div>
+
+                        <!-- Top China Products -->
+                        <div class="border rounded p-2.5 bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
+                                <span class="fw-bold text-danger small text-uppercase">
+                                    <i class="bi bi-box-seam-fill me-1"></i> Top China Products
+                                </span>
+                                <span class="text-secondary fs-8">Units &bull; Revenue</span>
+                            </div>
+                            <ul class="list-unstyled mb-0 small">
+                                @forelse($topChinaProducts as $cp)
+                                    <li class="d-flex justify-content-between py-1 border-bottom border-light">
+                                        <span class="text-dark fw-semibold text-truncate" style="max-width: 180px;">{{ $cp->product_title }}</span>
+                                        <span class="font-monospace text-dark">{{ $cp->total_qty }} pcs &bull; <strong>Rs. {{ number_format($cp->total_revenue) }}</strong></span>
+                                    </li>
+                                @empty
+                                    <li class="text-muted py-1">No China sales recorded yet.</li>
+                                @endforelse
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -185,7 +323,7 @@
                         @forelse($topCustomers as $index => $c)
                         <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
-                                <span class="badge {{ $index == 0 ? 'bg-warning text-dark' : ($index == 1 ? 'bg-secondary text-white' : ($index == 2 ? 'bg-bronze text-white bg-dark' : 'bg-light text-secondary border')) }} rounded-circle p-2 fw-bold" style="width: 28px; height: 28px; display:inline-flex; align-items:center; justify-content:center;">
+                                <span class="badge {{ $index == 0 ? 'bg-warning text-dark' : ($index == 1 ? 'bg-secondary text-white' : ($index == 2 ? 'bg-dark text-white' : 'bg-light text-secondary border')) }} rounded-circle p-2 fw-bold" style="width: 28px; height: 28px; display:inline-flex; align-items:center; justify-content:center;">
                                     {{ $index + 1 }}
                                 </span>
                                 <div>
@@ -505,7 +643,63 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // 1. Top 10 Selling Products Bar Chart
+        // 1. Bee Comfort vs China Comparison Chart (Revenue, Cost, Profit)
+        const compCtx = document.getElementById('categoryComparisonChart')?.getContext('2d');
+        if (compCtx) {
+            new Chart(compCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Bee Comfort Bills', 'China Bills'],
+                    datasets: [
+                        {
+                            label: 'Revenue (Rs.)',
+                            data: [{{ $bcRevenue }}, {{ $chRevenue }}],
+                            backgroundColor: '#0d6efd',
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                        },
+                        {
+                            label: 'Estimated Cost (Rs.)',
+                            data: [{{ $bcCost }}, {{ $chCost }}],
+                            backgroundColor: '#6c757d',
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                        },
+                        {
+                            label: 'Gross Profit (Rs.)',
+                            data: [{{ $bcProfit }}, {{ $chProfit }}],
+                            backgroundColor: '#198754',
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.dataset.label + ': Rs. ' + Number(context.parsed.y).toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { callback: v => 'Rs. ' + v.toLocaleString() }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // 2. Top 10 Selling Products Bar Chart
         const topProdCtx = document.getElementById('topProductsBarChart')?.getContext('2d');
         if (topProdCtx) {
             new Chart(topProdCtx, {
@@ -555,7 +749,7 @@
             });
         }
 
-        // 2. Sales vs Returns Activity Chart
+        // 3. Sales vs Returns Activity Chart
         const trendCtx = document.getElementById('salesTrendChart')?.getContext('2d');
         if (trendCtx) {
             new Chart(trendCtx, {
@@ -595,7 +789,7 @@
             });
         }
 
-        // 3. Category Stock Doughnut Chart
+        // 4. Category Stock Doughnut Chart
         const catCtx = document.getElementById('categoryStockChart')?.getContext('2d');
         if (catCtx) {
             const catData = {!! json_encode($categoriesStock) !!};

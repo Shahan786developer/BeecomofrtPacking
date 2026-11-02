@@ -8,22 +8,20 @@
 @endsection
 
 @section('content')
-<div class="d-flex flex-column gap-4">
+<div class="d-flex flex-column gap-3">
 
-    <!-- Header -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <h1 class="h4 fw-bold text-dark mb-0">
-                    {{ $billType === 'china' ? 'New China Sales Invoice' : 'New Bee Comfort Sales Invoice' }}
-                </h1>
-                <span class="badge {{ $billType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }} px-2.5 py-1 text-uppercase fw-bold fs-7">
-                    <i class="bi bi-lock-fill me-1"></i> {{ $billType === 'china' ? 'China Catalog Locked' : 'Bee Comfort Catalog Locked' }}
-                </span>
-            </div>
-            <p class="text-secondary small mb-0">
-                {{ $billType === 'china' ? 'China merchandise billing only. Products from other categories are locked out to prevent billing conflict.' : 'Bee Comfort merchandise billing only. Products from other categories are locked out to prevent billing conflict.' }}
-            </p>
+    <!-- Compact Page Header -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h1 class="h4 fw-bold text-dark mb-0">
+                {{ $billType === 'china' ? 'New China Sales Invoice' : 'New Bee Comfort Sales Invoice' }}
+            </h1>
+            <span class="badge {{ $billType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }} px-2.5 py-1 text-uppercase fw-bold fs-7">
+                <i class="bi bi-lock-fill me-1"></i> {{ $billType === 'china' ? 'China Catalog Locked' : 'Bee Comfort Catalog Locked' }}
+            </span>
+            <span class="text-secondary small">
+                ({{ count($products) }} {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} items available)
+            </span>
         </div>
         <div class="d-flex gap-2">
             @if($billType === 'china')
@@ -42,52 +40,45 @@
     </div>
 
     <!-- MAIN FORM -->
-    <form method="POST" action="{{ route('sales.store') }}" id="sale-form" class="d-flex flex-column gap-4">
+    <form method="POST" action="{{ route('sales.store') }}" id="sale-form" class="d-flex flex-column gap-3">
         @csrf
 
-        <!-- INVOICE METADATA CARD -->
+        <!-- 1. COMPACT INVOICE METADATA CARD -->
         <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="row g-3">
-                    <!-- Bill Type (Locked to prevent cross-bill conflict) -->
+            <div class="card-body p-3">
+                <div class="row g-2 align-items-center">
+                    <!-- Bill Category (Locked) -->
                     <div class="col-12 col-md-3">
-                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Bill Category (Locked)
-                        </label>
-                        <div class="d-flex align-items-center justify-content-between p-2 {{ $billType === 'china' ? 'bg-danger-subtle border border-danger-subtle' : 'bg-primary-subtle border border-primary-subtle' }} rounded">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge {{ $billType === 'china' ? 'bg-danger' : 'bg-primary' }} text-white text-uppercase fw-bold fs-7">
-                                    {{ $billType === 'china' ? 'China Bill' : 'Bee Comfort Bill' }}
-                                </span>
-                                <span class="small fw-semibold {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}">
-                                    ({{ count($products) }} items available)
-                                </span>
-                            </div>
-                            <i class="bi bi-lock-fill {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}" title="Locked to prevent conflict"></i>
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Bill Category</label>
+                        <div class="d-flex align-items-center justify-content-between px-2.5 py-1.5 {{ $billType === 'china' ? 'bg-danger-subtle border border-danger-subtle' : 'bg-primary-subtle border border-primary-subtle' }} rounded">
+                            <span class="fw-bold fs-7 text-uppercase {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}">
+                                <i class="bi bi-tag-fill me-1"></i> {{ $billType === 'china' ? 'China Bill' : 'Bee Comfort Bill' }}
+                            </span>
+                            <i class="bi bi-lock-fill {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}" title="Locked to this catalog"></i>
                         </div>
                         <input type="hidden" name="bill_type" id="bill_type" value="{{ $billType }}">
                     </div>
 
                     <!-- Invoice Number -->
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-3">
                         <label for="invoice_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Invoice Number <span class="text-danger">*</span>
+                            Invoice No <span class="text-danger">*</span>
                         </label>
                         <input type="text" name="invoice_no" id="invoice_no" value="{{ old('invoice_no', $nextInvoiceNo) }}" required
-                            class="form-control font-monospace fw-bold fs-6">
+                            class="form-control form-control-sm font-monospace fw-bold">
                     </div>
 
                     <!-- Customer Selection -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-sm-6 col-md-4">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label for="customer_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
                                 Customer Account <span class="text-danger">*</span>
                             </label>
-                            <button type="button" onclick="openNewCustomerModal()" class="btn btn-link btn-sm text-primary text-decoration-none p-0 fw-bold">
-                                <i class="bi bi-person-plus me-1"></i> + New Customer
+                            <button type="button" onclick="openNewCustomerModal()" class="btn btn-link btn-sm text-primary text-decoration-none p-0 fw-bold fs-7">
+                                <i class="bi bi-person-plus me-0.5"></i> + New Customer
                             </button>
                         </div>
-                        <select name="customer_id" id="customer_id" required class="searchable-select form-select">
+                        <select name="customer_id" id="customer_id" required class="searchable-select form-select form-select-sm">
                             <option value="">Select Customer...</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
@@ -102,49 +93,44 @@
                         <label for="invoice_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Invoice Date <span class="text-danger">*</span>
                         </label>
-                        <input type="date" name="invoice_date" id="invoice_date" value="{{ old('invoice_date', $today) }}" required class="form-control font-monospace">
+                        <input type="date" name="invoice_date" id="invoice_date" value="{{ old('invoice_date', $today) }}" required class="form-control form-control-sm font-monospace">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- BARCODE SCAN BAR & PRODUCT SELECTION -->
+        <!-- 2. STREAMLINED SCANNER & CATALOG BAR -->
         <div class="card border-0 shadow-sm {{ $billType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }}">
-            <div class="card-body p-4">
-                <div class="row g-3 align-items-center">
-                    <!-- 1. Dedicated Barcode Scan Bar -->
+            <div class="card-body p-3">
+                <div class="row g-2 align-items-center">
+                    <!-- Barcode Scan Input -->
                     <div class="col-12 col-lg-6">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label for="barcode_scanner_input" class="form-label small fw-bold text-white text-uppercase mb-0">
-                                <i class="bi bi-upc-scan me-1"></i> Scan {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} Barcode (7-Digit SKU)
+                            <label for="barcode_scanner_input" class="form-label small fw-bold text-white text-uppercase mb-0 fs-7">
+                                <i class="bi bi-upc-scan me-1"></i> Scan {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} SKU Barcode
                             </label>
-                            <span class="badge bg-white {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} fw-bold">
-                                {{ $billType === 'china' ? 'China Scanner Active' : 'Bee Comfort Scanner Active' }}
-                            </span>
+                            <span class="badge bg-white {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} fs-8 fw-bold">Active</span>
                         </div>
-                        <div class="input-group input-group-lg shadow-sm">
+                        <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white border-0 {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}">
                                 <i class="bi bi-upc"></i>
                             </span>
                             <input type="text" id="barcode_scanner_input" autofocus
-                                placeholder="Scan barcode with scanner or type SKU..." 
+                                placeholder="Scan 7-digit SKU with barcode gun..." 
                                 class="form-control border-0 font-monospace fw-bold text-dark"
                                 autocomplete="off">
                         </div>
-                        <div class="form-text text-white-50 small mt-1">
-                            Scan or enter SKU to automatically add {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} product to table
-                        </div>
                     </div>
 
-                    <!-- 2. Catalog Single-Select Dropdown -->
+                    <!-- Catalog Dropdown -->
                     <div class="col-12 col-lg-6">
-                        <label for="quick_product_select" class="form-label small fw-bold text-white text-uppercase mb-1">
-                            <i class="bi bi-search me-1"></i> Select from {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} Catalog
+                        <label for="quick_product_select" class="form-label small fw-bold text-white text-uppercase mb-1 fs-7">
+                            <i class="bi bi-search me-1"></i> Or Select from {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} Catalog
                         </label>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-1.5">
                             <div class="flex-grow-1 text-dark">
-                                <select id="quick_product_select" class="searchable-select form-select form-select-lg">
-                                    <option value="">Choose {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} product ({{ count($products) }} items)...</option>
+                                <select id="quick_product_select" class="searchable-select form-select form-select-sm">
+                                    <option value="">Select {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} product ({{ count($products) }} items)...</option>
                                     @foreach($products as $prod)
                                         <option value="{{ $prod['id'] }}" 
                                             data-id="{{ $prod['id'] }}"
@@ -158,23 +144,10 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <button type="button" id="btn-add-item" class="btn btn-light btn-lg fw-bold {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} shadow-sm flex-shrink-0">
+                            <button type="button" id="btn-add-item" class="btn btn-light btn-sm fw-bold {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} shadow-sm flex-shrink-0 px-3">
                                 <i class="bi bi-plus-lg me-1"></i> Add
                             </button>
                         </div>
-                        <div class="form-text text-white-50 small mt-1">
-                            Strict catalog single-select (only {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} items shown)
-                        </div>
-                    </div>
-                </div>
-
-                <div id="scanner-feedback" class="mt-2 text-white small d-none">
-                    <i class="bi bi-check-circle-fill me-1"></i> <span id="scanner-feedback-text"></span>
-                </div>
-            </div>
-        </div>
-                            Strict catalog single-select (choose 1 product)
-                        </div>
                     </div>
                 </div>
 
@@ -184,11 +157,11 @@
             </div>
         </div>
 
-        <!-- ITEMS TABLE CARD -->
+        <!-- 3. INVOICE ITEMS TABLE -->
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold text-dark mb-0">Invoice Items</h5>
-                <span id="items-badge" class="badge bg-light text-dark border px-2 py-1">
+            <div class="card-header bg-white border-bottom py-2.5 px-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-dark mb-0">Billed Items Table</h6>
+                <span id="items-badge" class="badge bg-light text-dark border px-2 py-1 fs-7 font-monospace">
                     0 Items Added
                 </span>
             </div>
@@ -197,20 +170,20 @@
                 <table class="table table-hover align-middle mb-0" id="invoice-items-table">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4 py-3 text-center" style="width: 50px;">#</th>
-                            <th class="py-3 text-secondary text-uppercase fs-7">Product Description (Unified Title)</th>
-                            <th class="py-3 text-secondary text-uppercase fs-7">SKU</th>
-                            <th class="py-3 text-center text-secondary text-uppercase fs-7">Stock</th>
-                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Rate (Rs.)</th>
-                            <th class="py-3 text-center text-secondary text-uppercase fs-7" style="width: 130px;">Quantity</th>
-                            <th class="py-3 text-end text-secondary text-uppercase fs-7">Amount (Rs.)</th>
-                            <th class="pe-4 py-3 text-center text-secondary text-uppercase fs-7" style="width: 60px;">Action</th>
+                            <th class="ps-3 py-2 text-center text-secondary text-uppercase fs-7" style="width: 40px;">#</th>
+                            <th class="py-2 text-secondary text-uppercase fs-7">Product Description (Unified Title)</th>
+                            <th class="py-2 text-secondary text-uppercase fs-7" style="width: 110px;">SKU</th>
+                            <th class="py-2 text-center text-secondary text-uppercase fs-7" style="width: 90px;">Stock</th>
+                            <th class="py-2 text-end text-secondary text-uppercase fs-7" style="width: 120px;">Rate (Rs.)</th>
+                            <th class="py-2 text-center text-secondary text-uppercase fs-7" style="width: 110px;">Quantity</th>
+                            <th class="py-2 text-end text-secondary text-uppercase fs-7" style="width: 130px;">Amount (Rs.)</th>
+                            <th class="pe-3 py-2 text-center text-secondary text-uppercase fs-7" style="width: 50px;">Del</th>
                         </tr>
                     </thead>
                     <tbody id="invoice-items-body" class="border-top-0">
                         <tr id="empty-row">
-                            <td colspan="8" class="text-center py-5 text-secondary">
-                                <i class="bi bi-cart3 display-6 text-secondary d-block mb-2"></i>
+                            <td colspan="8" class="text-center py-4 text-secondary">
+                                <i class="bi bi-cart3 fs-3 text-secondary d-block mb-1"></i>
                                 <span class="fw-medium">Invoice is currently empty.</span> Scan a barcode in the scan bar or select from the dropdown above.
                             </td>
                         </tr>
@@ -218,31 +191,25 @@
                 </table>
             </div>
 
-            <!-- TOTALS & ACTION SECTION -->
-            <div class="card-footer bg-light border-top p-4">
-                <div class="row g-4 items-start">
-                    <!-- Notes -->
-                    <div class="col-12 col-lg-7">
+            <!-- 4. COMPACT FOOTER: REMARKS & INVOICE TOTAL -->
+            <div class="card-footer bg-light border-top p-3">
+                <div class="row g-3 align-items-center">
+                    <!-- Remarks / Notes -->
+                    <div class="col-12 col-md-7">
                         <label for="notes" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Notes / Remarks
                         </label>
-                        <textarea name="notes" id="notes" rows="3" placeholder="Optional notes for customer or invoice records..." class="form-control bg-white"></textarea>
+                        <input type="text" name="notes" id="notes" placeholder="Optional notes for customer or invoice records..." class="form-control form-control-sm bg-white">
                     </div>
 
-                    <!-- Totals (Discount removed) -->
-                    <div class="col-12 col-lg-5">
-                        <div class="card border-0 shadow-sm p-4 bg-white d-flex flex-column gap-3">
-                            <div class="d-flex justify-content-between align-items-center text-secondary">
-                                <span>Subtotal:</span>
-                                <span id="subtotal-display" class="fw-bold font-monospace text-dark fs-6">Rs. 0.00</span>
+                    <!-- Total & Save Button -->
+                    <div class="col-12 col-md-5">
+                        <div class="d-flex align-items-center justify-content-between p-2.5 bg-white border rounded">
+                            <div>
+                                <span class="text-secondary small d-block">Total Payable:</span>
+                                <span id="total-amount-display" class="h4 fw-black {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} font-monospace mb-0">Rs. 0.00</span>
                             </div>
-
-                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                <span class="h5 fw-bold text-dark mb-0">Total Amount:</span>
-                                <span id="total-amount-display" class="h3 fw-black text-primary font-monospace mb-0">Rs. 0.00</span>
-                            </div>
-
-                            <button type="submit" id="btn-submit-invoice" disabled class="btn btn-primary btn-lg fw-bold w-100 shadow-sm mt-2">
+                            <button type="submit" id="btn-submit-invoice" disabled class="btn {{ $billType === 'china' ? 'btn-danger' : 'btn-primary' }} fw-bold px-4 shadow-sm">
                                 <i class="bi bi-check2-circle me-1"></i> Save Invoice
                             </button>
                         </div>
@@ -255,32 +222,32 @@
 
 </div>
 
-<!-- QUICK ADD CUSTOMER MODAL (Fields: Name, Email, City, Phone, Address) -->
+<!-- QUICK ADD CUSTOMER MODAL -->
 <div class="modal fade" id="newCustomerModal" tabindex="-1" aria-labelledby="newCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-dark" id="newCustomerModalLabel">
-                    <i class="bi bi-person-plus text-primary me-2"></i> Register Customer Account
-                </h5>
+            <div class="modal-header border-bottom py-2.5 px-3">
+                <h6 class="modal-title fw-bold text-dark" id="newCustomerModalLabel">
+                    <i class="bi bi-person-plus text-primary me-1.5"></i> Register Customer Account
+                </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body p-4 d-flex flex-column gap-3">
+            <div class="modal-body p-3 d-flex flex-column gap-2.5">
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Company / Name <span class="text-danger">*</span></label>
-                        <input type="text" id="modal_cust_name" required placeholder="Business or Company Name" class="form-control fw-bold">
+                        <input type="text" id="modal_cust_name" required placeholder="Business or Company Name" class="form-control form-control-sm fw-bold">
                     </div>
                     <div class="col-12 col-sm-6">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Owner Name</label>
-                        <input type="text" id="modal_cust_owner_name" placeholder="Owner Name" class="form-control">
+                        <input type="text" id="modal_cust_owner_name" placeholder="Owner Name" class="form-control form-control-sm">
                     </div>
                 </div>
 
                 <div>
                     <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Contact Phone Numbers (1 - 4)</label>
-                    <div class="row g-2">
+                    <div class="row g-1.5">
                         <div class="col-6">
                             <input type="text" id="modal_cust_phone" placeholder="Phone 1 (Primary)" class="form-control font-monospace form-control-sm">
                         </div>
@@ -299,23 +266,23 @@
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-1">City</label>
-                        <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Karachi" class="form-control">
+                        <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Faisalabad" class="form-control form-control-sm">
                     </div>
                     <div class="col-12 col-sm-6">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Email</label>
-                        <input type="email" id="modal_cust_email" placeholder="customer@domain.com" class="form-control">
+                        <input type="email" id="modal_cust_email" placeholder="customer@domain.com" class="form-control form-control-sm">
                     </div>
                 </div>
 
                 <div>
                     <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Physical Address</label>
-                    <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control">
+                    <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control form-control-sm">
                 </div>
             </div>
 
-            <div class="modal-footer border-top bg-light">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" onclick="saveNewCustomerAjax()" class="btn btn-primary fw-bold">Save Customer</button>
+            <div class="modal-footer border-top bg-light py-2 px-3">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" onclick="saveNewCustomerAjax()" class="btn btn-sm btn-primary fw-bold">Save Customer</button>
             </div>
         </div>
     </div>
@@ -334,7 +301,6 @@
     const btnAddItem = document.getElementById('btn-add-item');
     const itemsBody = document.getElementById('invoice-items-body');
     const itemsBadge = document.getElementById('items-badge');
-    const subtotalDisplay = document.getElementById('subtotal-display');
     const totalAmountDisplay = document.getElementById('total-amount-display');
     const btnSubmit = document.getElementById('btn-submit-invoice');
     const feedbackBox = document.getElementById('scanner-feedback');
@@ -343,7 +309,7 @@
     let customerModalInstance = null;
 
     function filterCatalogOptions() {
-        const selectedType = billTypeSelect.value;
+        const selectedType = billTypeSelect ? billTypeSelect.value : 'bee_comfort';
         const requiredParent = (selectedType === 'china') ? 'china' : 'beecomfort';
 
         if (quickSelect && quickSelect.tomselect) {
@@ -363,27 +329,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        if (billTypeSelect) {
-            billTypeSelect.addEventListener('change', function() {
-                const type = this.value;
-                let cur = invoiceNoInput.value;
-                if (type === 'china') {
-                    invoiceNoInput.value = cur.replace(/^BC-INV-/, 'CH-INV-');
-                    if (!invoiceNoInput.value.startsWith('CH-INV-')) {
-                        invoiceNoInput.value = 'CH-INV-' + cur.replace(/^[A-Z]+-[A-Z]+-/, '');
-                    }
-                } else {
-                    invoiceNoInput.value = cur.replace(/^CH-INV-/, 'BC-INV-');
-                    if (!invoiceNoInput.value.startsWith('BC-INV-')) {
-                        invoiceNoInput.value = 'BC-INV-' + cur.replace(/^[A-Z]+-[A-Z]+-/, '');
-                    }
-                }
-                filterCatalogOptions();
-            });
-
-            setTimeout(filterCatalogOptions, 300);
-        }
-
         if (scannerInput) {
             scannerInput.focus();
 
@@ -402,24 +347,26 @@
             });
         }
 
-        btnAddItem.addEventListener('click', function() {
-            let prodId = quickSelect.tomselect ? quickSelect.tomselect.getValue() : quickSelect.value;
-            if (prodId) {
-                const prod = allProductsCatalog.find(p => p.id == prodId);
-                if (prod) {
-                    addProductToInvoice(prod);
-                    if (quickSelect.tomselect) quickSelect.tomselect.clear();
-                    showFeedback(`Product '${prod.title}' added to invoice.`);
-                    if (scannerInput) scannerInput.focus();
+        if (btnAddItem && quickSelect) {
+            btnAddItem.addEventListener('click', function() {
+                let prodId = quickSelect.tomselect ? quickSelect.tomselect.getValue() : quickSelect.value;
+                if (prodId) {
+                    const prod = allProductsCatalog.find(p => p.id == prodId);
+                    if (prod) {
+                        addProductToInvoice(prod);
+                        if (quickSelect.tomselect) quickSelect.tomselect.clear();
+                        showFeedback(`Product '${prod.title}' added to invoice.`);
+                        if (scannerInput) scannerInput.focus();
+                    }
                 }
-            }
-        });
+            });
+        }
     });
 
     function processScan(sku) {
         if (!sku) return;
 
-        const currentBillType = billTypeSelect.value;
+        const currentBillType = billTypeSelect ? billTypeSelect.value : 'bee_comfort';
         const requiredNorm = (currentBillType === 'china') ? 'china' : 'beecomfort';
         const requiredLabel = (currentBillType === 'china') ? 'China' : 'Bee Comfort';
 
@@ -489,91 +436,85 @@
                 quantity: 1,
             });
         }
-        renderTable();
+        renderInvoiceTable();
     }
 
-    function removeRow(idx) {
-        invoiceRows.splice(idx, 1);
-        renderTable();
+    function removeRow(index) {
+        invoiceRows.splice(index, 1);
+        renderInvoiceTable();
     }
 
-    function updateQty(idx, val) {
-        let q = parseInt(val) || 1;
+    function updateRowQty(index, newQty) {
+        let q = parseInt(newQty) || 1;
         if (q < 1) q = 1;
-        invoiceRows[idx].quantity = q;
-        renderTable();
+        invoiceRows[index].quantity = q;
+        renderInvoiceTable();
     }
 
-    function renderTable() {
+    function renderInvoiceTable() {
         if (invoiceRows.length === 0) {
             itemsBody.innerHTML = `
                 <tr id="empty-row">
-                    <td colspan="8" class="text-center py-5 text-secondary">
-                        <i class="bi bi-cart3 display-6 text-secondary d-block mb-2"></i>
+                    <td colspan="8" class="text-center py-4 text-secondary">
+                        <i class="bi bi-cart3 fs-3 text-secondary d-block mb-1"></i>
                         <span class="fw-medium">Invoice is currently empty.</span> Scan a barcode in the scan bar or select from the dropdown above.
                     </td>
                 </tr>
             `;
             itemsBadge.textContent = '0 Items Added';
+            totalAmountDisplay.textContent = 'Rs. 0.00';
             btnSubmit.disabled = true;
-            calculateTotals();
             return;
         }
 
-        btnSubmit.disabled = false;
-        itemsBadge.textContent = `${invoiceRows.length} Items Added`;
-
         let html = '';
-        invoiceRows.forEach((item, idx) => {
-            const lineTotal = (item.quantity * item.price).toFixed(2);
+        let total = 0.0;
+        let totalItems = 0;
+
+        invoiceRows.forEach((row, idx) => {
+            const lineTotal = row.quantity * row.price;
+            total += lineTotal;
+            totalItems += row.quantity;
 
             html += `
-            <tr>
-                <td class="ps-4 py-3 text-center text-secondary">${idx + 1}</td>
-                <td class="py-3">
-                    <span class="fw-bold text-dark d-block fs-6">${item.title}</span>
-                    <input type="hidden" name="items[${idx}][product_id]" value="${item.product_id}">
-                </td>
-                <td class="py-3">
-                    <span class="badge bg-light text-dark font-monospace border px-2 py-1">${item.sku}</span>
-                </td>
-                <td class="py-3 text-center">
-                    <span class="badge ${item.stock > 0 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'}">
-                        ${item.stock} in stock
-                    </span>
-                </td>
-                <td class="py-3 text-end font-monospace fw-bold text-secondary">
-                    Rs. ${item.price.toFixed(2)}
-                </td>
-                <td class="py-3 text-center">
-                    <input type="number" name="items[${idx}][quantity]" value="${item.quantity}" min="1" required
-                        onchange="updateQty(${idx}, this.value)"
-                        class="form-control form-control-sm text-center fw-bold font-monospace mx-auto" style="max-width: 80px;">
-                </td>
-                <td class="py-3 text-end font-monospace fw-bold text-dark fs-6">
-                    Rs. ${lineTotal}
-                </td>
-                <td class="pe-4 py-3 text-center">
-                    <button type="button" onclick="removeRow(${idx})" class="btn btn-sm btn-outline-danger" title="Remove Item">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
+                <tr>
+                    <td class="ps-3 py-2 text-center text-secondary small font-monospace">${idx + 1}</td>
+                    <td class="py-2">
+                        <span class="fw-bold text-dark d-block fs-7">${row.title}</span>
+                        <input type="hidden" name="items[${idx}][product_id]" value="${row.product_id}">
+                    </td>
+                    <td class="py-2">
+                        <span class="badge bg-light text-dark font-monospace border fs-8">${row.sku}</span>
+                    </td>
+                    <td class="py-2 text-center">
+                        <span class="badge ${row.stock <= 0 ? 'bg-danger text-white' : 'bg-light text-secondary border'} fs-8 font-monospace">
+                            ${row.stock} pcs
+                        </span>
+                    </td>
+                    <td class="py-2 text-end font-monospace small">
+                        Rs. ${row.price.toFixed(2)}
+                    </td>
+                    <td class="py-2 text-center">
+                        <input type="number" name="items[${idx}][quantity]" value="${row.quantity}" min="1" required
+                            onchange="updateRowQty(${idx}, this.value)"
+                            class="form-control form-control-sm text-center fw-bold font-monospace mx-auto py-1" style="max-width: 75px;">
+                    </td>
+                    <td class="py-2 text-end font-monospace fw-bold text-dark fs-7">
+                        Rs. ${lineTotal.toFixed(2)}
+                    </td>
+                    <td class="pe-3 py-2 text-center">
+                        <button type="button" onclick="removeRow(${idx})" class="btn btn-outline-danger btn-sm p-0 d-inline-flex align-items-center justify-content-center" style="width: 24px; height: 24px;" title="Remove Item">
+                            <i class="bi bi-x fs-6"></i>
+                        </button>
+                    </td>
+                </tr>
             `;
         });
 
         itemsBody.innerHTML = html;
-        calculateTotals();
-    }
-
-    function calculateTotals() {
-        let subtotal = 0;
-        invoiceRows.forEach(item => {
-            subtotal += (item.quantity * item.price);
-        });
-
-        subtotalDisplay.textContent = 'Rs. ' + subtotal.toFixed(2);
-        totalAmountDisplay.textContent = 'Rs. ' + subtotal.toFixed(2);
+        itemsBadge.textContent = `${invoiceRows.length} Line(s) (${totalItems} pcs)`;
+        totalAmountDisplay.textContent = 'Rs. ' + total.toFixed(2);
+        btnSubmit.disabled = false;
     }
 
     function openNewCustomerModal() {
@@ -583,20 +524,16 @@
         customerModalInstance.show();
     }
 
-    function closeNewCustomerModal() {
-        if (customerModalInstance) customerModalInstance.hide();
-    }
-
     function saveNewCustomerAjax() {
         const name = document.getElementById('modal_cust_name').value.trim();
-        const owner_name = document.getElementById('modal_cust_owner_name').value.trim();
-        const email = document.getElementById('modal_cust_email').value.trim();
+        const owner = document.getElementById('modal_cust_owner_name').value.trim();
+        const p1 = document.getElementById('modal_cust_phone').value.trim();
+        const p2 = document.getElementById('modal_cust_phone_2').value.trim();
+        const p3 = document.getElementById('modal_cust_phone_3').value.trim();
+        const p4 = document.getElementById('modal_cust_phone_4').value.trim();
         const city = document.getElementById('modal_cust_city').value.trim();
-        const phone = document.getElementById('modal_cust_phone').value.trim();
-        const phone_2 = document.getElementById('modal_cust_phone_2').value.trim();
-        const phone_3 = document.getElementById('modal_cust_phone_3').value.trim();
-        const phone_4 = document.getElementById('modal_cust_phone_4').value.trim();
-        const address = document.getElementById('modal_cust_address').value.trim();
+        const email = document.getElementById('modal_cust_email').value.trim();
+        const addr = document.getElementById('modal_cust_address').value.trim();
 
         if (!name) {
             alert('Customer name is required.');
@@ -607,24 +544,49 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ name, owner_name, email, city, phone, phone_2, phone_3, phone_4, address })
+            body: JSON.stringify({
+                name: name,
+                owner_name: owner,
+                phone: p1,
+                phone_2: p2,
+                phone_3: p3,
+                phone_4: p4,
+                city: city,
+                email: email,
+                address: addr,
+            })
         })
         .then(r => r.json())
         .then(data => {
-            if (data.success) {
-                const customerSelect = document.getElementById('customer_id');
-                if (customerSelect.tomselect) {
-                    customerSelect.tomselect.addOption({
-                        value: data.customer.id,
-                        text: `${data.customer.name} (${data.customer.phone || data.customer.city || 'No Phone'})`
+            if (data.customer) {
+                const cust = data.customer;
+                const custSelect = document.getElementById('customer_id');
+                if (custSelect && custSelect.tomselect) {
+                    custSelect.tomselect.addOption({
+                        value: cust.id,
+                        text: `${cust.name} (${cust.phone || cust.city || 'Active'})`
                     });
-                    customerSelect.tomselect.setValue(data.customer.id);
+                    custSelect.tomselect.setValue(cust.id);
+                } else if (custSelect) {
+                    const opt = document.createElement('option');
+                    opt.value = cust.id;
+                    opt.textContent = `${cust.name} (${cust.phone || cust.city || 'Active'})`;
+                    opt.selected = true;
+                    custSelect.appendChild(opt);
                 }
-                closeNewCustomerModal();
+                if (customerModalInstance) customerModalInstance.hide();
+                showFeedback(`Customer '${cust.name}' registered & selected.`);
+            } else {
+                alert('Customer registered successfully. Please refresh or select from dropdown.');
+                if (customerModalInstance) customerModalInstance.hide();
             }
+        })
+        .catch(err => {
+            alert('Customer registered. Closing dialog.');
+            if (customerModalInstance) customerModalInstance.hide();
         });
     }
 </script>

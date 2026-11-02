@@ -695,4 +695,17 @@ class BeeComfortTest extends TestCase
         $bcReturnPage->assertSee('Process Bee Comfort Bill Return');
         $bcReturnPage->assertSee('BC-TEST-INV-RET');
     }
+
+    /**
+     * Test Dashboard Gross Profit (Actual Price vs Selling Price) and China vs Bee Comfort Comparison
+     */
+    public function test_dashboard_gross_profit_and_china_vs_bee_comfort_comparison(): void
+    {
+        $dashboard = $this->get(route('dashboard'));
+        $dashboard->assertStatus(200);
+        $dashboard->assertSee('Gross Profit');
+        $dashboard->assertSee('Bee Comfort vs China');
+        $dashboard->assertSee('Performance');
+        $dashboard->assertSee('categoryComparisonChart');
+    }
 }
