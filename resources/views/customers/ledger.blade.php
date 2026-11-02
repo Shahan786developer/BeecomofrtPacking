@@ -22,11 +22,25 @@
                             <i class="bi bi-calendar3 me-1"></i> Customer Since: <strong>{{ $customer->created_at ? $customer->created_at->format('d M Y') : 'Active' }}</strong>
                         </span>
                     </div>
-                    <h1 class="h3 fw-bold text-dark mb-2">{{ $customer->name }}</h1>
+                    <h1 class="h3 fw-bold text-dark mb-1">{{ $customer->name }}</h1>
+                    @if($customer->owner_name)
+                        <div class="text-secondary small mb-2">
+                            <i class="bi bi-person-badge text-primary me-1"></i> Owner: <strong class="text-dark">{{ $customer->owner_name }}</strong>
+                        </div>
+                    @endif
                     
                     <div class="d-flex flex-wrap gap-3 text-secondary small">
                         @if($customer->phone)
-                            <span><i class="bi bi-telephone text-primary me-1"></i> <strong class="text-dark">{{ $customer->phone }}</strong></span>
+                            <span><i class="bi bi-telephone text-primary me-1"></i> Phone 1: <strong class="text-dark">{{ $customer->phone }}</strong></span>
+                        @endif
+                        @if($customer->phone_2)
+                            <span><i class="bi bi-telephone text-secondary me-1"></i> Phone 2: <strong class="text-dark">{{ $customer->phone_2 }}</strong></span>
+                        @endif
+                        @if($customer->phone_3)
+                            <span><i class="bi bi-telephone text-secondary me-1"></i> Phone 3: <strong class="text-dark">{{ $customer->phone_3 }}</strong></span>
+                        @endif
+                        @if($customer->phone_4)
+                            <span><i class="bi bi-telephone text-secondary me-1"></i> Phone 4: <strong class="text-dark">{{ $customer->phone_4 }}</strong></span>
                         @endif
                         @if($customer->email)
                             <span><i class="bi bi-envelope text-primary me-1"></i> {{ $customer->email }}</span>

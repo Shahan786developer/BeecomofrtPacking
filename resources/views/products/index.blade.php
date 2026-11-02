@@ -19,11 +19,14 @@
 
     <!-- CONTROLS: SEARCH ABOVE + ACTION BUTTONS (CREATE & PRINT) -->
     <div class="card border-0 shadow-sm">
-        <div class="card-body p-3">
+        <div class="card-body p-3 d-flex flex-column gap-3">
             <div class="row g-2 align-items-center">
                 <!-- Search Functionality Above -->
                 <div class="col-12 col-md-7 col-lg-8">
                     <form method="GET" action="{{ route('products.index') }}" class="d-flex gap-2">
+                        @if(request('parent_category'))
+                            <input type="hidden" name="parent_category" value="{{ request('parent_category') }}">
+                        @endif
                         <div class="input-group">
                             <span class="input-group-text bg-light text-secondary border-end-0">
                                 <i class="bi bi-search"></i>
@@ -35,7 +38,7 @@
                         <button type="submit" class="btn btn-primary fw-bold px-3">
                             Search
                         </button>
-                        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
+                        <a href="{{ route('products.index', request('parent_category') ? ['parent_category' => request('parent_category')] : []) }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
                             <i class="bi bi-x-lg"></i>
                         </a>
                     </form>
@@ -50,6 +53,23 @@
                         <i class="bi bi-printer me-1"></i> Print Barcodes
                     </a>
                 </div>
+            </div>
+
+            <!-- Parent Category Filter Pills -->
+            <div class="d-flex flex-wrap align-items-center gap-2 pt-2 border-top">
+                <span class="small fw-bold text-secondary text-uppercase me-1">Category Filter:</span>
+                <a href="{{ route('products.index', array_merge(request()->except('parent_category', 'page'))) }}" 
+                   class="btn btn-sm {{ !request('parent_category') ? 'btn-dark' : 'btn-outline-secondary' }}">
+                    All Items
+                </a>
+                <a href="{{ route('products.index', array_merge(request()->except('page'), ['parent_category' => 'Bee Comfort'])) }}" 
+                   class="btn btn-sm {{ request('parent_category') === 'Bee Comfort' ? 'btn-primary' : 'btn-outline-primary' }}">
+                    <i class="bi bi-shield-check me-1"></i> Bee Comfort
+                </a>
+                <a href="{{ route('products.index', array_merge(request()->except('page'), ['parent_category' => 'China'])) }}" 
+                   class="btn btn-sm {{ request('parent_category') === 'China' ? 'btn-danger' : 'btn-outline-danger' }}">
+                    <i class="bi bi-box-seam me-1"></i> China
+                </a>
             </div>
         </div>
     </div>
@@ -75,9 +95,16 @@
                     <tr>
                         <!-- Unified Product Title -->
                         <td class="ps-3 py-3">
-                            <a href="{{ route('products.show', $product) }}" class="fw-bold text-dark text-decoration-none d-block fs-6">
-                                {{ $product->title }}
-                            </a>
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <a href="{{ route('products.show', $product) }}" class="fw-bold text-dark text-decoration-none fs-6">
+                                    {{ $product->title }}
+                                </a>
+                                @if($product->parent_category === 'China')
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-0.5 px-1.5" style="font-size: 0.7rem;">China</span>
+                                @else
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-0.5 px-1.5" style="font-size: 0.7rem;">Bee Comfort</span>
+                                @endif
+                            </div>
                             <span class="text-secondary small">
                                 Code: <strong class="text-dark">{{ $product->product_code }}</strong> &bull; {{ $product->dozen->label }}
                             </span>

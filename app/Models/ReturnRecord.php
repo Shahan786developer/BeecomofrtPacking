@@ -15,6 +15,7 @@ class ReturnRecord extends Model
 
     protected $fillable = [
         'return_no',
+        'return_type',
         'sale_id',
         'customer_id',
         'return_date',
@@ -42,9 +43,10 @@ class ReturnRecord extends Model
         return $this->hasMany(ReturnDetail::class, 'return_id');
     }
 
-    public static function generateNextReturnNo(): string
+    public static function generateNextReturnNo(string $returnType = 'bee_comfort'): string
     {
-        $prefix = 'RET-' . date('Ymd') . '-';
+        $prefixTag = ($returnType === 'china') ? 'CH-RET-' : 'BC-RET-';
+        $prefix = $prefixTag . date('Ymd') . '-';
         $latest = static::where('return_no', 'like', $prefix . '%')
             ->orderByDesc('id')
             ->value('return_no');

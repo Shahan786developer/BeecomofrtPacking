@@ -17,7 +17,12 @@ class ReturnController extends Controller
 {
     public function index(Request $request)
     {
+        $returnType = $request->input('return_type'); // null, 'bee_comfort', or 'china'
         $query = ReturnRecord::with(['customer', 'sale', 'details']);
+
+        if ($returnType && in_array($returnType, ['bee_comfort', 'china'])) {
+            $query->where('return_type', $returnType);
+        }
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -26,7 +31,9 @@ class ReturnController extends Controller
                       $sq->where('invoice_no', 'like', "%{$search}%");
                   })
                   ->orWhereHas('customer', function ($cq) use ($search) {
-                      $cq->where('name', 'like', "%{$search}%");
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('phone', 'like', "%{$search}%")
+                         ->orWhere('owner_name', 'like', "%{$search}%");
                   });
             });
         }
@@ -41,18 +48,28 @@ class ReturnController extends Controller
 
         $returns = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
-        return view('returns.index', compact('returns'));
+        $beeComfortCount = ReturnRecord::where('return_type', 'bee_comfort')->count();
+        $chinaCount = ReturnRecord::where('return_type', 'china')->count();
+        $allCount = ReturnRecord::count();
+
+        return view('returns.index', compact('returns', 'returnType', 'beeComfortCount', 'chinaCount', 'allCount'));
     }
 
     public function create(Request $request)
     {
-        $nextReturnNo = ReturnRecord::generateNextReturnNo();
+        $returnType = $request->input('return_type', 'bee_comfort');
+        if (!in_array($returnType, ['bee_comfort', 'china'])) {
+            $returnType = 'bee_comfort';
+        }
+
+        $nextReturnNo = ReturnRecord::generateNextReturnNo($returnType);
         $today = Carbon::today()->format('Y-m-d');
 
-        // Only sales that have at least one returnable item
+        // Only sales matching the return type that have at least one returnable item
         $sales = Sale::with(['customer', 'details' => function ($q) {
             $q->whereColumn('quantity', '>', 'returned_quantity');
         }])
+        ->where('bill_type', $returnType)
         ->whereHas('details', function ($q) {
             $q->whereColumn('quantity', '>', 'returned_quantity');
         })
@@ -61,12 +78,13 @@ class ReturnController extends Controller
 
         $selectedSaleId = $request->input('sale_id');
 
-        return view('returns.create', compact('nextReturnNo', 'today', 'sales', 'selectedSaleId'));
+        return view('returns.create', compact('nextReturnNo', 'today', 'sales', 'selectedSaleId', 'returnType'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'return_type' => 'required|in:bee_comfort,china',
             'sale_id' => 'required|exists:sales,id',
             'return_no' => 'required|string|unique:returns,return_no',
             'return_date' => 'required|date',
@@ -86,6 +104,7 @@ class ReturnController extends Controller
 
             $return = ReturnRecord::create([
                 'return_no' => trim($validated['return_no']),
+                'return_type' => $validated['return_type'],
                 'sale_id' => $sale->id,
                 'customer_id' => $sale->customer_id,
                 'return_date' => $validated['return_date'],
@@ -149,7 +168,7 @@ class ReturnController extends Controller
             return $return;
         });
 
-        return redirect()->route('returns.index')
+        return redirect()->route('returns.index', ['return_type' => $return->return_type])
             ->with('success', "Return record #{$return->return_no} processed successfully. Stock restored.");
     }
 
@@ -248,7 +267,7 @@ class ReturnController extends Controller
             ]);
         });
 
-        return redirect()->route('returns.index')
+        return redirect()->route('returns.index', ['return_type' => $return->return_type])
             ->with('success', "Return record #{$return->return_no} updated successfully.");
     }
 }

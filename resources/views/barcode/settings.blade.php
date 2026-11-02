@@ -14,7 +14,7 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Thermal Barcode Configuration</h1>
-            <p class="text-secondary small mb-0">Manage 32mm &times; 22mm roll label dimensions, brand typography, and second-line origin descriptions.</p>
+            <p class="text-secondary small mb-0">Hardware specifications for standard 32mm &times; 22mm thermal roll sticker printing.</p>
         </div>
         <div>
             <a href="{{ route('barcode.index') }}" class="btn btn-primary shadow-sm">
@@ -23,18 +23,16 @@
         </div>
     </div>
 
-    <!-- Configuration Grid -->
-    <div class="row g-4">
-
-        <!-- 1. Thermal Printer Hardware Parameters -->
-        <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
+    <!-- Configuration Card -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="fw-bold text-dark mb-0">Thermal Label Specifications</h5>
-                        <span class="text-secondary small">Hardware parameters for thermal roll output</span>
+                        <span class="text-secondary small">Hardware parameters for 32 mm &times; 22 mm thermal roll output</span>
                     </div>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2.5 py-1">
                         32 mm &times; 22 mm
                     </span>
                 </div>
@@ -43,13 +41,15 @@
                     <form method="POST" action="{{ route('barcode.settings.update') }}" class="d-flex flex-column gap-3">
                         @csrf
 
-                        <!-- Brand Name -->
+                        <!-- Brand Name (Line 1) -->
                         <div>
                             <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                1. First Line: Brand Name
+                                Default Brand Name (Line 1)
                             </label>
                             <input type="text" name="brand_name" value="{{ old('brand_name', $config->brand_name) }}" required class="form-control fw-bold">
-                            <div class="form-text small text-secondary">Prints as the prominent header on the first line (e.g., BEE COMFORT)</div>
+                            <div class="form-text small text-secondary">
+                                Prints as the prominent first header on every sticker (e.g. <strong>BEE COMFORT</strong>). Line 2 is auto-fetched as <em>[Category] [Product Code]</em>.
+                            </div>
                         </div>
 
                         <!-- Dimensions -->
@@ -104,12 +104,12 @@
                         <div class="form-check pt-2">
                             <input class="form-check-input" type="checkbox" name="auto_resize" id="autoResizeCheck" value="1" {{ $config->auto_resize ? 'checked' : '' }}>
                             <label class="form-check-label small fw-bold text-dark" for="autoResizeCheck">
-                                Auto-Resize Enabled (High Readability for Thermal Roll Printers)
+                                Auto-Resize Enabled (Crisp 1D lines for thermal roll printers)
                             </label>
                         </div>
 
                         <div class="pt-3 border-top d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary fw-bold">
+                            <button type="submit" class="btn btn-primary fw-bold px-4">
                                 Save Printer Settings
                             </button>
                         </div>
@@ -117,95 +117,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 2. Second-Line Description Options -->
-        <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-0">Second-Line Description Options</h5>
-                        <span class="text-secondary small">Origin descriptors combined with Product Code (e.g. INDIA AA-01)</span>
-                    </div>
-                    <span class="badge bg-light text-dark border px-2 py-1">
-                        {{ $descriptions->count() }} Available
-                    </span>
-                </div>
-
-                <div class="card-body p-4 d-flex flex-column gap-3">
-                    <!-- Add Description Form -->
-                    <form method="POST" action="{{ route('barcode.descriptions.store') }}" class="p-3 bg-light rounded-3 border">
-                        @csrf
-                        <span class="form-label small fw-bold text-secondary text-uppercase d-block mb-2">Add New Origin / Description</span>
-                        <div class="row g-2 align-items-center">
-                            <div class="col-sm-8">
-                                <input type="text" name="name" placeholder="e.g. PAKISTAN, CHINA" required style="text-transform: uppercase;" class="form-control text-uppercase fw-bold">
-                            </div>
-                            <div class="col-sm-4">
-                                <button type="submit" class="btn btn-primary w-100 fw-bold">
-                                    <i class="bi bi-plus-lg me-1"></i> Add
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" name="is_default" id="isDefaultCheck" value="1">
-                            <label class="form-check-label small text-secondary" for="isDefaultCheck">
-                                Set as default second-line selection
-                            </label>
-                        </div>
-                    </form>
-
-                    <!-- Descriptions Table -->
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="py-2 text-secondary text-uppercase fs-7">Description Name</th>
-                                    <th class="py-2 text-center text-secondary text-uppercase fs-7">Status</th>
-                                    <th class="pe-3 py-2 text-end text-secondary text-uppercase fs-7">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($descriptions as $desc)
-                                <tr>
-                                    <td class="py-3 font-monospace fw-bold text-dark">
-                                        {{ $desc->name }}
-                                    </td>
-                                    <td class="py-3 text-center">
-                                        @if($desc->is_default)
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                                <i class="bi bi-star-fill me-1 text-warning"></i> Default
-                                            </span>
-                                        @else
-                                            <form method="POST" action="{{ route('barcode.descriptions.default', $desc) }}" class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-link btn-sm text-secondary text-decoration-none p-0 small">
-                                                    Make Default
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                    <td class="pe-3 py-3 text-end">
-                                        @if(!$desc->is_default)
-                                        <form method="POST" action="{{ route('barcode.descriptions.destroy', $desc) }}" class="d-inline" onsubmit="return confirm('Remove this description?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                        @else
-                                        <span class="text-secondary small fst-italic">Locked</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
 </div>

@@ -31,8 +31,23 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="row g-3">
+                    <!-- Bill Type (Bee Comfort vs China) -->
+                    <div class="col-12 col-md-3">
+                        <label for="bill_type" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Bill Type <span class="text-danger">*</span>
+                        </label>
+                        <select name="bill_type" id="bill_type" required class="form-select fw-bold border-primary-subtle text-primary">
+                            <option value="bee_comfort" {{ old('bill_type', $billType ?? 'bee_comfort') === 'bee_comfort' ? 'selected' : '' }}>
+                                Bee Comfort Bill
+                            </option>
+                            <option value="china" {{ old('bill_type', $billType ?? 'bee_comfort') === 'china' ? 'selected' : '' }}>
+                                China Bill
+                            </option>
+                        </select>
+                    </div>
+
                     <!-- Invoice Number -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label for="invoice_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Invoice Number <span class="text-danger">*</span>
                         </label>
@@ -41,7 +56,7 @@
                     </div>
 
                     <!-- Customer Selection -->
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-md-4">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label for="customer_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
                                 Customer Account <span class="text-danger">*</span>
@@ -61,7 +76,7 @@
                     </div>
 
                     <!-- Invoice Date -->
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-md-2">
                         <label for="invoice_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Invoice Date <span class="text-danger">*</span>
                         </label>
@@ -217,24 +232,48 @@
             </div>
 
             <div class="modal-body p-4 d-flex flex-column gap-3">
-                <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Customer Name <span class="text-danger">*</span></label>
-                    <input type="text" id="modal_cust_name" required placeholder="Full Name or Business Name" class="form-control fw-bold">
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Company / Name <span class="text-danger">*</span></label>
+                        <input type="text" id="modal_cust_name" required placeholder="Business or Company Name" class="form-control fw-bold">
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Owner Name</label>
+                        <input type="text" id="modal_cust_owner_name" placeholder="Owner Name" class="form-control">
+                    </div>
                 </div>
+
                 <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Email</label>
-                    <input type="email" id="modal_cust_email" placeholder="customer@domain.com" class="form-control">
+                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Contact Phone Numbers (1 - 4)</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="text" id="modal_cust_phone" placeholder="Phone 1 (Primary)" class="form-control font-monospace form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" id="modal_cust_phone_2" placeholder="Phone 2" class="form-control font-monospace form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" id="modal_cust_phone_3" placeholder="Phone 3" class="form-control font-monospace form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" id="modal_cust_phone_4" placeholder="Phone 4" class="form-control font-monospace form-control-sm">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">City</label>
-                    <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Karachi, Rawalpindi" class="form-control">
+
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">City</label>
+                        <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Karachi" class="form-control">
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Email</label>
+                        <input type="email" id="modal_cust_email" placeholder="customer@domain.com" class="form-control">
+                    </div>
                 </div>
+
                 <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Phone Number</label>
-                    <input type="text" id="modal_cust_phone" placeholder="+92 300 0000000" class="form-control font-monospace">
-                </div>
-                <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Address</label>
+                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Physical Address</label>
                     <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control">
                 </div>
             </div>
@@ -253,6 +292,8 @@
     const allProductsCatalog = {!! json_encode($products) !!};
     let invoiceRows = [];
 
+    const billTypeSelect = document.getElementById('bill_type');
+    const invoiceNoInput = document.getElementById('invoice_no');
     const scannerInput = document.getElementById('barcode_scanner_input');
     const quickSelect = document.getElementById('quick_product_select');
     const btnAddItem = document.getElementById('btn-add-item');
@@ -266,7 +307,47 @@
 
     let customerModalInstance = null;
 
+    function filterCatalogOptions() {
+        const selectedType = billTypeSelect.value;
+        const requiredParent = (selectedType === 'china') ? 'China' : 'Bee Comfort';
+
+        if (quickSelect && quickSelect.tomselect) {
+            quickSelect.tomselect.clear();
+            quickSelect.tomselect.clearOptions();
+            allProductsCatalog.forEach(p => {
+                if ((p.parent_category || 'Bee Comfort') === requiredParent) {
+                    quickSelect.tomselect.addOption({
+                        value: p.id,
+                        text: `${p.title} — [SKU: ${p.sku_code}] (Rs. ${parseFloat(p.selling_price).toFixed(2)})`
+                    });
+                }
+            });
+            quickSelect.tomselect.refreshOptions(false);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        if (billTypeSelect) {
+            billTypeSelect.addEventListener('change', function() {
+                const type = this.value;
+                let cur = invoiceNoInput.value;
+                if (type === 'china') {
+                    invoiceNoInput.value = cur.replace(/^BC-INV-/, 'CH-INV-');
+                    if (!invoiceNoInput.value.startsWith('CH-INV-')) {
+                        invoiceNoInput.value = 'CH-INV-' + cur.replace(/^[A-Z]+-[A-Z]+-/, '');
+                    }
+                } else {
+                    invoiceNoInput.value = cur.replace(/^CH-INV-/, 'BC-INV-');
+                    if (!invoiceNoInput.value.startsWith('BC-INV-')) {
+                        invoiceNoInput.value = 'BC-INV-' + cur.replace(/^[A-Z]+-[A-Z]+-/, '');
+                    }
+                }
+                filterCatalogOptions();
+            });
+
+            setTimeout(filterCatalogOptions, 300);
+        }
+
         if (scannerInput) {
             scannerInput.focus();
 
@@ -303,7 +384,14 @@
         if (!sku) return;
 
         const prod = allProductsCatalog.find(p => p.sku_code == sku);
+        const requiredParent = (billTypeSelect.value === 'china') ? 'China' : 'Bee Comfort';
+
         if (prod) {
+            if ((prod.parent_category || 'Bee Comfort') !== requiredParent) {
+                alert(`Warning: Product '${prod.title}' belongs to category '${prod.parent_category}', but '${billTypeSelect.value === 'china' ? 'China' : 'Bee Comfort'}' bill is currently selected!`);
+                scannerInput.select();
+                return;
+            }
             addProductToInvoice(prod);
             scannerInput.value = '';
             scannerInput.focus();
@@ -313,10 +401,16 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.found) {
+                        if ((data.parent_category || 'Bee Comfort') !== requiredParent) {
+                            alert(`Warning: Product '${data.title}' belongs to '${data.parent_category}', but '${billTypeSelect.value === 'china' ? 'China' : 'Bee Comfort'}' bill is selected!`);
+                            scannerInput.select();
+                            return;
+                        }
                         addProductToInvoice({
                             id: data.id,
                             sku_code: data.sku_code,
                             title: data.title,
+                            parent_category: data.parent_category,
                             selling_price: data.selling_price,
                             stock_quantity: data.stock_quantity,
                         });
@@ -455,9 +549,13 @@
 
     function saveNewCustomerAjax() {
         const name = document.getElementById('modal_cust_name').value.trim();
+        const owner_name = document.getElementById('modal_cust_owner_name').value.trim();
         const email = document.getElementById('modal_cust_email').value.trim();
         const city = document.getElementById('modal_cust_city').value.trim();
         const phone = document.getElementById('modal_cust_phone').value.trim();
+        const phone_2 = document.getElementById('modal_cust_phone_2').value.trim();
+        const phone_3 = document.getElementById('modal_cust_phone_3').value.trim();
+        const phone_4 = document.getElementById('modal_cust_phone_4').value.trim();
         const address = document.getElementById('modal_cust_address').value.trim();
 
         if (!name) {
@@ -472,7 +570,7 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ name, email, city, phone, address })
+            body: JSON.stringify({ name, owner_name, email, city, phone, phone_2, phone_3, phone_4, address })
         })
         .then(r => r.json())
         .then(data => {

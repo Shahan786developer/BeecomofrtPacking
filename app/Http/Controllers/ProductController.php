@@ -30,6 +30,11 @@ class ProductController extends Controller
             });
         }
 
+        // Parent Category filter
+        if ($parentCategory = $request->input('parent_category')) {
+            $query->where('parent_category', $parentCategory);
+        }
+
         // Category filter
         if ($categoryId = $request->input('category_id')) {
             $query->where('category_id', $categoryId);
@@ -57,6 +62,8 @@ class ProductController extends Controller
 
     public function create()
     {
+        $parentCategories = ['Bee Comfort', 'China'];
+        $defaultParentCategory = 'Bee Comfort';
         $categories = Category::orderBy('name')->get();
         $defaultCategory = Category::where('is_default', true)->first();
         $dozens = Dozen::orderBy('quantity')->get();
@@ -70,6 +77,8 @@ class ProductController extends Controller
         $previewSku = Sku::generateNextUniqueCode();
 
         return view('products.create', compact(
+            'parentCategories',
+            'defaultParentCategory',
             'categories',
             'defaultCategory',
             'dozens',
@@ -84,6 +93,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'bill_no' => 'required|string|max:100',
+            'parent_category' => 'required|string|in:Bee Comfort,China',
             'category_id' => 'required|exists:categories,id',
             'dozen_id' => 'required|exists:dozens,id',
             'product_code' => 'required|string|max:50',
@@ -92,6 +102,7 @@ class ProductController extends Controller
             'quantity' => 'required|integer',
         ], [
             'bill_no.required' => 'Bill Number is required.',
+            'parent_category.required' => 'Please select a parent category (Bee Comfort or China).',
             'category_id.required' => 'Please select a product category.',
             'dozen_id.required' => 'Please select a dozen unit.',
             'product_code.required' => 'Product Code is required (e.g. AA-01).',
@@ -117,6 +128,7 @@ class ProductController extends Controller
 
             $product = Product::create([
                 'bill_no' => trim($validated['bill_no']),
+                'parent_category' => $validated['parent_category'],
                 'category_id' => $validated['category_id'],
                 'dozen_id' => $validated['dozen_id'],
                 'product_code' => strtoupper(trim($validated['product_code'])),
@@ -159,17 +171,19 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        $parentCategories = ['Bee Comfort', 'China'];
         $categories = Category::orderBy('name')->get();
         $dozens = Dozen::orderBy('quantity')->get();
         $pricingRules = PricingRule::with('category')->orderBy('name')->get();
 
-        return view('products.edit', compact('product', 'categories', 'dozens', 'pricingRules'));
+        return view('products.edit', compact('product', 'parentCategories', 'categories', 'dozens', 'pricingRules'));
     }
 
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
             'bill_no' => 'required|string|max:100',
+            'parent_category' => 'required|string|in:Bee Comfort,China',
             'category_id' => 'required|exists:categories,id',
             'dozen_id' => 'required|exists:dozens,id',
             'product_code' => 'required|string|max:50',
@@ -182,6 +196,7 @@ class ProductController extends Controller
 
         $product->update([
             'bill_no' => trim($validated['bill_no']),
+            'parent_category' => $validated['parent_category'],
             'category_id' => $validated['category_id'],
             'dozen_id' => $validated['dozen_id'],
             'product_code' => strtoupper(trim($validated['product_code'])),

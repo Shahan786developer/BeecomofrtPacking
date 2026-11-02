@@ -108,6 +108,7 @@ class BeeComfortTest extends TestCase
 
         $response = $this->post(route('products.store'), [
             'bill_no' => 'BILL-NEW-99',
+            'parent_category' => 'Bee Comfort',
             'category_id' => $category->id,
             'dozen_id' => $dozen->id,
             'product_code' => 'bb-99', // Lowercase should be saved as uppercase BB-99
@@ -120,6 +121,7 @@ class BeeComfortTest extends TestCase
 
         $product = Product::where('product_code', 'BB-99')->first();
         $this->assertNotNull($product);
+        $this->assertEquals('Bee Comfort', $product->parent_category);
         $this->assertEquals(7, strlen($product->sku_code));
         $this->assertEquals(60, $product->stock_quantity);
 
@@ -150,7 +152,8 @@ class BeeComfortTest extends TestCase
 
         $response = $this->post(route('sales.store'), [
             'customer_id' => $customer->id,
-            'invoice_no' => 'INV-TEST-0001',
+            'bill_type' => 'bee_comfort',
+            'invoice_no' => 'BC-INV-TEST-0001',
             'invoice_date' => date('Y-m-d'),
             'discount' => 10,
             'items' => [
@@ -161,9 +164,10 @@ class BeeComfortTest extends TestCase
             ],
         ]);
 
-        $sale = Sale::where('invoice_no', 'INV-TEST-0001')->first();
+        $sale = Sale::where('invoice_no', 'BC-INV-TEST-0001')->first();
         $this->assertNotNull($sale);
-        $response->assertRedirect(route('sales.index'));
+        $this->assertEquals('bee_comfort', $sale->bill_type);
+        $response->assertRedirect(route('sales.index', ['bill_type' => 'bee_comfort']));
 
         // Verify stock deduction
         $product->refresh();
@@ -181,7 +185,8 @@ class BeeComfortTest extends TestCase
         $excessSold = $product->stock_quantity + 5; // Will make stock -5
         $this->post(route('sales.store'), [
             'customer_id' => $customer->id,
-            'invoice_no' => 'INV-TEST-OVERSOLD',
+            'bill_type' => 'bee_comfort',
+            'invoice_no' => 'BC-INV-TEST-OVERSOLD',
             'invoice_date' => date('Y-m-d'),
             'items' => [
                 [
@@ -210,7 +215,8 @@ class BeeComfortTest extends TestCase
 
         // 1. Create a sale of 10 units
         $sale = Sale::create([
-            'invoice_no' => 'INV-TEST-FOR-RET',
+            'invoice_no' => 'BC-INV-TEST-FOR-RET',
+            'bill_type' => 'bee_comfort',
             'customer_id' => $customer->id,
             'invoice_date' => date('Y-m-d'),
             'subtotal' => $product->selling_price * 10,
@@ -232,8 +238,9 @@ class BeeComfortTest extends TestCase
 
         // 2. Try returning 15 units (exceeds 10 eligible) -> should fail
         $responseFail = $this->post(route('returns.store'), [
+            'return_type' => 'bee_comfort',
             'sale_id' => $sale->id,
-            'return_no' => 'RET-TEST-FAIL',
+            'return_no' => 'BC-RET-TEST-FAIL',
             'return_date' => date('Y-m-d'),
             'items' => [
                 [
@@ -246,8 +253,9 @@ class BeeComfortTest extends TestCase
 
         // 3. Return 4 units (valid)
         $responseSuccess = $this->post(route('returns.store'), [
+            'return_type' => 'bee_comfort',
             'sale_id' => $sale->id,
-            'return_no' => 'RET-TEST-SUCCESS',
+            'return_no' => 'BC-RET-TEST-SUCCESS',
             'return_date' => date('Y-m-d'),
             'reason' => 'Defective packaging',
             'items' => [
@@ -258,9 +266,10 @@ class BeeComfortTest extends TestCase
             ],
         ]);
 
-        $return = ReturnRecord::where('return_no', 'RET-TEST-SUCCESS')->first();
+        $return = ReturnRecord::where('return_no', 'BC-RET-TEST-SUCCESS')->first();
         $this->assertNotNull($return);
-        $responseSuccess->assertRedirect(route('returns.index'));
+        $this->assertEquals('bee_comfort', $return->return_type);
+        $responseSuccess->assertRedirect(route('returns.index', ['return_type' => 'bee_comfort']));
 
         // Check stock restored
         $product->refresh();
@@ -293,24 +302,64 @@ class BeeComfortTest extends TestCase
     }
 
     /**
-     * Test Thermal Barcode Configuration and Second-Line Description
+     * Test Thermal Barcode Generation and Auto-Fetched Second-Line
      */
     public function test_barcode_configuration_and_print(): void
     {
-        $product = Product::first();
-        $desc = BarcodeDescription::where('name', 'INDIA')->first();
+        $product = Product::with('category')->first();
         $config = BarcodeConfiguration::getActive();
 
         $response = $this->post(route('barcode.print'), [
             'product_id' => $product->id,
-            'description_id' => $desc->id,
             'quantity' => 5,
         ]);
 
         $response->assertStatus(200);
         $response->assertSee('BEE COMFORT');
-        $response->assertSee("INDIA {$product->product_code}");
+        $response->assertSee("{$product->category->name} {$product->product_code}");
         $response->assertSee($product->sku_code);
+    }
+
+    /**
+     * Test Customer creation with Owner Name and 4 Phone numbers
+     */
+    public function test_customer_creation_with_owner_and_four_phones(): void
+    {
+        $response = $this->post(route('customers.store'), [
+            'name' => 'Royal Garments International',
+            'owner_name' => 'Haji Muhammad Iqbal',
+            'phone' => '03001234567',
+            'phone_2' => '03217654321',
+            'phone_3' => '03459876543',
+            'phone_4' => '03123456789',
+            'city' => 'Faisalabad',
+            'address' => 'Clock Tower Market Shop 44',
+        ]);
+
+        $response->assertRedirect(route('customers.index'));
+
+        $customer = Customer::where('name', 'Royal Garments International')->first();
+        $this->assertNotNull($customer);
+        $this->assertEquals('Haji Muhammad Iqbal', $customer->owner_name);
+        $this->assertEquals('03001234567', $customer->phone);
+        $this->assertEquals('03217654321', $customer->phone_2);
+        $this->assertEquals('03459876543', $customer->phone_3);
+        $this->assertEquals('03123456789', $customer->phone_4);
+    }
+
+    /**
+     * Test A4 Printable Invoice View
+     */
+    public function test_a4_printable_invoice_layout(): void
+    {
+        $sale = Sale::first();
+        $response = $this->get(route('sales.print', $sale));
+
+        $response->assertStatus(200);
+        $response->assertSee('Bee Comfort');
+        $response->assertSee($sale->invoice_no);
+        $response->assertSee($sale->customer->name);
+        $response->assertSee('Print Invoice (A4)');
     }
 
     /**

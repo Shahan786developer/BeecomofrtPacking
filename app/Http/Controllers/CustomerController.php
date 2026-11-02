@@ -14,7 +14,11 @@ class CustomerController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('owner_name', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('phone_2', 'like', "%{$search}%")
+                  ->orWhere('phone_3', 'like', "%{$search}%")
+                  ->orWhere('phone_4', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('city', 'like', "%{$search}%")
                   ->orWhere('address', 'like', "%{$search}%");
@@ -29,7 +33,11 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:150',
+            'owner_name' => 'nullable|string|max:150',
             'phone' => 'nullable|string|max:50',
+            'phone_2' => 'nullable|string|max:50',
+            'phone_3' => 'nullable|string|max:50',
+            'phone_4' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:100',
             'city' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:255',
@@ -53,7 +61,11 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:150',
+            'owner_name' => 'nullable|string|max:150',
             'phone' => 'nullable|string|max:50',
+            'phone_2' => 'nullable|string|max:50',
+            'phone_3' => 'nullable|string|max:50',
+            'phone_4' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:100',
             'city' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:255',

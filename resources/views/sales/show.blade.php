@@ -20,12 +20,15 @@
                 <h1 class="h3 fw-bold text-dark mb-0">Sales Invoice Details</h1>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('returns.create', ['sale_id' => $sale->id]) }}" class="btn btn-outline-warning">
+                <a href="{{ route('sales.edit', $sale) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i> Edit Invoice
+                </a>
+                <a href="{{ route('returns.create', ['sale_id' => $sale->id, 'return_type' => $sale->bill_type ?? 'bee_comfort']) }}" class="btn btn-outline-warning">
                     <i class="bi bi-arrow-counterclockwise me-1"></i> Process Return
                 </a>
-                <button onclick="window.print()" class="btn btn-primary">
-                    <i class="bi bi-printer me-1"></i> Print Invoice
-                </button>
+                <a href="{{ route('sales.print', $sale) }}" target="_blank" class="btn btn-primary fw-bold shadow-sm">
+                    <i class="bi bi-printer me-1"></i> Print A4 Invoice
+                </a>
             </div>
         </div>
 
@@ -48,9 +51,15 @@
                 </div>
 
                 <div class="text-sm-end">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 text-uppercase fw-bold">
-                        Customer Invoice
-                    </span>
+                    @if($sale->bill_type === 'china')
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 text-uppercase fw-bold">
+                            China Bill
+                        </span>
+                    @else
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 text-uppercase fw-bold">
+                            Bee Comfort Bill
+                        </span>
+                    @endif
                     <h3 class="h4 font-monospace fw-bold text-dark mt-2 mb-1">{{ $sale->invoice_no }}</h3>
                     <div class="text-secondary small">
                         Invoice Date: <strong class="text-dark">{{ $sale->invoice_date->format('d M Y') }}</strong>
@@ -63,11 +72,17 @@
                 <div class="col-sm-6">
                     <span class="text-secondary text-uppercase fw-bold fs-7 d-block mb-1">Billed To (Customer):</span>
                     <h5 class="fw-bold text-dark mb-1">{{ $sale->customer->name }}</h5>
-                    @if($sale->customer->phone)
-                        <div class="text-secondary small"><i class="bi bi-telephone me-1 text-primary"></i> {{ $sale->customer->phone }}</div>
+                    @if($sale->customer->owner_name)
+                        <div class="text-secondary small mb-1"><i class="bi bi-person me-1 text-primary"></i> Owner: <strong class="text-dark">{{ $sale->customer->owner_name }}</strong></div>
                     @endif
-                    @if($sale->customer->email)
-                        <div class="text-secondary small"><i class="bi bi-envelope me-1 text-primary"></i> {{ $sale->customer->email }}</div>
+                    @if($sale->customer->phone)
+                        <div class="text-secondary small"><i class="bi bi-telephone me-1 text-primary"></i> Phone 1: <span class="font-monospace">{{ $sale->customer->phone }}</span></div>
+                    @endif
+                    @if($sale->customer->phone_2)
+                        <div class="text-secondary small"><i class="bi bi-telephone me-1 text-secondary"></i> Phone 2: <span class="font-monospace">{{ $sale->customer->phone_2 }}</span></div>
+                    @endif
+                    @if($sale->customer->city)
+                        <div class="text-secondary small"><i class="bi bi-geo me-1 text-primary"></i> City: {{ $sale->customer->city }}</div>
                     @endif
                     @if($sale->customer->address)
                         <div class="text-secondary small mt-1"><i class="bi bi-geo-alt me-1 text-primary"></i> {{ $sale->customer->address }}</div>

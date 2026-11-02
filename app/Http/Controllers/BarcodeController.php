@@ -16,9 +16,6 @@ class BarcodeController extends Controller
             ->orderBy('product_code')
             ->get();
 
-        $descriptions = BarcodeDescription::orderBy('name')->get();
-        $defaultDescription = BarcodeDescription::where('is_default', true)->first() ?? $descriptions->first();
-
         $config = BarcodeConfiguration::getActive();
 
         // Optional preselected product
@@ -29,8 +26,6 @@ class BarcodeController extends Controller
 
         return view('barcode.index', compact(
             'products',
-            'descriptions',
-            'defaultDescription',
             'config',
             'selectedProduct'
         ));
@@ -40,27 +35,24 @@ class BarcodeController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'description_id' => 'required|exists:barcode_descriptions,id',
             'quantity' => 'required|integer|min:1|max:1000',
         ]);
 
         $product = Product::with(['category', 'dozen', 'sku'])->findOrFail($validated['product_id']);
-        $description = BarcodeDescription::findOrFail($validated['description_id']);
         $config = BarcodeConfiguration::getActive();
         $quantity = (int) $validated['quantity'];
 
-        // Second line combined text: [Description] [Product Code] -> e.g. "INDIA AA-01"
-        $secondLine = trim($description->name . ' ' . $product->product_code);
+        // Second line combined text: [Category Name] [Product Code] -> e.g. "Silk Touch AA-01"
+        $secondLine = trim($product->category->name . ' ' . $product->product_code);
 
-        return view('barcode.print', compact('product', 'description', 'secondLine', 'config', 'quantity'));
+        return view('barcode.print', compact('product', 'secondLine', 'config', 'quantity'));
     }
 
     public function settings()
     {
         $config = BarcodeConfiguration::getActive();
-        $descriptions = BarcodeDescription::orderBy('name')->get();
 
-        return view('barcode.settings', compact('config', 'descriptions'));
+        return view('barcode.settings', compact('config'));
     }
 
     public function updateSettings(Request $request)
@@ -75,7 +67,6 @@ class BarcodeController extends Controller
             'text_align' => 'required|string|in:center,left,right',
             'rotation' => 'required|integer|in:0,90,180,270',
             'auto_resize' => 'nullable|boolean',
-            'default_description_id' => 'nullable|exists:barcode_descriptions,id',
         ]);
 
         $config = BarcodeConfiguration::getActive();
@@ -89,7 +80,6 @@ class BarcodeController extends Controller
             'text_align' => $validated['text_align'],
             'rotation' => $validated['rotation'],
             'auto_resize' => $request->boolean('auto_resize'),
-            'default_description_id' => $validated['default_description_id'] ?? null,
         ]);
 
         return redirect()->route('barcode.settings')

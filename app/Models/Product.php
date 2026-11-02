@@ -15,6 +15,7 @@ class Product extends Model
 
     protected $fillable = [
         'bill_no',
+        'parent_category',
         'category_id',
         'dozen_id',
         'product_code',

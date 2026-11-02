@@ -14,7 +14,10 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <span class="badge bg-primary font-monospace px-3 py-2 fs-7">
+                <span class="badge {{ $product->parent_category === 'China' ? 'bg-danger text-white' : 'bg-primary text-white' }} px-3 py-2 fs-7">
+                    <i class="bi bi-tag-fill me-1"></i> {{ $product->parent_category }}
+                </span>
+                <span class="badge bg-dark font-monospace px-3 py-2 fs-7">
                     <i class="bi bi-upc me-1"></i> SKU: {{ $product->sku_code }}
                 </span>
                 <span class="badge bg-light text-secondary border px-3 py-2 fs-7">

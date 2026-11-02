@@ -52,8 +52,22 @@
                         </h6>
 
                         <div class="row g-3">
+                            <!-- 0. Parent Category (China or Bee Comfort) -->
+                            <div class="col-12 col-md-3">
+                                <label for="parent_category" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    Parent Category <span class="text-danger">*</span>
+                                </label>
+                                <select name="parent_category" id="parent_category" required class="form-select fw-bold border-primary-subtle text-primary">
+                                    @foreach($parentCategories as $pCat)
+                                        <option value="{{ $pCat }}" {{ old('parent_category', $defaultParentCategory) === $pCat ? 'selected' : '' }}>
+                                            {{ $pCat }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <!-- 1. Bill No (Blank by default) -->
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-3">
                                 <label for="bill_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                                     Bill Number <span class="text-danger">*</span>
                                 </label>
@@ -62,7 +76,7 @@
                             </div>
 
                             <!-- 2. Category (Pre-selects default category if available) -->
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-3">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <label for="category_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
                                         Category <span class="text-danger">*</span>
@@ -84,7 +98,7 @@
                             </div>
 
                             <!-- 3. Dozens (12 default) -->
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-3">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <label for="dozen_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
                                         Dozens Unit <span class="text-danger">*</span>

@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [SaleController::class, 'index'])->name('index');
         Route::get('/create', [SaleController::class, 'create'])->name('create');
         Route::post('/', [SaleController::class, 'store'])->name('store');
+        Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
         Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
         Route::get('/{sale}/edit', [SaleController::class, 'edit'])->name('edit');
         Route::put('/{sale}', [SaleController::class, 'update'])->name('update');

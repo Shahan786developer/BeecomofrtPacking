@@ -93,33 +93,39 @@
             height: 22mm;
             background: #ffffff;
             color: #000000;
-            padding: 0.8mm 1mm;
+            padding: 1mm 1.2mm;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
             overflow: hidden;
             text-align: center;
-            line-height: 1.1;
+            line-height: 1.15;
             border: 1px dashed #cbd5e1;
             page-break-after: always;
             page-break-inside: avoid;
+            box-sizing: border-box;
         }
 
         .line-brand {
-            font-size: 8px;
+            font-size: 7.5pt;
             font-weight: 900;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
             text-transform: uppercase;
+            line-height: 1.1;
+            margin: 0;
         }
 
         .line-desc {
-            font-size: 7.5px;
+            font-size: 6.8pt;
             font-weight: 700;
             text-transform: uppercase;
             white-space: nowrap;
             overflow: hidden;
-            margin-top: -1px;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            margin-top: 0.4mm;
+            line-height: 1.1;
         }
 
         .line-barcode {
@@ -128,20 +134,22 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            margin: auto 0;
+            margin: 0.5mm 0;
         }
 
         .line-barcode svg {
             max-width: 100%;
-            height: 7.5mm;
+            height: 9.2mm;
+            display: block;
         }
 
         .line-sku {
-            font-size: 8px;
+            font-size: 7.8pt;
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
-            letter-spacing: 1.5px;
-            margin-top: -1px;
+            letter-spacing: 1.4px;
+            margin-top: 0.3mm;
+            line-height: 1;
         }
 
         /* PRINT MEDIA STYLING */
@@ -212,8 +220,8 @@
                 JsBarcode(el, sku, {
                     format: "CODE39",
                     lineColor: "#000000",
-                    width: 1.1,
-                    height: 25,
+                    width: 1.15,
+                    height: 38,
                     displayValue: false, // Line 4 renders human-readable SKU
                     margin: 0,
                     flat: true,

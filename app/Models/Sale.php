@@ -13,6 +13,7 @@ class Sale extends Model
 
     protected $fillable = [
         'invoice_no',
+        'bill_type',
         'customer_id',
         'invoice_date',
         'subtotal',
@@ -43,9 +44,10 @@ class Sale extends Model
         return $this->hasMany(ReturnRecord::class);
     }
 
-    public static function generateNextInvoiceNo(): string
+    public static function generateNextInvoiceNo(string $billType = 'bee_comfort'): string
     {
-        $prefix = 'INV-' . date('Ymd') . '-';
+        $prefixTag = ($billType === 'china') ? 'CH-INV-' : 'BC-INV-';
+        $prefix = $prefixTag . date('Ymd') . '-';
         $latest = static::where('invoice_no', 'like', $prefix . '%')
             ->orderByDesc('id')
             ->value('invoice_no');

@@ -14,14 +14,20 @@ class SaleController extends Controller
 {
     public function index(Request $request)
     {
+        $billType = $request->input('bill_type'); // null, 'bee_comfort', or 'china'
         $query = Sale::with(['customer', 'details']);
+
+        if ($billType && in_array($billType, ['bee_comfort', 'china'])) {
+            $query->where('bill_type', $billType);
+        }
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_no', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('phone', 'like', "%{$search}%");
+                         ->orWhere('phone', 'like', "%{$search}%")
+                         ->orWhere('owner_name', 'like', "%{$search}%");
                   });
             });
         }
@@ -36,16 +42,25 @@ class SaleController extends Controller
 
         $sales = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
-        return view('sales.index', compact('sales'));
+        $beeComfortCount = Sale::where('bill_type', 'bee_comfort')->count();
+        $chinaCount = Sale::where('bill_type', 'china')->count();
+        $allCount = Sale::count();
+
+        return view('sales.index', compact('sales', 'billType', 'beeComfortCount', 'chinaCount', 'allCount'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $billType = $request->input('bill_type', 'bee_comfort');
+        if (!in_array($billType, ['bee_comfort', 'china'])) {
+            $billType = 'bee_comfort';
+        }
+
         $customers = Customer::orderBy('name')->get();
-        $nextInvoiceNo = Sale::generateNextInvoiceNo();
+        $nextInvoiceNo = Sale::generateNextInvoiceNo($billType);
         $today = Carbon::today()->format('Y-m-d');
 
-        // All registered products with dynamic combined title for quick barcode/search selection
+        // All registered products with dynamic combined title and parent category for filtering
         $products = Product::with(['category', 'dozen', 'sku'])
             ->orderBy('product_code')
             ->get()
@@ -54,18 +69,20 @@ class SaleController extends Controller
                     'id' => $p->id,
                     'sku_code' => $p->sku_code,
                     'title' => $p->title,
+                    'parent_category' => $p->parent_category ?? 'Bee Comfort',
                     'stock_quantity' => $p->stock_quantity,
                     'selling_price' => (float) $p->selling_price,
                 ];
             });
 
-        return view('sales.create', compact('customers', 'nextInvoiceNo', 'today', 'products'));
+        return view('sales.create', compact('customers', 'nextInvoiceNo', 'today', 'products', 'billType'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'bill_type' => 'required|in:bee_comfort,china',
             'invoice_no' => 'required|string|unique:sales,invoice_no',
             'invoice_date' => 'required|date',
             'discount' => 'nullable|numeric|min:0',
@@ -85,6 +102,7 @@ class SaleController extends Controller
 
             $sale = Sale::create([
                 'invoice_no' => trim($validated['invoice_no']),
+                'bill_type' => $validated['bill_type'],
                 'customer_id' => $validated['customer_id'],
                 'invoice_date' => $validated['invoice_date'],
                 'subtotal' => 0,
@@ -138,8 +156,14 @@ class SaleController extends Controller
             return $sale;
         });
 
-        return redirect()->route('sales.index')
+        return redirect()->route('sales.index', ['bill_type' => $sale->bill_type])
             ->with('success', "Invoice #{$sale->invoice_no} created successfully. Stock quantities deducted.");
+    }
+
+    public function print(Sale $sale)
+    {
+        $sale->load(['customer', 'details.product.category', 'details.product.dozen']);
+        return view('sales.print', compact('sale'));
     }
 
     public function show(Sale $sale)
@@ -161,6 +185,7 @@ class SaleController extends Controller
                     'id' => $p->id,
                     'sku_code' => $p->sku_code,
                     'title' => $p->title,
+                    'parent_category' => $p->parent_category ?? 'Bee Comfort',
                     'stock_quantity' => $p->stock_quantity,
                     'selling_price' => (float) $p->selling_price,
                 ];
@@ -242,7 +267,7 @@ class SaleController extends Controller
             ]);
         });
 
-        return redirect()->route('sales.index')
+        return redirect()->route('sales.index', ['bill_type' => $sale->bill_type])
             ->with('success', "Invoice #{$sale->invoice_no} updated successfully.");
     }
 }

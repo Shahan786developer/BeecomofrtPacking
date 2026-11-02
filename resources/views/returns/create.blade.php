@@ -30,9 +30,24 @@
         <!-- INVOICE SELECTION CARD -->
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <div class="row g-4">
+                <div class="row g-3">
+                    <!-- 0. Return Category -->
+                    <div class="col-12 col-md-3">
+                        <label for="return_type" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Return Category <span class="text-danger">*</span>
+                        </label>
+                        <select name="return_type" id="return_type" required class="form-select fw-bold border-warning text-dark" onchange="window.location.href='{{ route('returns.create') }}?return_type=' + this.value">
+                            <option value="bee_comfort" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'bee_comfort') ? 'selected' : '' }}>
+                                Bee Comfort Return
+                            </option>
+                            <option value="china" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'china') ? 'selected' : '' }}>
+                                China Return
+                            </option>
+                        </select>
+                    </div>
+
                     <!-- 1. Original Invoice -->
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-md-4">
                         <label for="sale_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Original Invoice <span class="text-danger">*</span>
                         </label>
@@ -40,14 +55,14 @@
                             <option value="">Select Invoice...</option>
                             @foreach($sales as $sale)
                                 <option value="{{ $sale->id }}" {{ (isset($selectedSaleId) && $selectedSaleId == $sale->id) ? 'selected' : ($loop->first ? 'selected' : '') }}>
-                                    {{ $sale->invoice_no }} — {{ $sale->customer->name }} (${{ number_format($sale->total_amount, 2) }})
+                                    {{ $sale->invoice_no }} — {{ $sale->customer->name }} (Rs. {{ number_format($sale->total_amount, 2) }})
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
                     <!-- 2. Return Number -->
-                    <div class="col-12 col-sm-6 col-md-4">
+                    <div class="col-12 col-sm-6 col-md-3">
                         <label for="return_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Return Number <span class="text-danger">*</span>
                         </label>
@@ -55,7 +70,7 @@
                     </div>
 
                     <!-- 3. Return Date -->
-                    <div class="col-12 col-sm-6 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-2">
                         <label for="return_date" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Return Date <span class="text-danger">*</span>
                         </label>

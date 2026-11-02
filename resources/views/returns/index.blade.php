@@ -13,29 +13,32 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
         <div>
             <h1 class="h4 fw-bold text-dark mb-0">Customer Bill Returns</h1>
-            <p class="text-secondary small mb-0">Merchandise returns, sales invoice quantity validation, and inventory restorations.</p>
+            <p class="text-secondary small mb-0">Merchandise returns, separate China and Bee Comfort bill returns, and stock restorations.</p>
         </div>
     </div>
 
-    <!-- CONTROLS: SEARCH ABOVE + ACTION BUTTONS (CREATE & PRINT) -->
+    <!-- CONTROLS & TABS: BEE COMFORT RETURNS VS CHINA RETURNS -->
     <div class="card border-0 shadow-sm">
-        <div class="card-body p-3">
+        <div class="card-body p-3 d-flex flex-column gap-3">
             <div class="row g-2 align-items-center">
                 <!-- Search Functionality Above -->
                 <div class="col-12 col-md-8">
                     <form method="GET" action="{{ route('returns.index') }}" class="d-flex gap-2">
+                        @if(request('return_type'))
+                            <input type="hidden" name="return_type" value="{{ request('return_type') }}">
+                        @endif
                         <div class="input-group">
                             <span class="input-group-text bg-light text-secondary border-end-0">
                                 <i class="bi bi-search"></i>
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}" 
-                                placeholder="Search by return #, original invoice #, or customer name..." 
+                                placeholder="Search by return #, original invoice #, or customer/owner name..." 
                                 class="form-control border-start-0 ps-0" autocomplete="off">
                         </div>
                         <button type="submit" class="btn btn-primary fw-bold px-3">
                             Search
                         </button>
-                        <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
+                        <a href="{{ route('returns.index', request('return_type') ? ['return_type' => request('return_type')] : []) }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
                             <i class="bi bi-x-lg"></i>
                         </a>
                     </form>
@@ -43,11 +46,36 @@
 
                 <!-- Action Button: Create Return -->
                 <div class="col-12 col-md-4 d-flex justify-content-md-end">
-                    <a href="{{ route('returns.create') }}" class="btn btn-primary fw-bold shadow-sm w-100 w-md-auto">
-                        <i class="bi bi-plus-lg me-1"></i> Create Return
+                    <a href="{{ route('returns.create', ['return_type' => request('return_type') === 'china' ? 'china' : 'bee_comfort']) }}" class="btn btn-primary fw-bold shadow-sm w-100 w-md-auto">
+                        <i class="bi bi-plus-lg me-1"></i> Create {{ request('return_type') === 'china' ? 'China' : 'Bee Comfort' }} Return
                     </a>
                 </div>
             </div>
+
+            <!-- TABS NAVIGATION -->
+            <ul class="nav nav-pills gap-2 pt-2 border-top">
+                <li class="nav-item">
+                    <a href="{{ route('returns.index', array_merge(request()->except('return_type', 'page'), ['return_type' => 'bee_comfort'])) }}" 
+                       class="nav-link py-2 px-3 fw-bold {{ (!request('return_type') || request('return_type') === 'bee_comfort') ? 'active bg-primary' : 'bg-light text-dark' }}">
+                        <i class="bi bi-shield-check me-1"></i> Bee Comfort Returns
+                        <span class="badge bg-white text-primary ms-1">{{ $beeComfortCount ?? 0 }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('returns.index', array_merge(request()->except('page'), ['return_type' => 'china'])) }}" 
+                       class="nav-link py-2 px-3 fw-bold {{ request('return_type') === 'china' ? 'active bg-danger text-white' : 'bg-light text-dark' }}">
+                        <i class="bi bi-box-seam me-1"></i> China Returns
+                        <span class="badge {{ request('return_type') === 'china' ? 'bg-white text-danger' : 'bg-danger text-white' }} ms-1">{{ $chinaCount ?? 0 }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('returns.index', array_merge(request()->except('page'), ['return_type' => 'all'])) }}" 
+                       class="nav-link py-2 px-3 fw-bold {{ request('return_type') === 'all' ? 'active bg-dark text-white' : 'bg-light text-secondary' }}">
+                        <i class="bi bi-collection me-1"></i> All Returns
+                        <span class="badge bg-secondary text-white ms-1">{{ $allCount ?? 0 }}</span>
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 
@@ -60,7 +88,7 @@
                     <tr>
                         <th class="ps-3 py-3 text-secondary text-uppercase fs-7">Return No</th>
                         <th class="py-3 text-secondary text-uppercase fs-7">Original Invoice</th>
-                        <th class="py-3 text-secondary text-uppercase fs-7">Customer</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Customer &amp; Owner</th>
                         <th class="py-3 text-secondary text-uppercase fs-7">Return Date</th>
                         <th class="py-3 text-center text-secondary text-uppercase fs-7">Units Returned</th>
                         <th class="py-3 text-end text-secondary text-uppercase fs-7">Refund Amount</th>
@@ -70,11 +98,18 @@
                 <tbody class="border-top-0">
                     @forelse($returns as $ret)
                     <tr>
-                        <!-- Return Number -->
+                        <!-- Return Number & Badge -->
                         <td class="ps-3 py-3">
-                            <a href="{{ route('returns.show', $ret) }}" class="fw-bold text-danger text-decoration-none font-monospace fs-6">
-                                {{ $ret->return_no }}
-                            </a>
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="{{ route('returns.show', $ret) }}" class="fw-bold text-danger text-decoration-none font-monospace fs-6">
+                                    {{ $ret->return_no }}
+                                </a>
+                                @if($ret->return_type === 'china')
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-0.5 px-1.5" style="font-size: 0.7rem;">China</span>
+                                @else
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-0.5 px-1.5" style="font-size: 0.7rem;">Bee Comfort</span>
+                                @endif
+                            </div>
                         </td>
 
                         <!-- Original Invoice -->
@@ -89,16 +124,19 @@
                             <a href="{{ route('customers.ledger', $ret->customer_id) }}" class="fw-bold text-dark text-decoration-none hover-primary" title="View Customer Ledger">
                                 {{ $ret->customer->name }} <i class="bi bi-journal-text text-primary small ms-1"></i>
                             </a>
+                            @if($ret->customer->owner_name)
+                                <div class="text-secondary small">Owner: <strong class="text-dark">{{ $ret->customer->owner_name }}</strong></div>
+                            @endif
                         </td>
 
                         <!-- Date -->
-                        <td class="py-3 text-secondary small">
+                        <td class="py-3 text-secondary small font-monospace">
                             {{ $ret->return_date->format('d M Y') }}
                         </td>
 
                         <!-- Units -->
                         <td class="py-3 text-center">
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1">
                                 +{{ $ret->details->sum('quantity') }} unit(s)
                             </span>
                         </td>
@@ -124,9 +162,9 @@
                     <tr>
                         <td colspan="7" class="text-center py-5 text-secondary">
                             <i class="bi bi-arrow-counterclockwise display-6 d-block mb-2 text-secondary"></i>
-                            <h6 class="fw-bold text-dark">No customer bill returns recorded yet.</h6>
+                            <h6 class="fw-bold text-dark">No {{ request('return_type') === 'china' ? 'China' : 'Bee Comfort' }} bill returns recorded yet.</h6>
                             <p class="small text-secondary mb-3">When merchandise is returned, validate quantities against sales and restore inventory.</p>
-                            <a href="{{ route('returns.create') }}" class="btn btn-primary btn-sm">
+                            <a href="{{ route('returns.create', ['return_type' => request('return_type') === 'china' ? 'china' : 'bee_comfort']) }}" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-lg me-1"></i> Create First Return
                             </a>
                         </td>
