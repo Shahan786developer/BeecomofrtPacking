@@ -15,13 +15,27 @@
             <h1 class="h3 fw-bold text-dark mb-1">Executive Dashboard</h1>
             <p class="text-secondary small mb-0">Real-time inventory levels, customer billing, cash receipts, and pending receivables tracking.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('receipts.create') }}" class="btn btn-success fw-bold shadow-sm">
                 <i class="bi bi-cash-stack me-1"></i> Receive Cash (CRV)
             </a>
-            <a href="{{ route('sales.create') }}" class="btn btn-primary shadow-sm">
-                <i class="bi bi-cart-plus me-1"></i> New Sales Invoice
-            </a>
+            <div class="dropdown">
+                <button class="btn btn-primary shadow-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-cart-plus me-1"></i> New Sales Bill
+                </button>
+                <ul class="dropdown-menu shadow border-0">
+                    <li>
+                        <a class="dropdown-item py-2 fw-semibold text-primary" href="{{ route('sales.create', ['bill_type' => 'bee_comfort']) }}">
+                            <i class="bi bi-receipt me-1"></i> New Bee Comfort Bill
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 fw-semibold text-danger" href="{{ route('sales.create', ['bill_type' => 'china']) }}">
+                            <i class="bi bi-box-seam me-1"></i> New China Bill
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <a href="{{ route('products.create') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-plus-lg me-1"></i> Add Product
             </a>

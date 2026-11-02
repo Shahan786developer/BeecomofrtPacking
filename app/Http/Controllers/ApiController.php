@@ -60,7 +60,7 @@ class ApiController extends Controller
     /**
      * Scan / search product by 7-digit SKU
      */
-    public function getProductBySku(string $sku)
+    public function getProductBySku(Request $request, string $sku)
     {
         $product = Product::with(['category', 'dozen', 'sku'])
             ->where('sku_code', trim($sku))
@@ -73,13 +73,32 @@ class ApiController extends Controller
             ], 404);
         }
 
+        $parentCat = $product->parent_category ?? 'Bee Comfort';
+        $normalizedParent = strtolower(str_replace(' ', '', $parentCat)) === 'china' ? 'china' : 'bee_comfort';
+
+        $expectedBillType = $request->input('bill_type');
+        if ($expectedBillType && in_array($expectedBillType, ['bee_comfort', 'china'])) {
+            if ($expectedBillType !== $normalizedParent) {
+                return response()->json([
+                    'found' => true,
+                    'mismatch' => true,
+                    'product_bill_type' => $normalizedParent,
+                    'parent_category' => $parentCat,
+                    'title' => $product->title,
+                    'message' => "Product '{$product->title}' belongs to {$parentCat} catalog and cannot be added to a " . ($expectedBillType === 'china' ? 'China' : 'Bee Comfort') . " bill.",
+                ]);
+            }
+        }
+
         return response()->json([
             'found' => true,
+            'mismatch' => false,
             'id' => $product->id,
             'sku_code' => $product->sku_code,
             'product_code' => $product->product_code,
             'category_name' => $product->category->name,
             'dozen_label' => $product->dozen->label,
+            'parent_category' => $parentCat,
             'title' => $product->title, // Dynamic combined title e.g. "Comfort Fit (12 pieces) AA-01"
             'selling_price' => (float) $product->selling_price,
             'stock_quantity' => $product->stock_quantity,

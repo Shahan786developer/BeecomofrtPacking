@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Process Bill Return')
+@section('title', $returnType === 'china' ? 'Process China Bill Return' : 'Process Bee Comfort Bill Return')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('returns.index') }}" class="text-decoration-none">Bill Returns</a></li>
-    <li class="breadcrumb-item active" aria-current="page">New Return</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ $returnType === 'china' ? 'New China Return' : 'New Bee Comfort Return' }}</li>
 @endsection
 
 @section('content')
@@ -13,11 +13,31 @@
     <!-- Header -->
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="h3 fw-bold text-dark mb-1">Process Bill Return</h1>
-            <p class="text-secondary small mb-0">Select original sales invoice, scan returned merchandise, and restore warehouse inventory.</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h3 fw-bold text-dark mb-0">
+                    {{ $returnType === 'china' ? 'Process China Bill Return' : 'Process Bee Comfort Bill Return' }}
+                </h1>
+                <span class="badge {{ $returnType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }} px-2.5 py-1 text-uppercase fw-bold fs-7">
+                    <i class="bi bi-lock-fill me-1"></i> {{ $returnType === 'china' ? 'China Category Locked' : 'Bee Comfort Category Locked' }}
+                </span>
+            </div>
+            <p class="text-secondary small mb-0">
+                {{ $returnType === 'china' ? 'Only China sales invoices are listed. Merchandise returns are locked to prevent cross-bill conflicts.' : 'Only Bee Comfort sales invoices are listed. Merchandise returns are locked to prevent cross-bill conflicts.' }}
+            </p>
         </div>
-        <div>
-            <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary">
+        <div class="d-flex gap-2">
+            @if(!isset($selectedSale))
+                @if($returnType === 'china')
+                    <a href="{{ route('returns.create', ['return_type' => 'bee_comfort']) }}" class="btn btn-outline-primary btn-sm fw-bold">
+                        <i class="bi bi-arrow-left-right me-1"></i> Switch to Bee Comfort Return
+                    </a>
+                @else
+                    <a href="{{ route('returns.create', ['return_type' => 'china']) }}" class="btn btn-outline-danger btn-sm fw-bold">
+                        <i class="bi bi-arrow-left-right me-1"></i> Switch to China Return
+                    </a>
+                @endif
+            @endif
+            <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Back to Returns
             </a>
         </div>
@@ -77,30 +97,29 @@
                         </div>
                     </div>
                 @else
-                    <!-- Manual Mode: Select from available invoices -->
+                    <!-- Manual Mode: Select from available invoices for this return_type -->
                     <div class="row g-3">
-                        <!-- 0. Return Category -->
+                        <!-- 0. Return Category (Locked to avoid conflict) -->
                         <div class="col-12 col-md-3">
-                            <label for="return_type" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                Return Category <span class="text-danger">*</span>
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                Return Category (Locked)
                             </label>
-                            <select name="return_type" id="return_type" required class="form-select fw-bold border-warning text-dark" onchange="window.location.href='{{ route('returns.create') }}?return_type=' + this.value">
-                                <option value="bee_comfort" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'bee_comfort') ? 'selected' : '' }}>
-                                    Bee Comfort Return
-                                </option>
-                                <option value="china" {{ (old('return_type', $returnType ?? 'bee_comfort') === 'china') ? 'selected' : '' }}>
-                                    China Return
-                                </option>
-                            </select>
+                            <div class="d-flex align-items-center justify-content-between p-2 {{ $returnType === 'china' ? 'bg-danger-subtle border border-danger-subtle' : 'bg-primary-subtle border border-primary-subtle' }} rounded">
+                                <span class="badge {{ $returnType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }} fs-7 text-uppercase fw-bold">
+                                    {{ $returnType === 'china' ? 'China Return' : 'Bee Comfort Return' }}
+                                </span>
+                                <i class="bi bi-lock-fill {{ $returnType === 'china' ? 'text-danger' : 'text-primary' }}" title="Category locked to prevent cross-bill conflict"></i>
+                            </div>
+                            <input type="hidden" name="return_type" id="return_type" value="{{ $returnType }}">
                         </div>
 
-                        <!-- 1. Original Invoice -->
+                        <!-- 1. Original Invoice (Filtered to this Return Category) -->
                         <div class="col-12 col-md-4">
                             <label for="sale_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                Original Invoice <span class="text-danger">*</span>
+                                Original {{ $returnType === 'china' ? 'China' : 'Bee Comfort' }} Invoice <span class="text-danger">*</span>
                             </label>
                             <select name="sale_id" id="sale_id" required class="searchable-select form-select">
-                                <option value="">Select Invoice...</option>
+                                <option value="">Select {{ $returnType === 'china' ? 'China' : 'Bee Comfort' }} Invoice ({{ count($sales) }} available)...</option>
                                 @foreach($sales as $sale)
                                     <option value="{{ $sale->id }}" {{ (isset($selectedSaleId) && $selectedSaleId == $sale->id) ? 'selected' : ($loop->first ? 'selected' : '') }}>
                                         {{ $sale->invoice_no }} — {{ $sale->customer->name }} (Rs. {{ number_format($sale->total_amount, 2) }})

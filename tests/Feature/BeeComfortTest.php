@@ -576,4 +576,123 @@ class BeeComfortTest extends TestCase
             $response->assertSee('Locked to Original Invoice');
         }
     }
+
+    /**
+     * Test Separate China & Bee Comfort Bill creation pages and strict catalog product isolation
+     */
+    public function test_separate_china_and_bee_comfort_bill_pages_and_strict_product_filtering(): void
+    {
+        $category = Category::first();
+        $dozen = Dozen::first();
+        $pricingRule = PricingRule::first();
+        $skuChina = Sku::allocate();
+        $skuBee = Sku::allocate();
+
+        // Create China Product
+        $chinaProduct = Product::create([
+            'bill_no' => 'BILL-CH-01',
+            'parent_category' => 'China',
+            'category_id' => $category->id,
+            'dozen_id' => $dozen->id,
+            'pricing_rule_id' => $pricingRule->id,
+            'product_code' => 'CH-999',
+            'sku_id' => $skuChina->id,
+            'sku_code' => $skuChina->sku_code,
+            'actual_price' => 500,
+            'selling_price' => 600,
+            'stock_quantity' => 100,
+        ]);
+
+        // Create Bee Comfort Product
+        $beeProduct = Product::create([
+            'bill_no' => 'BILL-BC-01',
+            'parent_category' => 'Bee Comfort',
+            'category_id' => $category->id,
+            'dozen_id' => $dozen->id,
+            'pricing_rule_id' => $pricingRule->id,
+            'product_code' => 'BC-999',
+            'sku_id' => $skuBee->id,
+            'sku_code' => $skuBee->sku_code,
+            'actual_price' => 700,
+            'selling_price' => 850,
+            'stock_quantity' => 100,
+        ]);
+
+        $customer = Customer::first();
+
+        // 1. Visit China Bill Create Page
+        $chinaPage = $this->get(route('sales.create', ['bill_type' => 'china']));
+        $chinaPage->assertStatus(200);
+        $chinaPage->assertSee('New China Sales Invoice');
+        $chinaPage->assertSee('China Catalog Locked');
+        $chinaPage->assertSee($chinaProduct->title);
+        $chinaPage->assertDontSee($beeProduct->title);
+
+        // 2. Visit Bee Comfort Bill Create Page
+        $beePage = $this->get(route('sales.create', ['bill_type' => 'bee_comfort']));
+        $beePage->assertStatus(200);
+        $beePage->assertSee('New Bee Comfort Sales Invoice');
+        $beePage->assertSee('Bee Comfort Catalog Locked');
+        $beePage->assertSee($beeProduct->title);
+        $beePage->assertDontSee($chinaProduct->title);
+
+        // 3. API Barcode scan mismatch check
+        $apiMismatch = $this->getJson("/api/products/by-sku/{$chinaProduct->sku_code}?bill_type=bee_comfort");
+        $apiMismatch->assertStatus(200);
+        $apiMismatch->assertJson(['found' => true, 'mismatch' => true]);
+
+        // 4. Server-side validation prevents cross-category injection
+        $invalidPost = $this->post(route('sales.store'), [
+            'bill_type' => 'bee_comfort',
+            'invoice_no' => 'BC-INV-TEST-CROSS',
+            'customer_id' => $customer->id,
+            'invoice_date' => Carbon::today()->format('Y-m-d'),
+            'items' => [
+                ['product_id' => $chinaProduct->id, 'quantity' => 1]
+            ]
+        ]);
+        $invalidPost->assertSessionHasErrors('items');
+    }
+
+    /**
+     * Test Separate China and Bee Comfort Returns Locking
+     */
+    public function test_separate_china_and_bee_comfort_returns_locking(): void
+    {
+        $customer = Customer::first();
+
+        // Create Bee Comfort Sale
+        $bcSale = Sale::create([
+            'bill_type' => 'bee_comfort',
+            'invoice_no' => 'BC-TEST-INV-RET',
+            'customer_id' => $customer->id,
+            'invoice_date' => Carbon::today(),
+            'subtotal' => 1000,
+            'total_amount' => 1000,
+        ]);
+
+        $prod = Product::first();
+        SaleDetail::create([
+            'sale_id' => $bcSale->id,
+            'product_id' => $prod->id,
+            'product_title' => $prod->title,
+            'sku_code' => $prod->sku_code,
+            'quantity' => 10,
+            'returned_quantity' => 0,
+            'unit_price' => 100,
+            'total_amount' => 1000,
+        ]);
+
+        // Visit China Return Create Page: Bee Comfort Sale should NOT be in the China invoice list
+        $chinaReturnPage = $this->get(route('returns.create', ['return_type' => 'china']));
+        $chinaReturnPage->assertStatus(200);
+        $chinaReturnPage->assertSee('Process China Bill Return');
+        $chinaReturnPage->assertDontSee('BC-TEST-INV-RET');
+
+        // Visit Bee Comfort Return Create Page: Bee Comfort Sale SHOULD be in the list
+        $bcReturnPage = $this->get(route('returns.create', ['return_type' => 'bee_comfort']));
+        $bcReturnPage->assertStatus(200);
+        $bcReturnPage->assertSee('Process Bee Comfort Bill Return');
+        $bcReturnPage->assertSee('BC-TEST-INV-RET');
+    }
 }

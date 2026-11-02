@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'New Sales Invoice')
+@section('title', $billType === 'china' ? 'New China Sales Invoice' : 'New Bee Comfort Sales Invoice')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('sales.index') }}" class="text-decoration-none">Sales Invoices</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Create Invoice</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ $billType === 'china' ? 'New China Bill' : 'New Bee Comfort Bill' }}</li>
 @endsection
 
 @section('content')
@@ -13,12 +13,30 @@
     <!-- Header -->
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
-            <h1 class="h4 fw-bold text-dark mb-1">New Sales Invoice</h1>
-            <p class="text-secondary small mb-0">Scan barcodes or select products to generate customer bill. Totals in Rupees (Rs.).</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h4 fw-bold text-dark mb-0">
+                    {{ $billType === 'china' ? 'New China Sales Invoice' : 'New Bee Comfort Sales Invoice' }}
+                </h1>
+                <span class="badge {{ $billType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }} px-2.5 py-1 text-uppercase fw-bold fs-7">
+                    <i class="bi bi-lock-fill me-1"></i> {{ $billType === 'china' ? 'China Catalog Locked' : 'Bee Comfort Catalog Locked' }}
+                </span>
+            </div>
+            <p class="text-secondary small mb-0">
+                {{ $billType === 'china' ? 'China merchandise billing only. Products from other categories are locked out to prevent billing conflict.' : 'Bee Comfort merchandise billing only. Products from other categories are locked out to prevent billing conflict.' }}
+            </p>
         </div>
-        <div>
-            <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Back to Invoices
+        <div class="d-flex gap-2">
+            @if($billType === 'china')
+                <a href="{{ route('sales.create', ['bill_type' => 'bee_comfort']) }}" class="btn btn-outline-primary btn-sm fw-bold">
+                    <i class="bi bi-arrow-left-right me-1"></i> Switch to Bee Comfort Bill
+                </a>
+            @else
+                <a href="{{ route('sales.create', ['bill_type' => 'china']) }}" class="btn btn-outline-danger btn-sm fw-bold">
+                    <i class="bi bi-arrow-left-right me-1"></i> Switch to China Bill
+                </a>
+            @endif
+            <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Invoices List
             </a>
         </div>
     </div>
@@ -31,19 +49,23 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="row g-3">
-                    <!-- Bill Type (Bee Comfort vs China) -->
+                    <!-- Bill Type (Locked to prevent cross-bill conflict) -->
                     <div class="col-12 col-md-3">
-                        <label for="bill_type" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                            Bill Type <span class="text-danger">*</span>
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                            Bill Category (Locked)
                         </label>
-                        <select name="bill_type" id="bill_type" required class="form-select fw-bold border-primary-subtle text-primary">
-                            <option value="bee_comfort" {{ old('bill_type', $billType ?? 'bee_comfort') === 'bee_comfort' ? 'selected' : '' }}>
-                                Bee Comfort Bill
-                            </option>
-                            <option value="china" {{ old('bill_type', $billType ?? 'bee_comfort') === 'china' ? 'selected' : '' }}>
-                                China Bill
-                            </option>
-                        </select>
+                        <div class="d-flex align-items-center justify-content-between p-2 {{ $billType === 'china' ? 'bg-danger-subtle border border-danger-subtle' : 'bg-primary-subtle border border-primary-subtle' }} rounded">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge {{ $billType === 'china' ? 'bg-danger' : 'bg-primary' }} text-white text-uppercase fw-bold fs-7">
+                                    {{ $billType === 'china' ? 'China Bill' : 'Bee Comfort Bill' }}
+                                </span>
+                                <span class="small fw-semibold {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}">
+                                    ({{ count($products) }} items available)
+                                </span>
+                            </div>
+                            <i class="bi bi-lock-fill {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}" title="Locked to prevent conflict"></i>
+                        </div>
+                        <input type="hidden" name="bill_type" id="bill_type" value="{{ $billType }}">
                     </div>
 
                     <!-- Invoice Number -->
@@ -87,19 +109,21 @@
         </div>
 
         <!-- BARCODE SCAN BAR & PRODUCT SELECTION -->
-        <div class="card border-0 shadow-sm bg-primary text-white">
+        <div class="card border-0 shadow-sm {{ $billType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }}">
             <div class="card-body p-4">
                 <div class="row g-3 align-items-center">
                     <!-- 1. Dedicated Barcode Scan Bar -->
                     <div class="col-12 col-lg-6">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label for="barcode_scanner_input" class="form-label small fw-bold text-white text-uppercase mb-0">
-                                <i class="bi bi-upc-scan me-1"></i> Scan Barcode (7-Digit SKU)
+                                <i class="bi bi-upc-scan me-1"></i> Scan {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} Barcode (7-Digit SKU)
                             </label>
-                            <span class="badge bg-white text-primary fw-bold">Scan Bar Active</span>
+                            <span class="badge bg-white {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} fw-bold">
+                                {{ $billType === 'china' ? 'China Scanner Active' : 'Bee Comfort Scanner Active' }}
+                            </span>
                         </div>
                         <div class="input-group input-group-lg shadow-sm">
-                            <span class="input-group-text bg-white border-0 text-primary">
+                            <span class="input-group-text bg-white border-0 {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}">
                                 <i class="bi bi-upc"></i>
                             </span>
                             <input type="text" id="barcode_scanner_input" autofocus
@@ -108,24 +132,25 @@
                                 autocomplete="off">
                         </div>
                         <div class="form-text text-white-50 small mt-1">
-                            Scan or enter SKU to automatically add product to table
+                            Scan or enter SKU to automatically add {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} product to table
                         </div>
                     </div>
 
                     <!-- 2. Catalog Single-Select Dropdown -->
                     <div class="col-12 col-lg-6">
                         <label for="quick_product_select" class="form-label small fw-bold text-white text-uppercase mb-1">
-                            <i class="bi bi-search me-1"></i> Or Select from Catalog
+                            <i class="bi bi-search me-1"></i> Select from {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} Catalog
                         </label>
                         <div class="d-flex gap-2">
                             <div class="flex-grow-1 text-dark">
                                 <select id="quick_product_select" class="searchable-select form-select form-select-lg">
-                                    <option value="">Select registered product from catalog...</option>
+                                    <option value="">Choose {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} product ({{ count($products) }} items)...</option>
                                     @foreach($products as $prod)
                                         <option value="{{ $prod['id'] }}" 
                                             data-id="{{ $prod['id'] }}"
                                             data-sku="{{ $prod['sku_code'] }}"
                                             data-title="{{ $prod['title'] }}"
+                                            data-parent="{{ $prod['parent_category'] }}"
                                             data-price="{{ $prod['selling_price'] }}"
                                             data-stock="{{ $prod['stock_quantity'] }}">
                                             {{ $prod['title'] }} — [SKU: {{ $prod['sku_code'] }}] (Rs. {{ number_format($prod['selling_price'], 2) }})
@@ -133,11 +158,21 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <button type="button" id="btn-add-item" class="btn btn-light btn-lg fw-bold text-primary shadow-sm flex-shrink-0">
+                            <button type="button" id="btn-add-item" class="btn btn-light btn-lg fw-bold {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} shadow-sm flex-shrink-0">
                                 <i class="bi bi-plus-lg me-1"></i> Add
                             </button>
                         </div>
                         <div class="form-text text-white-50 small mt-1">
+                            Strict catalog single-select (only {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} items shown)
+                        </div>
+                    </div>
+                </div>
+
+                <div id="scanner-feedback" class="mt-2 text-white small d-none">
+                    <i class="bi bi-check-circle-fill me-1"></i> <span id="scanner-feedback-text"></span>
+                </div>
+            </div>
+        </div>
                             Strict catalog single-select (choose 1 product)
                         </div>
                     </div>
@@ -309,13 +344,14 @@
 
     function filterCatalogOptions() {
         const selectedType = billTypeSelect.value;
-        const requiredParent = (selectedType === 'china') ? 'China' : 'Bee Comfort';
+        const requiredParent = (selectedType === 'china') ? 'china' : 'beecomfort';
 
         if (quickSelect && quickSelect.tomselect) {
             quickSelect.tomselect.clear();
             quickSelect.tomselect.clearOptions();
             allProductsCatalog.forEach(p => {
-                if ((p.parent_category || 'Bee Comfort') === requiredParent) {
+                const pNorm = (p.parent_category || 'Bee Comfort').toLowerCase().replace(/\s+/g, '');
+                if (pNorm === requiredParent) {
                     quickSelect.tomselect.addOption({
                         value: p.id,
                         text: `${p.title} — [SKU: ${p.sku_code}] (Rs. ${parseFloat(p.selling_price).toFixed(2)})`
@@ -383,12 +419,16 @@
     function processScan(sku) {
         if (!sku) return;
 
+        const currentBillType = billTypeSelect.value;
+        const requiredNorm = (currentBillType === 'china') ? 'china' : 'beecomfort';
+        const requiredLabel = (currentBillType === 'china') ? 'China' : 'Bee Comfort';
+
         const prod = allProductsCatalog.find(p => p.sku_code == sku);
-        const requiredParent = (billTypeSelect.value === 'china') ? 'China' : 'Bee Comfort';
 
         if (prod) {
-            if ((prod.parent_category || 'Bee Comfort') !== requiredParent) {
-                alert(`Warning: Product '${prod.title}' belongs to category '${prod.parent_category}', but '${billTypeSelect.value === 'china' ? 'China' : 'Bee Comfort'}' bill is currently selected!`);
+            const prodNorm = (prod.parent_category || 'Bee Comfort').toLowerCase().replace(/\s+/g, '');
+            if (prodNorm !== requiredNorm) {
+                alert(`Conflict Warning: Product '${prod.title}' belongs to '${prod.parent_category}' catalog, but this is a ${requiredLabel} Bill! Only ${requiredLabel} products can be added.`);
                 scannerInput.select();
                 return;
             }
@@ -397,12 +437,12 @@
             scannerInput.focus();
             showFeedback(`Scanned [SKU: ${sku}]: '${prod.title}' added.`);
         } else {
-            fetch(`/api/products/by-sku/${encodeURIComponent(sku)}`)
+            fetch(`/api/products/by-sku/${encodeURIComponent(sku)}?bill_type=${encodeURIComponent(currentBillType)}`)
                 .then(r => r.json())
                 .then(data => {
                     if (data.found) {
-                        if ((data.parent_category || 'Bee Comfort') !== requiredParent) {
-                            alert(`Warning: Product '${data.title}' belongs to '${data.parent_category}', but '${billTypeSelect.value === 'china' ? 'China' : 'Bee Comfort'}' bill is selected!`);
+                        if (data.mismatch) {
+                            alert(`Category Conflict: Product '${data.title}' belongs to '${data.parent_category}' and cannot be added to a ${requiredLabel} Bill! Only ${requiredLabel} products are allowed.`);
                             scannerInput.select();
                             return;
                         }

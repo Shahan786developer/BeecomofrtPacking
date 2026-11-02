@@ -60,8 +60,23 @@ class SaleController extends Controller
         $nextInvoiceNo = Sale::generateNextInvoiceNo($billType);
         $today = Carbon::today()->format('Y-m-d');
 
-        // All registered products with dynamic combined title and parent category for filtering
-        $products = Product::with(['category', 'dozen', 'sku'])
+        // Products strictly filtered to match the selected bill type (Bee Comfort vs China)
+        $productsQuery = Product::with(['category', 'dozen', 'sku']);
+
+        if ($billType === 'china') {
+            $productsQuery->where(function ($q) {
+                $q->where('parent_category', 'China')
+                  ->orWhere('parent_category', 'china');
+            });
+        } else {
+            $productsQuery->where(function ($q) {
+                $q->where('parent_category', 'Bee Comfort')
+                  ->orWhere('parent_category', 'bee_comfort')
+                  ->orWhereNull('parent_category');
+            });
+        }
+
+        $products = $productsQuery
             ->orderBy('product_code')
             ->get()
             ->map(function ($p) {
@@ -96,6 +111,24 @@ class SaleController extends Controller
             'items.min' => 'At least one product item must be added to the invoice.',
             'items.*.quantity.min' => 'Item quantity must be at least 1.',
         ]);
+
+        // Validate that all items strictly belong to the specified bill type
+        foreach ($validated['items'] as $itemData) {
+            $prod = Product::find($itemData['product_id']);
+            if ($prod) {
+                $isChina = strtolower(str_replace(' ', '', $prod->parent_category ?? '')) === 'china';
+                if ($validated['bill_type'] === 'china' && !$isChina) {
+                    return back()->withInput()->withErrors([
+                        'items' => "Product '{$prod->title}' is a Bee Comfort product and cannot be added to a China Bill."
+                    ]);
+                }
+                if ($validated['bill_type'] === 'bee_comfort' && $isChina) {
+                    return back()->withInput()->withErrors([
+                        'items' => "Product '{$prod->title}' is a China product and cannot be added to a Bee Comfort Bill."
+                    ]);
+                }
+            }
+        }
 
         $sale = DB::transaction(function () use ($validated) {
             $discount = (float) ($validated['discount'] ?? 0);

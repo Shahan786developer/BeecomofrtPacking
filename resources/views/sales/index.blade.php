@@ -10,10 +10,18 @@
 <div class="d-flex flex-column gap-3">
 
     <!-- PAGE TITLE -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
         <div>
             <h1 class="h4 fw-bold text-dark mb-0">Sales Invoices</h1>
             <p class="text-secondary small mb-0">Manage customer billing records, separate China and Bee Comfort bills, and print A4 invoices.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('sales.create', ['bill_type' => 'bee_comfort']) }}" class="btn btn-primary fw-bold shadow-sm">
+                <i class="bi bi-cart-plus me-1"></i> + New Bee Comfort Bill
+            </a>
+            <a href="{{ route('sales.create', ['bill_type' => 'china']) }}" class="btn btn-danger fw-bold shadow-sm">
+                <i class="bi bi-box-seam me-1"></i> + New China Bill
+            </a>
         </div>
     </div>
 
@@ -22,7 +30,7 @@
         <div class="card-body p-3 d-flex flex-column gap-3">
             <div class="row g-2 align-items-center">
                 <!-- Search Functionality Above -->
-                <div class="col-12 col-md-7 col-lg-8">
+                <div class="col-12 col-md-6 col-lg-7">
                     <form method="GET" action="{{ route('sales.index') }}" class="d-flex gap-2">
                         @if(request('bill_type'))
                             <input type="hidden" name="bill_type" value="{{ request('bill_type') }}">
@@ -44,12 +52,15 @@
                     </form>
                 </div>
 
-                <!-- Action Buttons: Create & Process Return -->
-                <div class="col-12 col-md-5 col-lg-4 d-flex justify-content-md-end gap-2">
-                    <a href="{{ route('sales.create', ['bill_type' => request('bill_type') === 'china' ? 'china' : 'bee_comfort']) }}" class="btn btn-primary fw-bold shadow-sm flex-fill flex-md-grow-0">
-                        <i class="bi bi-cart-plus me-1"></i> Create {{ request('bill_type') === 'china' ? 'China' : 'Bee Comfort' }} Bill
+                <!-- Action Buttons: Both Bee Comfort & China Bill Buttons -->
+                <div class="col-12 col-md-6 col-lg-5 d-flex justify-content-md-end gap-2 flex-wrap">
+                    <a href="{{ route('sales.create', ['bill_type' => 'bee_comfort']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-cart-plus me-1"></i> Bee Comfort Bill
                     </a>
-                    <a href="{{ route('returns.create', ['return_type' => request('bill_type') === 'china' ? 'china' : 'bee_comfort']) }}" class="btn btn-outline-warning fw-bold flex-fill flex-md-grow-0">
+                    <a href="{{ route('sales.create', ['bill_type' => 'china']) }}" class="btn btn-danger btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-box-seam me-1"></i> China Bill
+                    </a>
+                    <a href="{{ route('returns.create', ['return_type' => request('bill_type') === 'china' ? 'china' : 'bee_comfort']) }}" class="btn btn-outline-warning btn-sm fw-bold">
                         <i class="bi bi-arrow-counterclockwise me-1"></i> Return
                     </a>
                 </div>

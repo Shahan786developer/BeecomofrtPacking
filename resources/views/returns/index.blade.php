@@ -10,10 +10,18 @@
 <div class="d-flex flex-column gap-3">
 
     <!-- PAGE TITLE -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
         <div>
             <h1 class="h4 fw-bold text-dark mb-0">Customer Bill Returns</h1>
             <p class="text-secondary small mb-0">Merchandise returns, separate China and Bee Comfort bill returns, and stock restorations.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('returns.create', ['return_type' => 'bee_comfort']) }}" class="btn btn-primary fw-bold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> + New Bee Comfort Return
+            </a>
+            <a href="{{ route('returns.create', ['return_type' => 'china']) }}" class="btn btn-danger fw-bold shadow-sm">
+                <i class="bi bi-box-seam me-1"></i> + New China Return
+            </a>
         </div>
     </div>
 
@@ -22,7 +30,7 @@
         <div class="card-body p-3 d-flex flex-column gap-3">
             <div class="row g-2 align-items-center">
                 <!-- Search Functionality Above -->
-                <div class="col-12 col-md-8">
+                <div class="col-12 col-md-6 col-lg-7">
                     <form method="GET" action="{{ route('returns.index') }}" class="d-flex gap-2">
                         @if(request('return_type'))
                             <input type="hidden" name="return_type" value="{{ request('return_type') }}">
@@ -44,10 +52,13 @@
                     </form>
                 </div>
 
-                <!-- Action Button: Create Return -->
-                <div class="col-12 col-md-4 d-flex justify-content-md-end">
-                    <a href="{{ route('returns.create', ['return_type' => request('return_type') === 'china' ? 'china' : 'bee_comfort']) }}" class="btn btn-primary fw-bold shadow-sm w-100 w-md-auto">
-                        <i class="bi bi-plus-lg me-1"></i> Create {{ request('return_type') === 'china' ? 'China' : 'Bee Comfort' }} Return
+                <!-- Action Buttons: Both Bee Comfort & China Return Buttons -->
+                <div class="col-12 col-md-6 col-lg-5 d-flex justify-content-md-end gap-2 flex-wrap">
+                    <a href="{{ route('returns.create', ['return_type' => 'bee_comfort']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Bee Comfort Return
+                    </a>
+                    <a href="{{ route('returns.create', ['return_type' => 'china']) }}" class="btn btn-danger btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-box-seam me-1"></i> China Return
                     </a>
                 </div>
             </div>

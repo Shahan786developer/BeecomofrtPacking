@@ -111,8 +111,14 @@ class ReturnController extends Controller
             'items.*.quantity.min' => 'Return quantity must be at least 1.',
         ]);
 
-        $return = DB::transaction(function () use ($validated) {
-            $sale = Sale::with('customer')->findOrFail($validated['sale_id']);
+        $sale = Sale::findOrFail($validated['sale_id']);
+        if ($sale->bill_type !== $validated['return_type']) {
+            return back()->withInput()->withErrors([
+                'sale_id' => "Cannot process return: Invoice {$sale->invoice_no} is a " . ($sale->bill_type === 'china' ? 'China' : 'Bee Comfort') . " bill, but this return is locked to " . ($validated['return_type'] === 'china' ? 'China' : 'Bee Comfort') . " category."
+            ]);
+        }
+
+        $return = DB::transaction(function () use ($validated, $sale) {
 
             $return = ReturnRecord::create([
                 'return_no' => trim($validated['return_no']),
