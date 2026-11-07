@@ -11,6 +11,7 @@ class CompanyProfile extends Model
 
     protected $fillable = [
         'name',
+        'logo',
         'tagline',
         'address',
         'phone',
@@ -54,5 +55,10 @@ class CompanyProfile extends Model
             'email' => 'orders@beecomfort.com',
             'terms_conditions' => 'Thank you for your business. Please inspect goods upon receipt. Returns accepted per company policy.',
         ]);
+    }
+
+    public static function getSettings(): self
+    {
+        return static::getActive();
     }
 }

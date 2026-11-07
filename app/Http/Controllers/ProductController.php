@@ -92,16 +92,17 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'bill_no' => 'required|string|max:100',
+            'bill_no' => 'nullable|string|max:100',
             'parent_category' => 'required|string|in:Bee Comfort,China',
             'category_id' => 'required|exists:categories,id',
             'dozen_id' => 'required|exists:dozens,id',
             'product_code' => 'required|string|max:50',
+            'sku_code' => 'nullable|string|max:50|unique:products,sku_code',
             'actual_price' => 'required|numeric|min:0',
             'pricing_rule_id' => 'required|exists:pricing_rules,id',
+            'selling_price' => 'nullable|numeric|min:0',
             'quantity' => 'required|integer',
         ], [
-            'bill_no.required' => 'Bill Number is required.',
             'parent_category.required' => 'Please select a parent category (Bee Comfort or China).',
             'category_id.required' => 'Please select a product category.',
             'dozen_id.required' => 'Please select a dozen unit.',
@@ -111,14 +112,22 @@ class ProductController extends Controller
             'quantity.required' => 'Initial stock quantity is required.',
         ]);
 
-        $product = DB::transaction(function () use ($validated) {
-            // Allocate atomic, unique 7-digit SKU
-            $sku = Sku::allocate();
+        $product = DB::transaction(function () use ($validated, $request) {
+            // SKU handling: Allocate unique 7-digit SKU or use custom entered SKU
+            if (!empty($validated['sku_code'])) {
+                $customSku = trim($validated['sku_code']);
+                $sku = Sku::firstOrCreate(['sku_code' => $customSku]);
+            } else {
+                $sku = Sku::allocate();
+            }
 
-            // Fetch pricing rule percentage and calculate selling price:
-            // Formula: Selling Price = CEILING((Actual Price * (1 + Percentage / 100)) / 10) * 10
+            // Selling price handling: use custom entered price or calculate from pricing rule formula
             $pricingRule = PricingRule::findOrFail($validated['pricing_rule_id']);
-            $sellingPrice = $pricingRule->calculateSellingPrice((float) $validated['actual_price']);
+            if ($request->filled('selling_price') && is_numeric($request->input('selling_price'))) {
+                $sellingPrice = (float) $request->input('selling_price');
+            } else {
+                $sellingPrice = $pricingRule->calculateSellingPrice((float) $validated['actual_price']);
+            }
 
             $initialQty = (int) $validated['quantity'];
             $zeroDate = null;
@@ -127,7 +136,7 @@ class ProductController extends Controller
             }
 
             $product = Product::create([
-                'bill_no' => trim($validated['bill_no']),
+                'bill_no' => !empty($validated['bill_no']) ? trim($validated['bill_no']) : null,
                 'parent_category' => $validated['parent_category'],
                 'category_id' => $validated['category_id'],
                 'dozen_id' => $validated['dozen_id'],
@@ -150,14 +159,14 @@ class ProductController extends Controller
                 'new_stock' => $initialQty,
                 'reference_id' => $product->id,
                 'reference_type' => Product::class,
-                'notes' => 'Registered with initial stock from Bill #' . $product->bill_no,
+                'notes' => 'Registered with initial stock' . ($product->bill_no ? ' from Bill #' . $product->bill_no : ''),
             ]);
 
             return $product;
         });
 
         return redirect()->route('products.index')
-            ->with('success', "Product '{$product->title}' (SKU: {$product->sku_code}) registered successfully with selling price $" . number_format($product->selling_price, 2) . ".");
+            ->with('success', "Product '{$product->title}' (SKU: {$product->sku_code}) registered successfully with selling price Rs. " . number_format($product->selling_price, 2) . ".");
     }
 
     public function show(Product $product)
@@ -182,24 +191,39 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'bill_no' => 'required|string|max:100',
+            'bill_no' => 'nullable|string|max:100',
             'parent_category' => 'required|string|in:Bee Comfort,China',
             'category_id' => 'required|exists:categories,id',
             'dozen_id' => 'required|exists:dozens,id',
             'product_code' => 'required|string|max:50',
+            'sku_code' => 'required|string|max:50|unique:products,sku_code,' . $product->id,
             'actual_price' => 'required|numeric|min:0',
             'pricing_rule_id' => 'required|exists:pricing_rules,id',
+            'selling_price' => 'nullable|numeric|min:0',
         ]);
 
         $pricingRule = PricingRule::findOrFail($validated['pricing_rule_id']);
-        $sellingPrice = $pricingRule->calculateSellingPrice((float) $validated['actual_price']);
+        if ($request->filled('selling_price') && is_numeric($request->input('selling_price'))) {
+            $sellingPrice = (float) $request->input('selling_price');
+        } else {
+            $sellingPrice = $pricingRule->calculateSellingPrice((float) $validated['actual_price']);
+        }
+
+        $newSku = trim($validated['sku_code']);
+        $skuId = $product->sku_id;
+        if ($newSku !== $product->sku_code) {
+            $sku = Sku::firstOrCreate(['sku_code' => $newSku]);
+            $skuId = $sku->id;
+        }
 
         $product->update([
-            'bill_no' => trim($validated['bill_no']),
+            'bill_no' => !empty($validated['bill_no']) ? trim($validated['bill_no']) : null,
             'parent_category' => $validated['parent_category'],
             'category_id' => $validated['category_id'],
             'dozen_id' => $validated['dozen_id'],
             'product_code' => strtoupper(trim($validated['product_code'])),
+            'sku_id' => $skuId,
+            'sku_code' => $newSku,
             'actual_price' => (float) $validated['actual_price'],
             'pricing_rule_id' => $pricingRule->id,
             'selling_price' => $sellingPrice,

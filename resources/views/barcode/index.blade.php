@@ -61,18 +61,24 @@
                             </div>
                         </div>
 
-                        <!-- Automated Label Text Display (Auto-Fetched) -->
+                        <!-- Automated Label Text Display (Auto-Fetched 5 Rows) -->
                         <div class="p-3 bg-light rounded-3 border">
-                            <div class="row g-3">
-                                <div class="col-12 col-sm-6">
-                                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Row 1 (Brand Name):</span>
-                                    <div class="fw-black text-dark font-monospace fs-6 text-uppercase">
+                            <div class="row g-2">
+                                <div class="col-12 col-sm-4">
+                                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Row 1 (Brand):</span>
+                                    <div class="fw-bold text-dark font-monospace fs-7 text-uppercase">
                                         {{ $config->brand_name ?? 'BEE COMFORT' }}
                                     </div>
                                 </div>
-                                <div class="col-12 col-sm-6">
-                                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Row 2 (Category + Code):</span>
-                                    <div id="row2-display" class="fw-bold text-primary font-monospace fs-6 text-uppercase">
+                                <div class="col-12 col-sm-4">
+                                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Row 2 (Product Name):</span>
+                                    <div id="row2-display" class="fw-bold text-primary font-monospace fs-7 text-uppercase">
+                                        —
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Row 3 (Code - Bold):</span>
+                                    <div id="row3-display" class="fw-black text-danger font-monospace fs-6 text-uppercase">
                                         —
                                     </div>
                                 </div>
@@ -122,30 +128,35 @@
                     <!-- Preview Card Area -->
                     <div class="p-4 bg-light rounded-3 border w-100 d-flex justify-content-center align-items-center" style="min-height: 250px;">
                         
-                        <!-- 32mm x 22mm Container scaled up for clear viewing -->
+                        <!-- 32mm x 22mm Container scaled up for clear viewing (5 Rows) -->
                         <div id="thermal-sticker-box" class="thermal-label-container shadow-sm border bg-white d-flex flex-column align-items-center justify-content-between" 
-                             style="width: 32mm; height: 22mm; padding: 1mm 1.2mm; transform: scale(2.4); transform-origin: center; box-sizing: border-box; overflow: hidden; text-align: center;">
+                             style="width: 32mm; height: 22mm; padding: 0.6mm 1mm; transform: scale(2.4); transform-origin: center; box-sizing: border-box; overflow: hidden; text-align: center;">
                             
-                            <!-- Header Info Block with clean proportional spacing -->
-                            <div class="w-100 d-flex flex-column align-items-center" style="line-height: 1.15; gap: 0.8px;">
-                                <!-- Line 1: Brand Name (BEE COMFORT) -->
-                                <div id="label-brand" class="fw-black text-uppercase text-dark" style="font-size: 7.5pt; font-weight: 900; letter-spacing: 0.6px; margin: 0;">
+                            <!-- Header Info Block: 3 Distinct Rows -->
+                            <div class="w-100 d-flex flex-column align-items-center" style="line-height: 1.1; gap: 0.5px;">
+                                <!-- Row 1: Brand Name (Smaller font) -->
+                                <div id="label-brand" class="fw-bold text-uppercase text-dark" style="font-size: 5.5pt; letter-spacing: 0.5px; margin: 0; white-space: nowrap; overflow: hidden; max-width: 100%;">
                                     {{ $config->brand_name ?? 'BEE COMFORT' }}
                                 </div>
 
-                                <!-- Line 2: Category + Manual Product Code (e.g. SILK TOUCH AA-01) -->
-                                <div id="label-desc" class="fw-bold text-uppercase text-dark" style="font-size: 6.8pt; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; margin: 0;">
-                                    Category AA-01
+                                <!-- Row 2: Product Name (Category) - Same font size as Row 1 -->
+                                <div id="label-prod-name" class="fw-semibold text-uppercase text-dark" style="font-size: 5.5pt; white-space: nowrap; overflow: hidden; max-width: 100%; margin: 0;">
+                                    Category Name
+                                </div>
+
+                                <!-- Row 3: Product Code (Most Important, Bold) -->
+                                <div id="label-prod-code" class="fw-black text-uppercase text-dark" style="font-size: 7.5pt; letter-spacing: 0.6px; font-weight: 900; margin: 0; white-space: nowrap; overflow: hidden; max-width: 100%;">
+                                    AA-01
                                 </div>
                             </div>
 
-                            <!-- Line 3: Code39 Barcode (Longer/Taller Barcode Lines) -->
-                            <div class="w-100 d-flex justify-content-center align-items-center overflow-hidden" style="margin: 0.6px 0;">
-                                <svg id="barcode-svg" style="max-width: 100%; height: 9mm; display: block;"></svg>
+                            <!-- Row 4: Code39 Barcode -->
+                            <div class="w-100 d-flex justify-content-center align-items-center overflow-hidden" style="margin: 0;">
+                                <svg id="barcode-svg" style="max-width: 100%; height: 7.8mm; display: block;"></svg>
                             </div>
 
-                            <!-- Line 4: Human-readable 7-digit SKU with clean distance -->
-                            <div id="label-sku" class="fw-bold font-monospace text-dark" style="font-size: 7.5pt; letter-spacing: 1.4px; line-height: 1; margin: 0;">
+                            <!-- Row 5: Human-readable SKU -->
+                            <div id="label-sku" class="fw-bold font-monospace text-dark" style="font-size: 6.8pt; letter-spacing: 1.2px; line-height: 1; margin: 0; white-space: nowrap; overflow: hidden;">
                                 1000001
                             </div>
                         </div>
@@ -164,11 +175,23 @@
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Row 1:</span>
-                            <strong class="text-dark">{{ $config->brand_name ?? 'BEE COMFORT' }}</strong>
+                            <strong class="text-dark">Company: {{ $config->brand_name ?? 'BEE COMFORT' }} (Small)</strong>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Row 2:</span>
-                            <strong class="text-dark">Auto: [Category] [Code]</strong>
+                            <strong class="text-dark">Product Name (Small)</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Row 3:</span>
+                            <strong class="text-dark">Product Code (BOLD)</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Row 4:</span>
+                            <strong class="text-dark">Barcode Lines</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Row 5:</span>
+                            <strong class="text-dark">SKU Code</strong>
                         </div>
                     </div>
                 </div>
@@ -187,8 +210,10 @@
         const printQuantityInput = document.getElementById('print_quantity');
         const availableStockDisplay = document.getElementById('available_stock_display');
         const row2Display = document.getElementById('row2-display');
+        const row3Display = document.getElementById('row3-display');
 
-        const labelDesc = document.getElementById('label-desc');
+        const labelProdName = document.getElementById('label-prod-name');
+        const labelProdCode = document.getElementById('label-prod-code');
         const labelSku = document.getElementById('label-sku');
         const barcodeSvg = document.getElementById('barcode-svg');
 
@@ -214,17 +239,19 @@
                 printQuantityInput.value = Math.max(1, stock);
             }
 
-            const secondLine = `${categoryName} ${productCode}`.trim().toUpperCase();
-            row2Display.textContent = secondLine || '—';
-            labelDesc.textContent = secondLine || 'CATEGORY AA-01';
-            labelSku.textContent = sku;
+            if (row2Display) row2Display.textContent = categoryName.toUpperCase() || '—';
+            if (row3Display) row3Display.textContent = productCode.toUpperCase() || '—';
+
+            if (labelProdName) labelProdName.textContent = categoryName.toUpperCase() || 'PRODUCT NAME';
+            if (labelProdCode) labelProdCode.textContent = productCode.toUpperCase() || 'AA-01';
+            if (labelSku) labelSku.textContent = sku;
 
             try {
                 JsBarcode(barcodeSvg, sku, {
                     format: "CODE39",
                     lineColor: "#000000",
-                    width: 1.15,
-                    height: 38,
+                    width: 1.1,
+                    height: 32,
                     displayValue: false,
                     margin: 0,
                     flat: true,

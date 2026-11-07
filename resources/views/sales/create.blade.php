@@ -2,6 +2,30 @@
 
 @section('title', $billType === 'china' ? 'New China Sales Invoice' : 'New Bee Comfort Sales Invoice')
 
+@push('styles')
+<style>
+    @keyframes rowHighlightPulse {
+        0% { background-color: #fef08a; }
+        50% { background-color: #bbf7d0; }
+        100% { background-color: transparent; }
+    }
+    .row-highlight-pulse {
+        animation: rowHighlightPulse 1.2s ease-in-out;
+    }
+
+    @keyframes qtyPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.22); background-color: #dcfce7; border-color: #16a34a; }
+        100% { transform: scale(1); }
+    }
+    .qty-animated {
+        animation: qtyPulse 0.8s ease-in-out;
+        border-color: #16a34a !important;
+        font-weight: 900 !important;
+    }
+</style>
+@endpush
+
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('sales.index') }}" class="text-decoration-none">Sales Invoices</a></li>
     <li class="breadcrumb-item active" aria-current="page">{{ $billType === 'china' ? 'New China Bill' : 'New Bee Comfort Bill' }}</li>
@@ -99,12 +123,36 @@
             </div>
         </div>
 
-        <!-- 2. STREAMLINED SCANNER & CATALOG BAR -->
+        <!-- 2. STREAMLINED ACTION BAR: LEFT (DROPDOWN SEARCH AUTO-ADD) & RIGHT (BARCODE SCAN) -->
         <div class="card border-0 shadow-sm {{ $billType === 'china' ? 'bg-danger text-white' : 'bg-primary text-white' }}">
             <div class="card-body p-3">
-                <div class="row g-2 align-items-center">
-                    <!-- Barcode Scan Input -->
-                    <div class="col-12 col-lg-6">
+                <div class="row g-3 align-items-center">
+                    
+                    <!-- LEFT SIDE: Catalog Dropdown Search (Auto-Add, No Add Button) -->
+                    <div class="col-12 col-lg-7">
+                        <label for="quick_product_select" class="form-label small fw-bold text-white text-uppercase mb-1 fs-7">
+                            <i class="bi bi-search me-1"></i> Search &amp; Select {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} Product
+                        </label>
+                        <div class="text-dark">
+                            <select id="quick_product_select" class="searchable-select form-select form-select-sm">
+                                <option value="">Search {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} product ({{ count($products) }} items)...</option>
+                                @foreach($products as $prod)
+                                    <option value="{{ $prod['id'] }}" 
+                                        data-id="{{ $prod['id'] }}"
+                                        data-sku="{{ $prod['sku_code'] }}"
+                                        data-title="{{ $prod['title'] }}"
+                                        data-parent="{{ $prod['parent_category'] }}"
+                                        data-price="{{ $prod['selling_price'] }}"
+                                        data-stock="{{ $prod['stock_quantity'] }}">
+                                        {{ $prod['title'] }} — [SKU: {{ $prod['sku_code'] }}] (Rs. {{ number_format($prod['selling_price'], 2) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT SIDE: Barcode Scan Input -->
+                    <div class="col-12 col-lg-5">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label for="barcode_scanner_input" class="form-label small fw-bold text-white text-uppercase mb-0 fs-7">
                                 <i class="bi bi-upc-scan me-1"></i> Scan {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} SKU Barcode
@@ -115,45 +163,29 @@
                             <span class="input-group-text bg-white border-0 {{ $billType === 'china' ? 'text-danger' : 'text-primary' }}">
                                 <i class="bi bi-upc"></i>
                             </span>
-                            <input type="text" id="barcode_scanner_input" autofocus
+                            <input type="text" id="barcode_scanner_input"
                                 placeholder="Scan 7-digit SKU with barcode gun..." 
                                 class="form-control border-0 font-monospace fw-bold text-dark"
                                 autocomplete="off">
                         </div>
                     </div>
 
-                    <!-- Catalog Dropdown -->
-                    <div class="col-12 col-lg-6">
-                        <label for="quick_product_select" class="form-label small fw-bold text-white text-uppercase mb-1 fs-7">
-                            <i class="bi bi-search me-1"></i> Or Select from {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} Catalog
-                        </label>
-                        <div class="d-flex gap-1.5">
-                            <div class="flex-grow-1 text-dark">
-                                <select id="quick_product_select" class="searchable-select form-select form-select-sm">
-                                    <option value="">Select {{ $billType === 'china' ? 'China' : 'Bee Comfort' }} product ({{ count($products) }} items)...</option>
-                                    @foreach($products as $prod)
-                                        <option value="{{ $prod['id'] }}" 
-                                            data-id="{{ $prod['id'] }}"
-                                            data-sku="{{ $prod['sku_code'] }}"
-                                            data-title="{{ $prod['title'] }}"
-                                            data-parent="{{ $prod['parent_category'] }}"
-                                            data-price="{{ $prod['selling_price'] }}"
-                                            data-stock="{{ $prod['stock_quantity'] }}">
-                                            {{ $prod['title'] }} — [SKU: {{ $prod['sku_code'] }}] (Rs. {{ number_format($prod['selling_price'], 2) }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="button" id="btn-add-item" class="btn btn-light btn-sm fw-bold {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} shadow-sm flex-shrink-0 px-3">
-                                <i class="bi bi-plus-lg me-1"></i> Add
-                            </button>
-                        </div>
+                </div>
+
+                <!-- FAST BILLING SHORTCUTS BANNER & FEEDBACK -->
+                <div class="mt-2.5 pt-2 border-top border-white-50 d-flex flex-wrap justify-content-between align-items-center small text-white">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-bold"><i class="bi bi-lightning-charge-fill text-warning me-0.5"></i> Fast Billing:</span>
+                        <span>Auto-adds on select</span> &bull;
+                        <span>Auto-focuses Qty</span> &bull;
+                        <span>Press <kbd class="bg-white text-dark px-1.5 py-0.5 rounded shadow-sm fw-bold">Tab</kbd> for Next Item</span> &bull;
+                        <span>Press <kbd class="bg-white text-dark px-1.5 py-0.5 rounded shadow-sm fw-bold">Enter</kbd> to Generate Bill</span>
+                    </div>
+                    <div id="scanner-feedback" class="small fw-bold d-none">
+                        <i class="bi bi-check-circle-fill me-1"></i> <span id="scanner-feedback-text"></span>
                     </div>
                 </div>
 
-                <div id="scanner-feedback" class="mt-2 text-white small d-none">
-                    <i class="bi bi-check-circle-fill me-1"></i> <span id="scanner-feedback-text"></span>
-                </div>
             </div>
         </div>
 
@@ -184,7 +216,7 @@
                         <tr id="empty-row">
                             <td colspan="8" class="text-center py-4 text-secondary">
                                 <i class="bi bi-cart3 fs-3 text-secondary d-block mb-1"></i>
-                                <span class="fw-medium">Invoice is currently empty.</span> Scan a barcode in the scan bar or select from the dropdown above.
+                                <span class="fw-medium">Invoice is currently empty.</span> Select a product from the left dropdown or scan barcode on the right.
                             </td>
                         </tr>
                     </tbody>
@@ -241,32 +273,36 @@
                     </div>
                     <div class="col-12 col-sm-6">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Owner Name</label>
-                        <input type="text" id="modal_cust_owner_name" placeholder="Owner Name" class="form-control form-control-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Contact Phone Numbers (1 - 4)</label>
-                    <div class="row g-1.5">
-                        <div class="col-6">
-                            <input type="text" id="modal_cust_phone" placeholder="Phone 1 (Primary)" class="form-control font-monospace form-control-sm">
-                        </div>
-                        <div class="col-6">
-                            <input type="text" id="modal_cust_phone_2" placeholder="Phone 2" class="form-control font-monospace form-control-sm">
-                        </div>
-                        <div class="col-6">
-                            <input type="text" id="modal_cust_phone_3" placeholder="Phone 3" class="form-control font-monospace form-control-sm">
-                        </div>
-                        <div class="col-6">
-                            <input type="text" id="modal_cust_phone_4" placeholder="Phone 4" class="form-control font-monospace form-control-sm">
-                        </div>
+                        <input type="text" id="modal_cust_owner_name" placeholder="Owner or Proprietor" class="form-control form-control-sm">
                     </div>
                 </div>
 
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
-                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">City</label>
-                        <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Faisalabad" class="form-control form-control-sm">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Primary Phone</label>
+                        <input type="text" id="modal_cust_phone" placeholder="e.g. 0300-1234567" class="form-control form-control-sm font-monospace">
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Phone 2 (Optional)</label>
+                        <input type="text" id="modal_cust_phone_2" placeholder="Secondary phone" class="form-control form-control-sm font-monospace">
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Phone 3 (Optional)</label>
+                        <input type="text" id="modal_cust_phone_3" placeholder="Phone 3" class="form-control form-control-sm font-monospace">
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Phone 4 (Optional)</label>
+                        <input type="text" id="modal_cust_phone_4" placeholder="Phone 4" class="form-control form-control-sm font-monospace">
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">City / Town</label>
+                        <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Karachi" class="form-control form-control-sm">
                     </div>
                     <div class="col-12 col-sm-6">
                         <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Email</label>
@@ -298,7 +334,6 @@
     const invoiceNoInput = document.getElementById('invoice_no');
     const scannerInput = document.getElementById('barcode_scanner_input');
     const quickSelect = document.getElementById('quick_product_select');
-    const btnAddItem = document.getElementById('btn-add-item');
     const itemsBody = document.getElementById('invoice-items-body');
     const itemsBadge = document.getElementById('items-badge');
     const totalAmountDisplay = document.getElementById('total-amount-display');
@@ -307,26 +342,6 @@
     const feedbackText = document.getElementById('scanner-feedback-text');
 
     let customerModalInstance = null;
-
-    function filterCatalogOptions() {
-        const selectedType = billTypeSelect ? billTypeSelect.value : 'bee_comfort';
-        const requiredParent = (selectedType === 'china') ? 'china' : 'beecomfort';
-
-        if (quickSelect && quickSelect.tomselect) {
-            quickSelect.tomselect.clear();
-            quickSelect.tomselect.clearOptions();
-            allProductsCatalog.forEach(p => {
-                const pNorm = (p.parent_category || 'Bee Comfort').toLowerCase().replace(/\s+/g, '');
-                if (pNorm === requiredParent) {
-                    quickSelect.tomselect.addOption({
-                        value: p.id,
-                        text: `${p.title} — [SKU: ${p.sku_code}] (Rs. ${parseFloat(p.selling_price).toFixed(2)})`
-                    });
-                }
-            });
-            quickSelect.tomselect.refreshOptions(false);
-        }
-    }
 
     document.addEventListener('DOMContentLoaded', function () {
         if (scannerInput) {
@@ -347,19 +362,34 @@
             });
         }
 
-        if (btnAddItem && quickSelect) {
-            btnAddItem.addEventListener('click', function() {
-                let prodId = quickSelect.tomselect ? quickSelect.tomselect.getValue() : quickSelect.value;
-                if (prodId) {
-                    const prod = allProductsCatalog.find(p => p.id == prodId);
-                    if (prod) {
-                        addProductToInvoice(prod);
-                        if (quickSelect.tomselect) quickSelect.tomselect.clear();
-                        showFeedback(`Product '${prod.title}' added to invoice.`);
-                        if (scannerInput) scannerInput.focus();
+        // Auto-add product when selected from dropdown without clicking Add button
+        if (quickSelect) {
+            function onProductSelected(prodId) {
+                if (!prodId) return;
+                const prod = allProductsCatalog.find(p => p.id == prodId);
+                if (prod) {
+                    addProductToInvoice(prod);
+                    if (quickSelect.tomselect) {
+                        quickSelect.tomselect.clear(true);
+                    } else {
+                        quickSelect.value = '';
                     }
+                    showFeedback(`Product '${prod.title}' added to invoice.`);
                 }
-            });
+            }
+
+            // TomSelect or Native Select hook
+            setTimeout(() => {
+                if (quickSelect.tomselect) {
+                    quickSelect.tomselect.on('change', function(val) {
+                        onProductSelected(val);
+                    });
+                } else {
+                    quickSelect.addEventListener('change', function() {
+                        onProductSelected(this.value);
+                    });
+                }
+            }, 300);
         }
     });
 
@@ -381,7 +411,6 @@
             }
             addProductToInvoice(prod);
             scannerInput.value = '';
-            scannerInput.focus();
             showFeedback(`Scanned [SKU: ${sku}]: '${prod.title}' added.`);
         } else {
             fetch(`/api/products/by-sku/${encodeURIComponent(sku)}?bill_type=${encodeURIComponent(currentBillType)}`)
@@ -402,7 +431,6 @@
                             stock_quantity: data.stock_quantity,
                         });
                         scannerInput.value = '';
-                        scannerInput.focus();
                         showFeedback(`Scanned [SKU: ${sku}]: '${data.title}' added.`);
                     } else {
                         alert(`No product found with barcode SKU '${sku}'.`);
@@ -417,16 +445,23 @@
     }
 
     function showFeedback(msg) {
+        if (!feedbackBox || !feedbackText) return;
         feedbackText.textContent = msg;
         feedbackBox.classList.remove('d-none');
         setTimeout(() => { feedbackBox.classList.add('d-none'); }, 3000);
     }
 
     function addProductToInvoice(product) {
-        const existing = invoiceRows.find(item => item.product_id == product.id);
-        if (existing) {
-            existing.quantity += 1;
+        let targetIndex = -1;
+        let isExisting = false;
+
+        const existingIdx = invoiceRows.findIndex(item => item.product_id == product.id);
+        if (existingIdx > -1) {
+            invoiceRows[existingIdx].quantity += 1;
+            targetIndex = existingIdx;
+            isExisting = true;
         } else {
+            // First added item stays on top (FIFO order preserved)
             invoiceRows.push({
                 product_id: product.id,
                 title: product.title,
@@ -435,8 +470,10 @@
                 stock: parseInt(product.stock_quantity),
                 quantity: 1,
             });
+            targetIndex = invoiceRows.length - 1;
         }
-        renderInvoiceTable();
+
+        renderInvoiceTable(targetIndex, isExisting);
     }
 
     function removeRow(index) {
@@ -451,13 +488,39 @@
         renderInvoiceTable();
     }
 
-    function renderInvoiceTable() {
+    // Handles keyboard navigation on quantity input:
+    // Tab -> Focus back to product dropdown
+    // Enter -> Save / Generate bill
+    function handleQtyKeydown(e, index) {
+        if (e.key === 'Tab' && !e.shiftKey) {
+            e.preventDefault();
+            // Focus back to quickSelect dropdown for next product
+            if (quickSelect && quickSelect.tomselect) {
+                quickSelect.tomselect.focus();
+            } else if (quickSelect) {
+                quickSelect.focus();
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            // Ensure blur updates quantity
+            e.target.blur();
+            // Submit form to generate bill
+            const form = document.getElementById('sale-form');
+            if (form && invoiceRows.length > 0) {
+                if (form.reportValidity()) {
+                    form.submit();
+                }
+            }
+        }
+    }
+
+    function renderInvoiceTable(highlightIndex = -1, isExisting = false) {
         if (invoiceRows.length === 0) {
             itemsBody.innerHTML = `
                 <tr id="empty-row">
                     <td colspan="8" class="text-center py-4 text-secondary">
                         <i class="bi bi-cart3 fs-3 text-secondary d-block mb-1"></i>
-                        <span class="fw-medium">Invoice is currently empty.</span> Scan a barcode in the scan bar or select from the dropdown above.
+                        <span class="fw-medium">Invoice is currently empty.</span> Select a product from the left dropdown or scan barcode on the right.
                     </td>
                 </tr>
             `;
@@ -475,9 +538,10 @@
             const lineTotal = row.quantity * row.price;
             total += lineTotal;
             totalItems += row.quantity;
+            const isTarget = (idx === highlightIndex);
 
             html += `
-                <tr>
+                <tr id="row-${idx}" class="${isTarget ? 'row-highlight-pulse' : ''}">
                     <td class="ps-3 py-2 text-center text-secondary small font-monospace">${idx + 1}</td>
                     <td class="py-2">
                         <span class="fw-bold text-dark d-block fs-7">${row.title}</span>
@@ -495,9 +559,12 @@
                         Rs. ${row.price.toFixed(2)}
                     </td>
                     <td class="py-2 text-center">
-                        <input type="number" name="items[${idx}][quantity]" value="${row.quantity}" min="1" required
+                        <input type="number" name="items[${idx}][quantity]" id="qty-input-${idx}"
+                            value="${row.quantity}" min="1" required
                             onchange="updateRowQty(${idx}, this.value)"
-                            class="form-control form-control-sm text-center fw-bold font-monospace mx-auto py-1" style="max-width: 75px;">
+                            onkeydown="handleQtyKeydown(event, ${idx})"
+                            class="form-control form-control-sm text-center fw-bold font-monospace mx-auto py-1 ${isTarget ? 'qty-animated text-success' : ''}"
+                            style="max-width: 80px;">
                     </td>
                     <td class="py-2 text-end font-monospace fw-bold text-dark fs-7">
                         Rs. ${lineTotal.toFixed(2)}
@@ -515,6 +582,17 @@
         itemsBadge.textContent = `${invoiceRows.length} Line(s) (${totalItems} pcs)`;
         totalAmountDisplay.textContent = 'Rs. ' + total.toFixed(2);
         btnSubmit.disabled = false;
+
+        // Auto-focus quantity input of the added/updated product and select text so user can immediately type quantity
+        if (highlightIndex >= 0) {
+            setTimeout(() => {
+                const qtyInput = document.getElementById(`qty-input-${highlightIndex}`);
+                if (qtyInput) {
+                    qtyInput.focus();
+                    qtyInput.select();
+                }
+            }, 60);
+        }
     }
 
     function openNewCustomerModal() {

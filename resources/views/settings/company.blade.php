@@ -13,7 +13,7 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Company Profile &amp; Invoice Branding</h1>
-            <p class="text-secondary small mb-0">Configure your business credentials, contact numbers, and terms printed on all sales invoices.</p>
+            <p class="text-secondary small mb-0">Configure your business logo, credentials, and invoice details printed on sales invoices.</p>
         </div>
         <div>
             <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary">
@@ -27,12 +27,42 @@
         <div class="col-12 col-lg-7">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white border-bottom py-3 px-4">
-                    <h5 class="fw-bold text-dark mb-0">Business Identity Details</h5>
+                    <h5 class="fw-bold text-dark mb-0">Business Identity &amp; Logo</h5>
                 </div>
 
                 <div class="card-body p-4">
-                    <form method="POST" action="{{ route('settings.company.update') }}" class="d-flex flex-column gap-3">
+                    <form method="POST" action="{{ route('settings.company.update') }}" enctype="multipart/form-data" class="d-flex flex-column gap-3">
                         @csrf
+
+                        <!-- Company Logo Upload -->
+                        <div class="p-3 bg-light rounded-3 border">
+                            <label class="form-label small fw-bold text-secondary text-uppercase mb-2">
+                                <i class="bi bi-image text-primary me-1"></i> Bee Comfort Company Logo
+                            </label>
+                            
+                            @if(!empty($company->logo) && file_exists(public_path($company->logo)))
+                                <div class="d-flex align-items-center gap-3 mb-3 p-2 bg-white rounded border">
+                                    <div class="p-1 bg-white border rounded">
+                                        <img src="{{ asset($company->logo) }}" alt="Company Logo" style="max-height: 60px; max-width: 160px; object-fit: contain;">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <span class="small fw-bold text-dark d-block">Current Logo Active</span>
+                                        <span class="text-secondary fs-8">This logo is fetched and printed on A4 sales invoices.</span>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="remove_logo" value="1" id="remove_logo">
+                                        <label class="form-check-label small text-danger fw-semibold" for="remove_logo">
+                                            Remove Logo
+                                        </label>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div>
+                                <input type="file" name="logo" id="logo" accept="image/*" class="form-control form-control-sm">
+                                <div class="form-text small text-secondary mt-1">Upload PNG, JPG, WEBP, or SVG logo (recommended height 50-80px with transparent background).</div>
+                            </div>
+                        </div>
 
                         <!-- Business Name -->
                         <div>
@@ -63,7 +93,7 @@
                             <!-- Phone -->
                             <div class="col-12 col-sm-6">
                                 <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Phone / WhatsApp Contact
+                                    Phone / WhatsApp Contact (Internal Record)
                                 </label>
                                 <input type="text" name="phone" value="{{ old('phone', $company->phone) }}" class="form-control font-monospace" placeholder="e.g. +92 300 0000000">
                             </div>
@@ -106,17 +136,23 @@
                     <div class="p-4 bg-light rounded-3 border">
                         <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
                             <div>
+                                @if(!empty($company->logo) && file_exists(public_path($company->logo)))
+                                    <div class="mb-2">
+                                        <img src="{{ asset($company->logo) }}" alt="Logo" style="max-height: 48px; max-width: 180px; object-fit: contain;">
+                                    </div>
+                                @endif
                                 <h3 class="fw-black text-dark text-uppercase mb-0 fs-4">{{ $company->name }}</h3>
-                                <div class="text-primary small fw-semibold">{{ $company->tagline }}</div>
+                                @if(!empty($company->tagline))
+                                    <div class="text-primary small fw-semibold">{{ $company->tagline }}</div>
+                                @endif
                                 <div class="text-secondary small mt-2">
                                     {{ $company->address }}<br>
-                                    Phone / WhatsApp: {{ $company->phone }}<br>
                                     Email: {{ $company->email }}
                                 </div>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-primary text-white text-uppercase px-2 py-1">INVOICE</span>
-                                <div class="font-monospace small text-dark fw-bold mt-1">BC-INV-XXXX</div>
+                                <span class="badge bg-primary text-white text-uppercase px-2 py-1">SALES INVOICE</span>
+                                <div class="font-monospace small text-dark fw-bold mt-1">BC-SIN-01</div>
                             </div>
                         </div>
 
@@ -127,7 +163,7 @@
                     </div>
 
                     <div class="small text-secondary">
-                        <i class="bi bi-info-circle text-primary me-1"></i> Any updates saved here will instantly reflect on all printed customer invoices and A4 statements.
+                        <i class="bi bi-info-circle text-primary me-1"></i> The uploaded logo and company info will immediately reflect on all printed A4 sales invoices.
                     </div>
                 </div>
             </div>

@@ -7,14 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <style>
-        /* Arabic Transparent Font Definition */
-        @font-face {
-            font-family: 'Arabic Transparent';
-            src: local('Arabic Transparent'), local('Arial');
-            font-weight: normal;
-            font-style: normal;
-        }
-
         /* Thermal roll page configuration */
         @page {
             size: 32mm 22mm;
@@ -29,7 +21,7 @@
 
         body {
             background-color: #f1f5f9;
-            font-family: 'Arabic Transparent', Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             color: #000000;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -87,69 +79,89 @@
             justify-content: center;
         }
 
-        /* Individual 32mm x 22mm Thermal Label Card */
+        /* Individual 32mm x 22mm Thermal Label Card (5 Distinct Rows) */
         .thermal-sticker-page {
             width: 32mm;
             height: 22mm;
             background: #ffffff;
             color: #000000;
-            padding: 1mm 1.2mm;
+            padding: 0.6mm 1mm;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
             overflow: hidden;
             text-align: center;
-            line-height: 1.15;
             border: 1px dashed #cbd5e1;
             page-break-after: always;
             page-break-inside: avoid;
             box-sizing: border-box;
         }
 
-        .line-brand {
+        /* Row 1: Company / Brand Name - Smaller font */
+        .row-brand {
+            font-size: 5.5pt;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            line-height: 1.1;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        /* Row 2: Product Name (Category) - Same size as Row 1 */
+        .row-product-name {
+            font-size: 5.5pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 100%;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        /* Row 3: Product Code - Most Important, BOLD */
+        .row-product-code {
             font-size: 7.5pt;
             font-weight: 900;
             letter-spacing: 0.6px;
             text-transform: uppercase;
             line-height: 1.1;
             margin: 0;
-        }
-
-        .line-desc {
-            font-size: 6.8pt;
-            font-weight: 700;
-            text-transform: uppercase;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
             max-width: 100%;
-            margin-top: 0.4mm;
-            line-height: 1.1;
         }
 
-        .line-barcode {
+        /* Row 4: Barcode Lines - Code39 */
+        .row-barcode {
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            margin: 0.5mm 0;
+            margin: 0;
         }
 
-        .line-barcode svg {
+        .row-barcode svg {
             max-width: 100%;
-            height: 9.2mm;
+            height: 7.8mm;
             display: block;
         }
 
-        .line-sku {
-            font-size: 7.8pt;
+        /* Row 5: Human-readable SKU Code */
+        .row-sku {
+            font-size: 6.8pt;
             font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            letter-spacing: 1.4px;
-            margin-top: 0.3mm;
+            font-weight: 800;
+            letter-spacing: 1.2px;
             line-height: 1;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         /* PRINT MEDIA STYLING */
@@ -180,9 +192,9 @@
     <!-- On-screen Toolbar (Hidden during print) -->
     <div class="no-print-bar">
         <div>
-            <strong>Bee Comfort — Thermal Sticker Print View</strong>
+            <strong>Bee Comfort — Thermal Sticker Print View (5 Rows)</strong>
             <span style="color: #94a3b8; margin-left: 8px;">
-                ({{ $quantity }} Identical 32mm × 22mm Labels • SKU: {{ $product->sku_code }})
+                ({{ $quantity }} Labels • 32mm × 22mm • Product Code: {{ $product->product_code }} • SKU: {{ $product->sku_code }})
             </span>
         </div>
         <div>
@@ -195,19 +207,22 @@
     <div class="stickers-wrapper">
         @for($i = 0; $i < $quantity; $i++)
         <div class="thermal-sticker-page">
-            <!-- Line 1: BEE COMFORT -->
-            <div class="line-brand">{{ $config->brand_name }}</div>
+            <!-- Row 1: Company / Brand Name (Smaller font) -->
+            <div class="row-brand">{{ $config->brand_name ?? 'BEE COMFORT' }}</div>
 
-            <!-- Line 2: Product Description (e.g. INDIA AA-01) -->
-            <div class="line-desc">{{ $secondLine }}</div>
+            <!-- Row 2: Product Name (Category Name) (Same size as Row 1) -->
+            <div class="row-product-name">{{ $product->category->name ?? 'PRODUCT' }}</div>
 
-            <!-- Line 3: Code39 Barcode -->
-            <div class="line-barcode">
+            <!-- Row 3: Product Code (Most Important, Bold) -->
+            <div class="row-product-code">{{ $product->product_code }}</div>
+
+            <!-- Row 4: Barcode Lines (Code39) -->
+            <div class="row-barcode">
                 <svg class="barcode-item" data-sku="{{ $product->sku_code }}"></svg>
             </div>
 
-            <!-- Line 4: Human-readable 7-digit SKU -->
-            <div class="line-sku">{{ $product->sku_code }}</div>
+            <!-- Row 5: SKU Code (No dotted displacement) -->
+            <div class="row-sku">{{ $product->sku_code }}</div>
         </div>
         @endfor
     </div>
@@ -220,9 +235,9 @@
                 JsBarcode(el, sku, {
                     format: "CODE39",
                     lineColor: "#000000",
-                    width: 1.15,
-                    height: 38,
-                    displayValue: false, // Line 4 renders human-readable SKU
+                    width: 1.1,
+                    height: 32,
+                    displayValue: false, // Row 5 renders human-readable SKU
                     margin: 0,
                     flat: true,
                 });

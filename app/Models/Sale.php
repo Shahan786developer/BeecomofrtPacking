@@ -46,19 +46,24 @@ class Sale extends Model
 
     public static function generateNextInvoiceNo(string $billType = 'bee_comfort'): string
     {
-        $prefixTag = ($billType === 'china') ? 'CH-INV-' : 'BC-INV-';
-        $prefix = $prefixTag . date('Ymd') . '-';
-        $latest = static::where('invoice_no', 'like', $prefix . '%')
-            ->orderByDesc('id')
-            ->value('invoice_no');
+        $prefix = ($billType === 'china') ? 'CH-SIN-' : 'BC-SIN-';
+        $invoices = static::where('invoice_no', 'like', $prefix . '%')
+            ->pluck('invoice_no');
 
-        if ($latest) {
-            $num = (int) substr($latest, strrpos($latest, '-') + 1);
-            $next = str_pad((string)($num + 1), 4, '0', STR_PAD_LEFT);
-        } else {
-            $next = '0001';
+        $maxNum = 0;
+        foreach ($invoices as $inv) {
+            $numPart = substr($inv, strlen($prefix));
+            if (is_numeric($numPart)) {
+                $n = (int) $numPart;
+                if ($n > $maxNum) {
+                    $maxNum = $n;
+                }
+            }
         }
 
-        return $prefix . $next;
+        $nextNum = $maxNum + 1;
+        $formattedNum = str_pad((string) $nextNum, max(2, strlen((string) $nextNum)), '0', STR_PAD_LEFT);
+
+        return $prefix . $formattedNum;
     }
 }

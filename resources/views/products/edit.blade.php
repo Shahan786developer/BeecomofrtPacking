@@ -54,10 +54,10 @@
 
                             <div class="col-12 col-md-3">
                                 <label for="bill_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Bill Number <span class="text-danger">*</span>
+                                    Bill Number <span class="text-secondary fw-normal fs-8">(Optional)</span>
                                 </label>
-                                <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no', $product->bill_no) }}" required
-                                    class="form-control font-monospace fw-semibold">
+                                <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no', $product->bill_no) }}"
+                                    placeholder="e.g. BILL-101 (Optional)" class="form-control font-monospace fw-semibold">
                             </div>
 
                             <div class="col-12 col-md-3">
@@ -114,11 +114,11 @@
                             </div>
 
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    SKU Code (Locked)
+                                <label for="sku_code" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                    SKU Code
                                 </label>
-                                <input type="text" value="{{ $product->sku_code }}" readonly
-                                    class="form-control font-monospace fw-bold bg-light text-primary fs-6 cursor-not-allowed">
+                                <input type="text" name="sku_code" id="sku_code" value="{{ old('sku_code', $product->sku_code) }}" required
+                                    class="form-control font-monospace fw-bold text-primary fs-6">
                             </div>
 
                             <div class="col-12 col-md-4">
@@ -164,13 +164,13 @@
                             </div>
 
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                                <label for="selling_price" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                                     Calculated Selling Price (Rs.)
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-secondary">Rs.</span>
-                                    <input type="text" id="selling_price_display" value="{{ number_format($product->selling_price, 2) }}" readonly
-                                        class="form-control fw-black text-dark font-monospace fs-6 bg-light cursor-not-allowed">
+                                    <input type="number" step="0.01" min="0" name="selling_price" id="selling_price" value="{{ old('selling_price', $product->selling_price) }}"
+                                        class="form-control fw-black text-dark font-monospace fs-6">
                                 </div>
                             </div>
                         </div>
@@ -197,7 +197,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const actualInput = document.getElementById('actual_price');
         const ruleSelect = document.getElementById('pricing_rule_id');
-        const spDisplay = document.getElementById('selling_price_display');
+        const sellingPriceInput = document.getElementById('selling_price');
 
         function recalc() {
             const actual = parseFloat(actualInput.value) || 0;
@@ -209,15 +209,16 @@
                 if (opt) pct = parseFloat(opt.getAttribute('data-percentage')) || 0;
             }
 
-            const raw = actual * (1 + (pct / 100));
-            const finalP = Math.ceil(raw / 10) * 10;
-            spDisplay.value = finalP.toFixed(2);
+            if (actual > 0) {
+                const raw = actual * (1 + (pct / 100));
+                const finalP = Math.ceil(raw / 10) * 10;
+                sellingPriceInput.value = finalP.toFixed(2);
+            }
         }
 
         actualInput.addEventListener('input', recalc);
         setTimeout(() => {
             if (ruleSelect.tomselect) ruleSelect.tomselect.on('change', recalc);
-            recalc();
         }, 300);
     });
 </script>

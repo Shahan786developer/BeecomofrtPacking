@@ -12,6 +12,7 @@ class Customer extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'owner_name',
         'phone',
         'phone_2',
@@ -21,6 +22,21 @@ class Customer extends Model
         'city',
         'address',
     ];
+
+    public function getFormattedCodeAttribute(): string
+    {
+        return $this->code ?: ('B' . sprintf('%03d', $this->id));
+    }
+
+    public function getDisplayWithCodeAttribute(): string
+    {
+        return "{$this->name} ({$this->formatted_code})";
+    }
+
+    public function saleOrders(): HasMany
+    {
+        return $this->hasMany(SaleOrder::class);
+    }
 
     public function sales(): HasMany
     {

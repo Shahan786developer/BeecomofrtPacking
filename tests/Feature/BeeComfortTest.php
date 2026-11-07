@@ -316,7 +316,8 @@ class BeeComfortTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('BEE COMFORT');
-        $response->assertSee("{$product->category->name} {$product->product_code}");
+        $response->assertSee($product->category->name);
+        $response->assertSee($product->product_code);
         $response->assertSee($product->sku_code);
     }
 
@@ -541,7 +542,7 @@ class BeeComfortTest extends TestCase
             $printResponse = $this->get(route('sales.print', $sale));
             $printResponse->assertStatus(200);
             $printResponse->assertSee('Bee Comfort Premium Garments');
-            $printResponse->assertSee('+92 321 7654321');
+            $printResponse->assertDontSee('+92 321 7654321');
             $printResponse->assertSee('Plot #45, Industrial Estate, Faisalabad');
         }
     }
@@ -707,5 +708,348 @@ class BeeComfortTest extends TestCase
         $dashboard->assertSee('Bee Comfort vs China');
         $dashboard->assertSee('Performance');
         $dashboard->assertSee('categoryComparisonChart');
+    }
+
+    /**
+     * Test SIN Sequential Invoice Numbering for Bee Comfort (BC-SIN-XX) and China (CH-SIN-XX)
+     */
+    public function test_sin_invoice_numbering_series(): void
+    {
+        // Fresh sequence begins at 01
+        $bcNext1 = Sale::generateNextInvoiceNo('bee_comfort');
+        $this->assertMatchesRegularExpression('/^BC-SIN-\d{2,}$/', $bcNext1);
+
+        $chNext1 = Sale::generateNextInvoiceNo('china');
+        $this->assertMatchesRegularExpression('/^CH-SIN-\d{2,}$/', $chNext1);
+
+        // Create sale with BC-SIN-01
+        $customer = Customer::first();
+        Sale::create([
+            'invoice_no' => 'BC-SIN-01',
+            'bill_type' => 'bee_comfort',
+            'customer_id' => $customer->id,
+            'invoice_date' => Carbon::today(),
+            'subtotal' => 500,
+            'total_amount' => 500,
+        ]);
+
+        $bcNext2 = Sale::generateNextInvoiceNo('bee_comfort');
+        $this->assertEquals('BC-SIN-02', $bcNext2);
+
+        // China should remain independent
+        Sale::create([
+            'invoice_no' => 'CH-SIN-01',
+            'bill_type' => 'china',
+            'customer_id' => $customer->id,
+            'invoice_date' => Carbon::today(),
+            'subtotal' => 500,
+            'total_amount' => 500,
+        ]);
+
+        $chNext2 = Sale::generateNextInvoiceNo('china');
+        $this->assertEquals('CH-SIN-02', $chNext2);
+    }
+
+    /**
+     * Test Product Registration with optional bill_no, editable SKU, and editable selling price
+     */
+    public function test_product_registration_optional_bill_no_editable_sku_and_editable_selling_price(): void
+    {
+        $cat = Category::first();
+        $dozen = Dozen::first();
+        $rule = PricingRule::first();
+
+        // Register product with NO bill_no (optional), CUSTOM sku, and CUSTOM selling_price
+        $customSku = '9988771';
+        $customSellingPrice = 1250.00;
+
+        $response = $this->post(route('products.store'), [
+            'bill_no' => '', // optional / omitted
+            'parent_category' => 'Bee Comfort',
+            'category_id' => $cat->id,
+            'dozen_id' => $dozen->id,
+            'product_code' => 'ZZ-99',
+            'sku_code' => $customSku,
+            'actual_price' => 700.00,
+            'pricing_rule_id' => $rule->id,
+            'selling_price' => $customSellingPrice, // custom override
+            'quantity' => 50,
+        ]);
+
+        $response->assertRedirect(route('products.index'));
+
+        $product = Product::where('sku_code', $customSku)->first();
+        $this->assertNotNull($product);
+        $this->assertNull($product->bill_no);
+        $this->assertEquals($customSku, $product->sku_code);
+        $this->assertEquals(1250.00, $product->selling_price);
+
+        // Test editing product allows updating sku and selling_price and leaving bill_no blank
+        $updateSku = '9988772';
+        $updateResponse = $this->put(route('products.update', $product), [
+            'bill_no' => '',
+            'parent_category' => 'Bee Comfort',
+            'category_id' => $cat->id,
+            'dozen_id' => $dozen->id,
+            'product_code' => 'ZZ-98',
+            'sku_code' => $updateSku,
+            'actual_price' => 750.00,
+            'pricing_rule_id' => $rule->id,
+            'selling_price' => 1400.00,
+        ]);
+
+        $updateResponse->assertRedirect(route('products.index'));
+        $product->refresh();
+        $this->assertEquals($updateSku, $product->sku_code);
+        $this->assertEquals(1400.00, $product->selling_price);
+        $this->assertEquals('ZZ-98', $product->product_code);
+    }
+
+    /**
+     * Test A4 Printable Invoice Layout Customizations:
+     * - No phone numbers
+     * - No billing summary card
+     * - No SKU column in item rows
+     * - No 'Prepared By'
+     * - No commercial bill footer
+     * - No printed timestamp at top
+     */
+    public function test_a4_invoice_print_customizations(): void
+    {
+        $sale = Sale::with(['customer', 'details'])->first();
+        $this->assertNotNull($sale);
+
+        $response = $this->get(route('sales.print', $sale));
+        $response->assertStatus(200);
+
+        // Phone numbers must not appear
+        if ($sale->customer->phone) {
+            $response->assertDontSee($sale->customer->phone);
+        }
+        $response->assertDontSee('Phone / WhatsApp:');
+
+        // Billing summary card must not appear
+        $response->assertDontSee('Billing Summary');
+
+        // SKU column header must not appear in table
+        $response->assertDontSee('<th class="text-center" style="width: 85px;">SKU</th>', false);
+
+        // 'Prepared By' must not appear
+        $response->assertDontSee('Prepared By');
+        $response->assertDontSee('Billing Staff');
+
+        // Old footer must not appear
+        $response->assertDontSee('Commercial Bill • This is an official computer-generated invoice receipt');
+
+        // Printed timestamp must not appear at top
+        $response->assertDontSee('Printed:');
+    }
+
+    /**
+     * Test that "Add Product" and "New Sale" buttons are removed from top navbar
+     */
+    public function test_top_navbar_quick_action_buttons_removed(): void
+    {
+        $response = $this->get(route('products.index'));
+        $response->assertStatus(200);
+
+        // Header must not have Add Product or New Sale buttons
+        $response->assertDontSee('<i class="bi bi-plus-lg me-1"></i> Add Product', false);
+        $response->assertDontSee('<i class="bi bi-cart-plus me-1"></i> New Sale', false);
+
+        // Sidebar must have Sale Orders link
+        $response->assertSee(route('orders.index'));
+        $response->assertSee('Sale Orders');
+    }
+
+    /**
+     * Test Sale Orders Index view, filter bar, and matrix table with rowspan grouping
+     */
+    public function test_sale_orders_index_view_and_matrix_display(): void
+    {
+        $response = $this->get(route('orders.index'));
+        $response->assertStatus(200);
+
+        // Title and header
+        $response->assertSee('Sale Orders');
+        $response->assertSee('Hashmi Brothers');
+        $response->assertSee('Book New Order');
+
+        // Filter bar elements
+        $response->assertSee('Voucher No');
+        $response->assertSee('All Voucher Nos');
+        $response->assertSee('All Customers');
+        $response->assertSee('Start Date');
+        $response->assertSee('End Date');
+
+        // Matrix table size columns
+        $response->assertSee('<th class="size-std">32</th>', false);
+        $response->assertSee('<th class="size-std">42</th>', false);
+        $response->assertSee('<th class="size-plus">44</th>', false);
+        $response->assertSee('<th class="size-plus">50</th>', false);
+
+        // Sample seeded orders
+        $response->assertSee('#181');
+        $response->assertSee('ABID HOSIERY');
+        $response->assertSee('B055');
+        $response->assertSee('#180');
+        $response->assertSee('BREMOD HOUSE OF COSMETICS');
+        $response->assertSee('B348');
+
+        // Actions
+        $response->assertSee('✏️ Edit');
+        $response->assertSee('👁️ View');
+        $response->assertSee('🗑️ Delete');
+    }
+
+    /**
+     * Test Create New Order - Hashmi Brothers booking form
+     */
+    public function test_sale_orders_create_page(): void
+    {
+        $response = $this->get(route('orders.create'));
+        $response->assertStatus(200);
+
+        $response->assertSee('Create New Order - Hashmi Brothers');
+        $response->assertSee('Customer');
+        $response->assertSee('-- Select Customer --');
+        $response->assertSee('Order / Voucher No');
+        $response->assertSee('Order Date');
+        $response->assertSee('Order Articles');
+        $response->assertSee('Article #1');
+        $response->assertSee('Select Article');
+        $response->assertSee('Article Details (Color, Cup & Sizes)', false);
+        $response->assertSee('Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)');
+        $response->assertSee('Grand Total Quantity');
+        $response->assertSee('Save & Book Order', false);
+    }
+
+    /**
+     * Test Sale Order store with multi-articles and 10-size matrix calculation
+     */
+    public function test_sale_order_store_and_matrix_calculation(): void
+    {
+        $customer = Customer::where('name', 'ABID HOSIERY')->first();
+        $this->assertNotNull($customer);
+
+        $payload = [
+            'order_no' => '#999',
+            'customer_id' => $customer->id,
+            'order_date' => '2026-11-08',
+            'status' => 'Pending',
+            'notes' => 'Test order booking',
+            'articles' => [
+                [
+                    'article_name' => 'COMFORT FIT 32-42',
+                    'items' => [
+                        [
+                            'color' => 'SKIN',
+                            'cup' => 'B',
+                            'size_32' => 10,
+                            'size_34' => 0,
+                            'size_36' => 0,
+                            'size_38' => 20,
+                            'size_40' => 20,
+                            'size_42' => 20,
+                            'size_44' => 10,
+                            'size_46' => 0,
+                            'size_48' => 10,
+                            'size_50' => 10,
+                            'rate_std' => 500.00,
+                            'rate_plus' => 550.00,
+                        ],
+                        [
+                            'color' => 'BLACK',
+                            'cup' => 'B',
+                            'size_32' => 5,
+                            'size_34' => 0,
+                            'size_36' => 0,
+                            'size_38' => 15,
+                            'size_40' => 15,
+                            'size_42' => 0,
+                            'size_44' => 0,
+                            'size_46' => 0,
+                            'size_48' => 0,
+                            'size_50' => 5,
+                            'rate_std' => 500.00,
+                            'rate_plus' => 550.00,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $response = $this->post(route('orders.store'), $payload);
+        $response->assertRedirect(route('orders.index'));
+        $response->assertSessionHas('success');
+
+        $order = \App\Models\SaleOrder::where('order_no', '#999')->first();
+        $this->assertNotNull($order);
+        // Total qty: row1 = 10+20+20+20+10+10+10 = 100; row2 = 5+15+15+5 = 40; sum = 140
+        $this->assertEquals(140, $order->total_quantity);
+        $this->assertCount(2, $order->items);
+    }
+
+    /**
+     * Test Sale Order edit, update, print, and destroy
+     */
+    public function test_sale_order_lifecycle_edit_print_delete(): void
+    {
+        $order = \App\Models\SaleOrder::where('order_no', '#181')->first();
+        $this->assertNotNull($order);
+
+        // Edit view
+        $editResponse = $this->get(route('orders.edit', $order));
+        $editResponse->assertStatus(200);
+        $editResponse->assertSee('Edit Order #181');
+
+        // Print view
+        $printResponse = $this->get(route('orders.print', $order));
+        $printResponse->assertStatus(200);
+        $printResponse->assertSee('Order Booking Sheet');
+        $printResponse->assertSee('#181');
+        $printResponse->assertSee('ABID HOSIERY');
+
+        // Update
+        $updatePayload = [
+            'order_no' => '#181',
+            'customer_id' => $order->customer_id,
+            'order_date' => '2026-11-08',
+            'status' => 'Completed',
+            'notes' => 'Updated notes',
+            'articles' => [
+                [
+                    'article_name' => 'COMFORT FIT 32-42',
+                    'items' => [
+                        [
+                            'color' => 'WHITE',
+                            'cup' => 'B',
+                            'size_32' => 50,
+                            'size_34' => 0,
+                            'size_36' => 0,
+                            'size_38' => 0,
+                            'size_40' => 0,
+                            'size_42' => 0,
+                            'size_44' => 0,
+                            'size_46' => 0,
+                            'size_48' => 0,
+                            'size_50' => 0,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $updateResponse = $this->put(route('orders.update', $order), $updatePayload);
+        $updateResponse->assertRedirect(route('orders.index'));
+
+        $order->refresh();
+        $this->assertEquals('Completed', $order->status);
+        $this->assertEquals(50, $order->total_quantity);
+
+        // Delete
+        $deleteResponse = $this->delete(route('orders.destroy', $order));
+        $deleteResponse->assertRedirect(route('orders.index'));
+        $this->assertDatabaseMissing('sale_orders', ['id' => $order->id]);
     }
 }

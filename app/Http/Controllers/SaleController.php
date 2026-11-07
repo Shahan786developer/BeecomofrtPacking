@@ -195,23 +195,52 @@ class SaleController extends Controller
 
     public function print(Sale $sale)
     {
-        $sale->load(['customer', 'details.product.category', 'details.product.dozen']);
+        $sale->load([
+            'customer',
+            'details' => fn($q) => $q->orderBy('id', 'asc'),
+            'details.product.category',
+            'details.product.dozen'
+        ]);
         $company = \App\Models\CompanyProfile::getActive();
         return view('sales.print', compact('sale', 'company'));
     }
 
     public function show(Sale $sale)
     {
-        $sale->load(['customer', 'details.product.category', 'details.product.dozen', 'returns.details']);
+        $sale->load([
+            'customer',
+            'details' => fn($q) => $q->orderBy('id', 'asc'),
+            'details.product.category',
+            'details.product.dozen',
+            'returns.details'
+        ]);
         return view('sales.show', compact('sale'));
     }
 
     public function edit(Sale $sale)
     {
         $customers = Customer::orderBy('name')->get();
-        $sale->load(['customer', 'details']);
+        $sale->load([
+            'customer',
+            'details' => fn($q) => $q->orderBy('id', 'asc'),
+        ]);
 
-        $products = Product::with(['category', 'dozen', 'sku'])
+        $productsQuery = Product::with(['category', 'dozen', 'sku']);
+
+        if ($sale->bill_type === 'china') {
+            $productsQuery->where(function ($q) {
+                $q->where('parent_category', 'China')
+                  ->orWhere('parent_category', 'china');
+            });
+        } else {
+            $productsQuery->where(function ($q) {
+                $q->where('parent_category', 'Bee Comfort')
+                  ->orWhere('parent_category', 'bee_comfort')
+                  ->orWhereNull('parent_category');
+            });
+        }
+
+        $products = $productsQuery
             ->orderBy('product_code')
             ->get()
             ->map(function ($p) {

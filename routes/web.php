@@ -13,6 +13,7 @@ use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SaleOrderController;
 use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,6 +60,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/descriptions', [BarcodeController::class, 'storeDescription'])->name('descriptions.store');
         Route::post('/descriptions/{description}/default', [BarcodeController::class, 'setDefaultDescription'])->name('descriptions.default');
         Route::delete('/descriptions/{description}', [BarcodeController::class, 'destroyDescription'])->name('descriptions.destroy');
+    });
+
+    // Sale Orders / Order Matrix Booking (Hashmi Brothers System)
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [SaleOrderController::class, 'index'])->name('index');
+        Route::get('/create', [SaleOrderController::class, 'create'])->name('create');
+        Route::post('/', [SaleOrderController::class, 'store'])->name('store');
+        Route::get('/{order}', [SaleOrderController::class, 'show'])->name('show');
+        Route::get('/{order}/edit', [SaleOrderController::class, 'edit'])->name('edit');
+        Route::put('/{order}', [SaleOrderController::class, 'update'])->name('update');
+        Route::delete('/{order}', [SaleOrderController::class, 'destroy'])->name('destroy');
+        Route::get('/{order}/print', [SaleOrderController::class, 'print'])->name('print');
     });
 
     // Sales / Customer Invoices

@@ -119,21 +119,52 @@ class DatabaseSeeder extends Seeder
         // 5. Customers
         Customer::create([
             'name' => 'Walk-in Retail Customer',
+            'code' => 'B001',
             'phone' => '+92 300 1234567',
             'email' => 'walkin@beecomfort.local',
             'address' => 'Local Cash Counter',
         ]);
         Customer::create([
             'name' => 'Ahmed Trading Co.',
+            'code' => 'B002',
             'phone' => '+92 321 9876543',
             'email' => 'ahmed@tradingco.com',
             'address' => 'Shop #14, Textile Plaza, Karachi',
         ]);
         Customer::create([
             'name' => 'Royal Garments Ltd.',
+            'code' => 'B003',
             'phone' => '+92 333 4567890',
             'email' => 'info@royalgarments.pk',
             'address' => 'Plot 88, Industrial Area, Lahore',
+        ]);
+        $abidHosiery = Customer::create([
+            'name' => 'ABID HOSIERY',
+            'code' => 'B055',
+            'phone' => '+92 300 5551234',
+            'email' => 'abid@hosiery.pk',
+            'city' => 'Gujranwala',
+            'address' => 'Bazaar #4, Gujranwala',
+        ]);
+        $bremodCosmetics = Customer::create([
+            'name' => 'BREMOD HOUSE OF COSMETICS',
+            'code' => 'B348',
+            'phone' => '+92 321 3481234',
+            'email' => 'bremod@cosmetics.pk',
+            'city' => 'Lahore',
+            'address' => 'Main Market, Lahore',
+        ]);
+        Customer::create([
+            'name' => '7 ELEVEN',
+            'code' => 'B268',
+            'phone' => '+92 300 7111268',
+            'city' => 'Sialkot',
+        ]);
+        Customer::create([
+            'name' => 'HASHMI BROTHERS (SOLE DISTRIBUTOR) GUJRANWALA',
+            'code' => 'B289',
+            'phone' => '+92 300 2891289',
+            'city' => 'Gujranwala',
         ]);
 
         // 6. Registered Sample Products
@@ -299,5 +330,58 @@ class DatabaseSeeder extends Seeder
             'new_stock' => 119,
             'notes' => 'Customer return voucher #' . $return->return_no,
         ]);
+
+        // 9. Seed Sample Sale Orders (Hashmi Brothers Matrix Booking)
+        $order181 = \App\Models\SaleOrder::create([
+            'order_no' => '#181',
+            'customer_id' => $abidHosiery->id,
+            'order_date' => Carbon::now(),
+            'status' => 'Pending',
+            'notes' => 'Regular stock booking for Abid Hosiery',
+            'total_quantity' => 0,
+            'total_amount' => 0.00,
+        ]);
+
+        $order181Items = [
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'SKIN', 'size_32' => 12, 'size_38' => 24, 'size_40' => 24, 'size_42' => 24, 'size_44' => 12, 'size_48' => 12, 'size_50' => 12],
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'BLACK', 'size_32' => 12, 'size_38' => 24, 'size_40' => 24, 'size_50' => 12],
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'BABY PINK', 'size_38' => 24],
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'WHITE', 'size_38' => 24],
+            ['article_name' => 'COMFORT FIT C & D CUP 32-42', 'cup' => 'C', 'color' => 'SKIN', 'size_38' => 12, 'size_40' => 12, 'size_42' => 12],
+            ['article_name' => 'COMFORT FIT C & D CUP 32-42', 'cup' => 'C', 'color' => 'BLACK', 'size_38' => 12, 'size_40' => 12, 'size_42' => 12],
+            ['article_name' => 'COMFORT FIT C & D CUP 32-42', 'cup' => 'D', 'color' => 'SKIN', 'size_38' => 12, 'size_40' => 12, 'size_42' => 12],
+            ['article_name' => 'COMFORT FIT C & D CUP 32-42', 'cup' => 'D', 'color' => 'BLACK', 'size_38' => 12, 'size_40' => 12, 'size_42' => 12],
+        ];
+
+        foreach ($order181Items as $itemData) {
+            $order181->items()->create($itemData);
+        }
+        $order181->recalculateTotals();
+
+        $order180 = \App\Models\SaleOrder::create([
+            'order_no' => '#180',
+            'customer_id' => $bremodCosmetics->id,
+            'order_date' => Carbon::now(),
+            'status' => 'Pending',
+            'notes' => 'Booking for Bremod House of Cosmetics',
+            'total_quantity' => 0,
+            'total_amount' => 0.00,
+        ]);
+
+        $order180Items = [
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'BABY PINK', 'size_32' => 2, 'size_34' => 3, 'size_36' => 6, 'size_38' => 6, 'size_40' => 3, 'size_42' => 3],
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'GRAY', 'size_34' => 3, 'size_36' => 6, 'size_38' => 3, 'size_40' => 6, 'size_42' => 3],
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'BLACK', 'size_36' => 4, 'size_38' => 4, 'size_40' => 4, 'size_42' => 6],
+            ['article_name' => 'COMFORT FIT 32-42', 'cup' => 'B', 'color' => 'SKIN', 'size_36' => 6, 'size_38' => 8, 'size_40' => 6, 'size_42' => 3],
+            ['article_name' => 'COMFORT PLUS 32-42', 'cup' => 'B', 'color' => 'SKIN', 'size_34' => 6, 'size_36' => 8, 'size_38' => 3, 'size_40' => 3, 'size_42' => 3],
+            ['article_name' => 'COMFORT PLUS 32-42', 'cup' => 'B', 'color' => 'BLACK', 'size_34' => 6, 'size_36' => 6, 'size_38' => 6, 'size_40' => 6, 'size_42' => 4],
+            ['article_name' => 'COMFORT PLUS 32-42', 'cup' => 'B', 'color' => 'BABY PINK', 'size_32' => 3, 'size_34' => 6, 'size_36' => 6, 'size_38' => 3, 'size_40' => 3, 'size_42' => 3],
+            ['article_name' => 'COMFORT PLUS 32-42', 'cup' => 'B', 'color' => 'MAROON', 'size_34' => 6, 'size_36' => 6, 'size_38' => 6, 'size_40' => 3, 'size_42' => 3],
+        ];
+
+        foreach ($order180Items as $itemData) {
+            $order180->items()->create($itemData);
+        }
+        $order180->recalculateTotals();
     }
 }

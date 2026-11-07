@@ -283,7 +283,13 @@
                 <span>Products & Stock</span>
             </a>
 
-            <!-- Page 3: Sales Invoices -->
+            <!-- Page 3: Sale Orders (Matrix Booking) -->
+            <a href="{{ route('orders.index') }}" class="sidebar-link {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                <i class="bi bi-journal-check"></i>
+                <span>Sale Orders</span>
+            </a>
+
+            <!-- Page 4: Sales Invoices -->
             <a href="{{ route('sales.index') }}" class="sidebar-link {{ request()->routeIs('sales.*') ? 'active' : '' }}">
                 <i class="bi bi-receipt"></i>
                 <span>Sales Invoices</span>
@@ -377,15 +383,8 @@
                 </div>
             </div>
 
-            <!-- Header Quick Action Buttons: Create, Print & User Profile -->
+            <!-- Header Actions: User Profile -->
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm px-3 shadow-sm d-none d-sm-inline-flex align-items-center">
-                    <i class="bi bi-plus-lg me-1"></i> Add Product
-                </a>
-                <a href="{{ route('sales.create') }}" class="btn btn-outline-primary btn-sm px-3 d-none d-sm-inline-flex align-items-center">
-                    <i class="bi bi-cart-plus me-1"></i> New Sale
-                </a>
-
                 @auth
                 <!-- User Profile & Logout Dropdown -->
                 <div class="dropdown ms-1">

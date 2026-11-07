@@ -99,8 +99,16 @@
             margin-bottom: 16px;
         }
 
+        .brand-logo {
+            max-height: 55px;
+            max-width: 190px;
+            object-fit: contain;
+            margin-bottom: 6px;
+            display: block;
+        }
+
         .brand-title {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 900;
             color: #0f172a;
             letter-spacing: 0.5px;
@@ -119,7 +127,7 @@
         .brand-contact {
             font-size: 11px;
             color: #64748b;
-            margin-top: 6px;
+            margin-top: 4px;
             line-height: 1.4;
         }
 
@@ -162,7 +170,7 @@
             margin-top: 8px;
             font-size: 12px;
             color: #334155;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .meta-details strong {
@@ -171,19 +179,13 @@
             color: #0f172a;
         }
 
-        /* Customer & Order Cards */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 18px;
-        }
-
+        /* Customer Card */
         .info-card {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            padding: 12px 14px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
         }
 
         .info-card-header {
@@ -198,7 +200,7 @@
         }
 
         .customer-company {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             color: #0f172a;
         }
@@ -216,24 +218,6 @@
             font-size: 11px;
             color: #64748b;
             min-width: 60px;
-        }
-
-        .phone-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 4px;
-        }
-
-        .phone-pill {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 11px;
-            font-weight: 600;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 1px 6px;
-            border-radius: 4px;
-            color: #0f172a;
         }
 
         /* Items Table */
@@ -280,7 +264,7 @@
             font-size: 12.5px;
         }
 
-        .item-sku {
+        .item-subtext {
             font-family: 'Courier New', Courier, monospace;
             font-size: 11px;
             color: #64748b;
@@ -356,14 +340,16 @@
             font-weight: 700;
         }
 
-        /* Signatures Block */
+        /* Signatures Block (2 columns) */
         .signatures-section {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
             padding-top: 28px;
             margin-top: auto;
             border-top: 1px dashed #cbd5e1;
+            max-width: 550px;
+            margin-left: auto;
         }
 
         .signature-box {
@@ -386,16 +372,6 @@
         .signature-subtitle {
             font-size: 10px;
             color: #94a3b8;
-        }
-
-        /* Footer notice */
-        .doc-footer {
-            margin-top: 18px;
-            text-align: center;
-            font-size: 10px;
-            color: #94a3b8;
-            border-top: 1px solid #f1f5f9;
-            padding-top: 8px;
         }
 
         /* PRINT MEDIA RULES */
@@ -428,7 +404,7 @@
                 color: #ffffff !important;
             }
 
-            .bill-badge, .phone-pill {
+            .bill-badge {
                 border-color: #94a3b8 !important;
             }
         }
@@ -460,13 +436,15 @@
             <!-- Header -->
             <div class="inv-header">
                 <div>
+                    @if(!empty($company->logo) && file_exists(public_path($company->logo)))
+                        <img src="{{ asset($company->logo) }}" alt="{{ $company->name ?? 'Bee Comfort' }}" class="brand-logo">
+                    @endif
                     <div class="brand-title">{{ $company->name ?? 'Bee Comfort' }}</div>
                     @if(!empty($company->tagline))
                         <div class="brand-tagline">{{ $company->tagline }}</div>
                     @endif
                     <div class="brand-contact">
-                        {{ $company->address ?? 'Warehouse • Pakistan' }}<br>
-                        Phone / WhatsApp: {{ $company->phone ?? 'Customer Care' }} &bull; {{ $company->email ?? 'orders@beecomfort.com' }}
+                        {{ $company->address ?? 'Warehouse • Pakistan' }} &bull; {{ $company->email ?? 'orders@beecomfort.com' }}
                     </div>
                 </div>
 
@@ -481,98 +459,48 @@
                     </div>
                     <div class="meta-details">
                         Invoice No: <strong>{{ $sale->invoice_no }}</strong><br>
-                        Date: <strong>{{ $sale->invoice_date->format('d M Y') }}</strong><br>
-                        Printed: {{ now()->format('d-m-Y h:i A') }}
+                        Date: <strong>{{ $sale->invoice_date->format('d M Y') }}</strong>
                     </div>
                 </div>
             </div>
 
-            <!-- Customer & Bill To Grid -->
-            <div class="info-grid">
-                <!-- Customer Details -->
-                <div class="info-card">
-                    <div class="info-card-header">Bill To Customer / Buyer</div>
-                    <div class="customer-company">{{ $sale->customer->name }}</div>
-                    
-                    @if($sale->customer->owner_name)
-                        <div class="info-row">
-                            <span class="info-label">Owner:</span>
-                            <strong>{{ $sale->customer->owner_name }}</strong>
-                        </div>
-                    @endif
-
-                    @php
-                        $phones = array_filter([
-                            $sale->customer->phone,
-                            $sale->customer->phone_2,
-                            $sale->customer->phone_3,
-                            $sale->customer->phone_4,
-                        ]);
-                    @endphp
-
-                    @if(count($phones) > 0)
-                        <div class="info-row" style="align-items: center;">
-                            <span class="info-label">Phone(s):</span>
-                            <div class="phone-pills">
-                                @foreach($phones as $idx => $ph)
-                                    <span class="phone-pill">P{{ $loop->iteration }}: {{ $ph }}</span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @if($sale->customer->city)
-                        <div class="info-row">
-                            <span class="info-label">City:</span>
-                            <span>{{ $sale->customer->city }}</span>
-                        </div>
-                    @endif
-
-                    @if($sale->customer->address)
-                        <div class="info-row">
-                            <span class="info-label">Address:</span>
-                            <span>{{ $sale->customer->address }}</span>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Invoice Meta & Summary Card -->
-                <div class="info-card">
-                    <div class="info-card-header">Billing Summary</div>
+            <!-- Customer Details Card -->
+            <div class="info-card">
+                <div class="info-card-header">Bill To Customer / Buyer</div>
+                <div class="customer-company">{{ $sale->customer->name }}</div>
+                
+                @if($sale->customer->owner_name)
                     <div class="info-row">
-                        <span class="info-label">Invoice Ref:</span>
-                        <strong style="font-family: monospace;">{{ $sale->invoice_no }}</strong>
+                        <span class="info-label">Owner:</span>
+                        <strong>{{ $sale->customer->owner_name }}</strong>
                     </div>
+                @endif
+
+                @if($sale->customer->city)
                     <div class="info-row">
-                        <span class="info-label">Bill Category:</span>
-                        <strong>{{ $sale->bill_type === 'china' ? 'China Inventory' : 'Bee Comfort Core' }}</strong>
+                        <span class="info-label">City:</span>
+                        <span>{{ $sale->customer->city }}</span>
                     </div>
+                @endif
+
+                @if($sale->customer->address)
                     <div class="info-row">
-                        <span class="info-label">Invoice Date:</span>
-                        <span>{{ $sale->invoice_date->format('d-M-Y') }}</span>
+                        <span class="info-label">Address:</span>
+                        <span>{{ $sale->customer->address }}</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Total Items:</span>
-                        <strong>{{ $sale->details->count() }} distinct item(s) &bull; {{ $sale->details->sum('quantity') }} units</strong>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Payment Status:</span>
-                        <strong style="color: #16a34a;">Recorded on Customer Account</strong>
-                    </div>
-                </div>
+                @endif
             </div>
 
-            <!-- Items Table -->
+            <!-- Items Table (SKU Column Removed) -->
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 32px;">#</th>
+                        <th class="text-center" style="width: 35px;">#</th>
                         <th>Product Title &amp; Unified Specification</th>
-                        <th class="text-center" style="width: 85px;">SKU</th>
-                        <th class="text-center" style="width: 80px;">Unit Pack</th>
-                        <th class="text-center" style="width: 60px;">Qty</th>
-                        <th class="text-right" style="width: 100px;">Rate (Rs.)</th>
-                        <th class="text-right" style="width: 110px;">Amount (Rs.)</th>
+                        <th class="text-center" style="width: 90px;">Unit Pack</th>
+                        <th class="text-center" style="width: 70px;">Qty</th>
+                        <th class="text-right" style="width: 110px;">Rate (Rs.)</th>
+                        <th class="text-right" style="width: 120px;">Amount (Rs.)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -581,11 +509,10 @@
                         <td class="text-center font-monospace">{{ $index + 1 }}</td>
                         <td>
                             <div class="item-title">{{ $item->product_title }}</div>
-                            <div class="item-sku">
+                            <div class="item-subtext">
                                 Code: {{ $item->product->product_code ?? '—' }} &bull; Category: {{ $item->product->category->name ?? '—' }}
                             </div>
                         </td>
-                        <td class="text-center font-monospace">{{ $item->sku_code }}</td>
                         <td class="text-center small">{{ $item->product->dozen->label ?? 'Unit' }}</td>
                         <td class="text-center font-monospace" style="font-weight: 700;">{{ $item->quantity }}</td>
                         <td class="text-right item-price">{{ number_format($item->unit_price, 2) }}</td>
@@ -631,14 +558,9 @@
             </div>
         </div>
 
-        <!-- Signatures & Policy Footer -->
+        <!-- Signatures Section -->
         <div>
             <div class="signatures-section">
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-title">Prepared By</div>
-                    <div class="signature-subtitle">Billing Staff</div>
-                </div>
                 <div class="signature-box">
                     <div class="signature-line"></div>
                     <div class="signature-title">Checked &amp; Verified</div>
@@ -650,17 +572,13 @@
                     <div class="signature-subtitle">Signature &amp; Stamp</div>
                 </div>
             </div>
-
-            <div class="doc-footer">
-                {{ $company->name ?? 'Bee Comfort' }} &bull; Commercial Bill &bull; This is an official computer-generated invoice receipt.
-            </div>
         </div>
 
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-trigger print dialog after small delay if needed
+            // Auto-trigger print dialog after small delay
             setTimeout(function() {
                 window.print();
             }, 500);

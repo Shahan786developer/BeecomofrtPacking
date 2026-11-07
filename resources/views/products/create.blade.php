@@ -66,13 +66,13 @@
                                 </select>
                             </div>
 
-                            <!-- 1. Bill No (Blank by default) -->
+                            <!-- 1. Bill No (Optional) -->
                             <div class="col-12 col-md-3">
                                 <label for="bill_no" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Bill Number <span class="text-danger">*</span>
+                                    Bill Number <span class="text-secondary fw-normal fs-8">(Optional)</span>
                                 </label>
-                                <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no') }}" required
-                                    placeholder="e.g. BILL-101" class="form-control font-monospace fw-semibold">
+                                <input type="text" name="bill_no" id="bill_no" value="{{ old('bill_no') }}"
+                                    placeholder="e.g. BILL-101 (Optional)" class="form-control font-monospace fw-semibold">
                             </div>
 
                             <!-- 2. Category (Pre-selects default category if available) -->
@@ -138,15 +138,15 @@
                                 <div class="form-text small text-secondary">Auto-formatted: 2 letters, hyphen, 2 digits (e.g. AA-01)</div>
                             </div>
 
-                            <!-- 5. SKU (Auto generated, 7 digits, read-only) -->
+                            <!-- 5. SKU (Editable) -->
                             <div class="col-12 col-md-4">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase mb-0">SKU Code</label>
-                                    <span class="badge bg-light text-secondary border">Auto Generated</span>
+                                    <label for="sku_code" class="form-label small fw-bold text-secondary text-uppercase mb-0">SKU Code</label>
+                                    <span class="badge bg-light text-primary border">Editable SKU</span>
                                 </div>
-                                <input type="text" value="{{ $previewSku }}" readonly
-                                    class="form-control font-monospace fw-bold bg-light text-primary fs-6 cursor-not-allowed">
-                                <div class="form-text small text-secondary">Unique 7-digit numeric barcode ID</div>
+                                <input type="text" name="sku_code" id="sku_code" value="{{ old('sku_code', $previewSku) }}"
+                                    placeholder="Unique 7-digit SKU" class="form-control font-monospace fw-bold text-primary fs-6">
+                                <div class="form-text small text-secondary">Auto-allocated unique 7 digits; can be edited if needed.</div>
                             </div>
 
                             <!-- 9. Initial Stock Quantity (Blank by default) -->
@@ -195,17 +195,20 @@
                                 </select>
                             </div>
 
-                            <!-- 8. Selling Price (Auto Calculated, Read-only, Rs.) -->
+                            <!-- 8. Selling Price (Calculated & Editable, Rs.) -->
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Calculated Selling Price (Rs.)
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="selling_price" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                        Calculated Selling Price (Rs.)
+                                    </label>
+                                    <span class="badge bg-light text-success border">Editable Price</span>
+                                </div>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-secondary">Rs.</span>
-                                    <input type="text" id="selling_price_display" value="0.00" readonly
-                                        class="form-control fw-black text-dark font-monospace fs-6 bg-light cursor-not-allowed">
+                                    <input type="number" step="0.01" min="0" name="selling_price" id="selling_price" value="{{ old('selling_price') }}"
+                                        placeholder="0.00" class="form-control fw-black text-dark font-monospace fs-6">
                                 </div>
-                                <div class="form-text small text-secondary">Computed automatically from purchase price and markup rule</div>
+                                <div class="form-text small text-secondary">Auto-calculated from pricing rule; can be customized freely.</div>
                             </div>
                         </div>
                     </div>
@@ -238,7 +241,7 @@
 
         const actualPriceInput = document.getElementById('actual_price');
         const pricingRuleSelect = document.getElementById('pricing_rule_id');
-        const sellingPriceDisplay = document.getElementById('selling_price_display');
+        const sellingPriceInput = document.getElementById('selling_price');
 
         // Product code auto-masking: 2 letters, then auto-insert hyphen, then 2 numbers
         productCodeInput.addEventListener('input', function() {
@@ -282,14 +285,22 @@
             }
 
             if (actual <= 0) {
-                sellingPriceDisplay.value = '0.00';
+                if (!sellingPriceInput.value || sellingPriceInput.dataset.autoCalculated === 'true') {
+                    sellingPriceInput.value = '';
+                }
                 return;
             }
 
             const raw = actual * (1 + (percentage / 100));
             const finalPrice = Math.ceil(raw / 10) * 10;
-            sellingPriceDisplay.value = finalPrice.toFixed(2);
+            sellingPriceInput.value = finalPrice.toFixed(2);
+            sellingPriceInput.dataset.autoCalculated = 'true';
         }
+
+        // Track when user manually edits selling price
+        sellingPriceInput.addEventListener('input', function() {
+            this.dataset.autoCalculated = 'false';
+        });
 
         actualPriceInput.addEventListener('input', recalcSellingPrice);
 
