@@ -297,18 +297,11 @@
                         </select>
                     </div>
 
-                    <!-- Article Details Sub-header & Add Custom Color Field -->
-                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                    <!-- Article Details Sub-header -->
+                    <div class="mb-2">
                         <label class="fw-bold small text-secondary mb-0">
                             Article Details (Color, Cup & Sizes) <span class="text-danger">*</span>
                         </label>
-
-                        <div class="input-group input-group-sm" style="width: 260px;">
-                            <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
-                            <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
-                                <i class="bi bi-plus-lg"></i> Add Color
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Rows Container for this Article -->
@@ -675,32 +668,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // 2. Add Custom Color Button from header
-        const addCustomColorBtn = e.target.closest('.add-custom-color-btn');
-        if (addCustomColorBtn) {
-            e.preventDefault();
-            const artBlock = addCustomColorBtn.closest('.article-block');
-            const inputEl = artBlock.querySelector('.new-custom-color-input');
-            const colorVal = inputEl ? inputEl.value.trim() : '';
-
-            if (!colorVal) {
-                if (inputEl) inputEl.focus();
-                return;
-            }
-
-            const rowsList = artBlock.querySelector('.article-rows-list');
-            const artIdx = artBlock.dataset.articleIndex;
-            const nextRowIdx = rowsList.querySelectorAll('.item-row').length;
-
-            const newRow = createRowElement(artIdx, nextRowIdx, colorVal, 'B');
-            rowsList.appendChild(newRow);
-
-            if (inputEl) inputEl.value = '';
-            recalculateAll();
-            return;
-        }
-
-        // 3. Remove Row Button
+        // 2. Remove Row Button
         const removeRowBtn = e.target.closest('.remove-row-btn');
         if (removeRowBtn) {
             e.preventDefault();
@@ -772,16 +740,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     </select>
                 </div>
 
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                <div class="mb-2">
                     <label class="fw-bold small text-secondary mb-0">
                         Article Details (Color, Cup & Sizes) <span class="text-danger">*</span>
                     </label>
-                    <div class="input-group input-group-sm" style="width: 260px;">
-                        <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
-                        <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
-                            <i class="bi bi-plus-lg"></i> Add Color
-                        </button>
-                    </div>
                 </div>
 
                 <div class="article-rows-list">
@@ -883,15 +845,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Enter key support on new custom color input
-    document.addEventListener('keydown', function (e) {
-        if (e.target && e.target.classList.contains('new-custom-color-input') && e.key === 'Enter') {
-            e.preventDefault();
-            const artBlock = e.target.closest('.article-block');
-            const btn = artBlock.querySelector('.add-custom-color-btn');
-            if (btn) btn.click();
-        }
-    });
 
     // Run initial calculation
     recalculateAll();

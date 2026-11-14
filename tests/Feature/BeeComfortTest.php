@@ -943,8 +943,8 @@ class BeeComfortTest extends TestCase
         $response->assertSee('Select Article');
         $response->assertSee('Article Details (Color, Cup & Sizes)', false);
         $response->assertSee('Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)');
-        $response->assertSee('new-custom-color-input');
-        $response->assertSee('add-custom-color-btn');
+        $response->assertDontSee('new-custom-color-input');
+        $response->assertDontSee('add-custom-color-btn');
         $response->assertSee('Grand Total Quantity');
         $response->assertSee('Save & Book Order', false);
 
@@ -1053,8 +1053,8 @@ class BeeComfortTest extends TestCase
         $editResponse->assertStatus(200);
         $editResponse->assertSee('Edit Order #181');
         $editResponse->assertSee('sidebar-collapsed');
-        $editResponse->assertSee('new-custom-color-input');
-        $editResponse->assertSee('add-custom-color-btn');
+        $editResponse->assertDontSee('new-custom-color-input');
+        $editResponse->assertDontSee('add-custom-color-btn');
         $editResponse->assertSee('searchable-select');
         $editResponse->assertSee('<option value="DD"', false);
 
