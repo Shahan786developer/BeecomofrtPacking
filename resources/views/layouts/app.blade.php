@@ -236,15 +236,30 @@
             border-color: #0a58ca;
         }
 
+        /* Collapsed / No-Sidebar Mode (Order Booking & Edit Full-Width) */
+        body.sidebar-collapsed .sidebar {
+            margin-left: -250px;
+        }
+
+        body.sidebar-collapsed .main-wrapper {
+            margin-left: 0;
+        }
+
+        body.sidebar-collapsed .sidebar.show {
+            margin-left: 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        }
+
         @media (max-width: 991.98px) {
             .sidebar {
                 margin-left: -250px;
             }
             .sidebar.show {
                 margin-left: 0;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             }
             .main-wrapper {
-                margin-left: 0;
+                margin-left: 0 !important;
             }
         }
 
@@ -256,7 +271,7 @@
     </style>
     @stack('styles')
 </head>
-<body>
+<body class="@yield('body_class')">
 
     <!-- CLEAN LEFT SIDEBAR: 3 PRIMARY PAGES -->
     <aside class="sidebar no-print" id="appSidebar">
@@ -371,8 +386,9 @@
         <!-- TOP NAVBAR -->
         <header class="top-navbar no-print">
             <div class="d-flex align-items-center">
-                <button class="btn btn-outline-secondary btn-sm d-lg-none me-3" type="button" id="sidebarToggle">
-                    <i class="bi bi-list fs-5"></i>
+                <button class="btn btn-outline-secondary btn-sm me-3 d-inline-flex align-items-center gap-1.5 shadow-none" type="button" id="sidebarToggle" title="Toggle Sidebar">
+                    <i class="bi bi-layout-sidebar-inset fs-5"></i>
+                    <span class="d-none d-md-inline small fw-semibold">Menu</span>
                 </button>
                 <div class="d-flex align-items-center gap-2 text-secondary small">
                     <a href="{{ route('products.index') }}" class="text-decoration-none text-secondary">
@@ -463,9 +479,27 @@
 
     <!-- Sidebar Toggle & Searchable Dropdowns -->
     <script>
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.getElementById('appSidebar').classList.toggle('show');
-        });
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const appSidebar = document.getElementById('appSidebar');
+
+        if (sidebarToggle && appSidebar) {
+            sidebarToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (window.innerWidth >= 992) {
+                    document.body.classList.toggle('sidebar-collapsed');
+                    appSidebar.classList.remove('show');
+                } else {
+                    appSidebar.classList.toggle('show');
+                }
+            });
+
+            // Close sidebar when clicking outside on mobile or collapsed view
+            document.addEventListener('click', function(e) {
+                if (appSidebar.classList.contains('show') && !appSidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    appSidebar.classList.remove('show');
+                }
+            });
+        }
 
         // Initialize TomSelect on searchable dropdowns
         document.addEventListener('DOMContentLoaded', function () {

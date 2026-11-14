@@ -76,6 +76,18 @@ class SaleOrderController extends Controller
         $nextOrderNo = SaleOrder::generateNextOrderNo();
         $customers = Customer::orderBy('name')->get();
 
+        // Registered products from backend product registration
+        $registeredProducts = Product::with(['category', 'dozen'])->orderBy('id', 'desc')->get();
+        $productArticles = [];
+        foreach ($registeredProducts as $p) {
+            if (!empty($p->product_code)) {
+                $productArticles[] = $p->product_code;
+            }
+            if (!empty($p->title)) {
+                $productArticles[] = $p->title;
+            }
+        }
+
         // Standard predefined articles
         $predefinedArticles = [
             'COMFORT FIT 32-42',
@@ -89,26 +101,36 @@ class SaleOrderController extends Controller
 
         // Also fetch product categories
         $categoryNames = Category::orderBy('name')->pluck('name')->toArray();
-        $availableArticles = array_values(array_unique(array_merge($predefinedArticles, $categoryNames)));
+        $availableArticles = array_values(array_unique(array_filter(array_merge(
+            $productArticles,
+            $predefinedArticles,
+            $categoryNames
+        ))));
 
-        // Predefined colors
+        // Color options (HTML default dropdown)
         $availableColors = [
-            'SKIN',
-            'BLACK',
-            'BABY PINK',
-            'WHITE',
-            'GRAY',
-            'MAROON',
-            'PLUM',
-            'NAVY BLUE',
-            'RED',
-            'PEACH',
-            'DARK BLUE',
-            'TEA PINK',
+            'Black',
+            'Skin',
+            'White',
+            'Mehroon',
+            'Baby Pink',
+            'Grey',
+            'Pink',
+            'Red',
+            'Royal Blue',
+            'Champagne',
+            'Charcoal Grey',
+            'Dark Pink',
+            'Dusty Rose',
+            'Ivory',
+            'Navy',
+            'Nude Beige',
+            'Purple',
+            'Sage Green',
         ];
 
         // Cup options
-        $cupOptions = ['B', 'C', 'D'];
+        $cupOptions = ['B', 'C', 'D', 'DD'];
 
         return view('orders.create', compact(
             'nextOrderNo',
@@ -244,6 +266,18 @@ class SaleOrderController extends Controller
         $order->load(['customer', 'items']);
         $customers = Customer::orderBy('name')->get();
 
+        // Registered products from backend product registration
+        $registeredProducts = Product::with(['category', 'dozen'])->orderBy('id', 'desc')->get();
+        $productArticles = [];
+        foreach ($registeredProducts as $p) {
+            if (!empty($p->product_code)) {
+                $productArticles[] = $p->product_code;
+            }
+            if (!empty($p->title)) {
+                $productArticles[] = $p->title;
+            }
+        }
+
         $predefinedArticles = [
             'COMFORT FIT 32-42',
             'COMFORT FIT C & D CUP 32-42',
@@ -255,24 +289,34 @@ class SaleOrderController extends Controller
         ];
 
         $categoryNames = Category::orderBy('name')->pluck('name')->toArray();
-        $availableArticles = array_values(array_unique(array_merge($predefinedArticles, $categoryNames)));
+        $availableArticles = array_values(array_unique(array_filter(array_merge(
+            $productArticles,
+            $predefinedArticles,
+            $categoryNames
+        ))));
 
         $availableColors = [
-            'SKIN',
-            'BLACK',
-            'BABY PINK',
-            'WHITE',
-            'GRAY',
-            'MAROON',
-            'PLUM',
-            'NAVY BLUE',
-            'RED',
-            'PEACH',
-            'DARK BLUE',
-            'TEA PINK',
+            'Black',
+            'Skin',
+            'White',
+            'Mehroon',
+            'Baby Pink',
+            'Grey',
+            'Pink',
+            'Red',
+            'Royal Blue',
+            'Champagne',
+            'Charcoal Grey',
+            'Dark Pink',
+            'Dusty Rose',
+            'Ivory',
+            'Navy',
+            'Nude Beige',
+            'Purple',
+            'Sage Green',
         ];
 
-        $cupOptions = ['B', 'C', 'D'];
+        $cupOptions = ['B', 'C', 'D', 'DD'];
 
         // Group existing items by article name
         $groupedArticles = [];

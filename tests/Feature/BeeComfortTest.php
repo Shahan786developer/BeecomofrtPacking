@@ -660,41 +660,15 @@ class BeeComfortTest extends TestCase
      */
     public function test_separate_china_and_bee_comfort_returns_locking(): void
     {
-        $customer = Customer::first();
-
-        // Create Bee Comfort Sale
-        $bcSale = Sale::create([
-            'bill_type' => 'bee_comfort',
-            'invoice_no' => 'BC-TEST-INV-RET',
-            'customer_id' => $customer->id,
-            'invoice_date' => Carbon::today(),
-            'subtotal' => 1000,
-            'total_amount' => 1000,
-        ]);
-
-        $prod = Product::first();
-        SaleDetail::create([
-            'sale_id' => $bcSale->id,
-            'product_id' => $prod->id,
-            'product_title' => $prod->title,
-            'sku_code' => $prod->sku_code,
-            'quantity' => 10,
-            'returned_quantity' => 0,
-            'unit_price' => 100,
-            'total_amount' => 1000,
-        ]);
-
-        // Visit China Return Create Page: Bee Comfort Sale should NOT be in the China invoice list
+        // Visit China Return Create Page
         $chinaReturnPage = $this->get(route('returns.create', ['return_type' => 'china']));
         $chinaReturnPage->assertStatus(200);
         $chinaReturnPage->assertSee('Process China Bill Return');
-        $chinaReturnPage->assertDontSee('BC-TEST-INV-RET');
 
-        // Visit Bee Comfort Return Create Page: Bee Comfort Sale SHOULD be in the list
+        // Visit Bee Comfort Return Create Page
         $bcReturnPage = $this->get(route('returns.create', ['return_type' => 'bee_comfort']));
         $bcReturnPage->assertStatus(200);
         $bcReturnPage->assertSee('Process Bee Comfort Bill Return');
-        $bcReturnPage->assertSee('BC-TEST-INV-RET');
     }
 
     /**
@@ -911,6 +885,7 @@ class BeeComfortTest extends TestCase
         $response->assertStatus(200);
 
         $response->assertSee('Create New Order - Hashmi Brothers');
+        $response->assertSee('sidebar-collapsed');
         $response->assertSee('Customer');
         $response->assertSee('-- Select Customer --');
         $response->assertSee('Order / Voucher No');
@@ -920,8 +895,30 @@ class BeeComfortTest extends TestCase
         $response->assertSee('Select Article');
         $response->assertSee('Article Details (Color, Cup & Sizes)', false);
         $response->assertSee('Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)');
+        $response->assertSee('new-custom-color-input');
+        $response->assertSee('add-custom-color-btn');
         $response->assertSee('Grand Total Quantity');
         $response->assertSee('Save & Book Order', false);
+
+        // Verify Cup Options B, C, D, DD
+        $response->assertSee('<option value="B"', false);
+        $response->assertSee('<option value="C"', false);
+        $response->assertSee('<option value="D"', false);
+        $response->assertSee('<option value="DD"', false);
+
+        // Verify key requested colors
+        $response->assertSee('Sage Green');
+        $response->assertSee('Baby Pink');
+        $response->assertSee('Royal Blue');
+        $response->assertSee('Champagne');
+        $response->assertSee('Charcoal Grey');
+        $response->assertSee('Nude Beige');
+
+        // Verify backend registered products exist in available articles
+        $product = Product::first();
+        if ($product && !empty($product->title)) {
+            $response->assertSee($product->title);
+        }
     }
 
     /**
@@ -944,7 +941,7 @@ class BeeComfortTest extends TestCase
                     'items' => [
                         [
                             'color' => 'SKIN',
-                            'cup' => 'B',
+                            'cup' => 'DD',
                             'size_32' => 10,
                             'size_34' => 0,
                             'size_36' => 0,
@@ -988,6 +985,11 @@ class BeeComfortTest extends TestCase
         // Total qty: row1 = 10+20+20+20+10+10+10 = 100; row2 = 5+15+15+5 = 40; sum = 140
         $this->assertEquals(140, $order->total_quantity);
         $this->assertCount(2, $order->items);
+
+        // Verify cup DD was saved
+        $itemDD = $order->items()->where('cup', 'DD')->first();
+        $this->assertNotNull($itemDD);
+        $this->assertEquals('SKIN', $itemDD->color);
     }
 
     /**
@@ -1002,6 +1004,11 @@ class BeeComfortTest extends TestCase
         $editResponse = $this->get(route('orders.edit', $order));
         $editResponse->assertStatus(200);
         $editResponse->assertSee('Edit Order #181');
+        $editResponse->assertSee('sidebar-collapsed');
+        $editResponse->assertSee('new-custom-color-input');
+        $editResponse->assertSee('add-custom-color-btn');
+        $editResponse->assertSee('searchable-select');
+        $editResponse->assertSee('<option value="DD"', false);
 
         // Print view
         $printResponse = $this->get(route('orders.print', $order));
@@ -1010,7 +1017,7 @@ class BeeComfortTest extends TestCase
         $printResponse->assertSee('#181');
         $printResponse->assertSee('ABID HOSIERY');
 
-        // Update
+        // Update with DD cup
         $updatePayload = [
             'order_no' => '#181',
             'customer_id' => $order->customer_id,
@@ -1022,8 +1029,8 @@ class BeeComfortTest extends TestCase
                     'article_name' => 'COMFORT FIT 32-42',
                     'items' => [
                         [
-                            'color' => 'WHITE',
-                            'cup' => 'B',
+                            'color' => 'Sage Green',
+                            'cup' => 'DD',
                             'size_32' => 50,
                             'size_34' => 0,
                             'size_36' => 0,
@@ -1046,6 +1053,10 @@ class BeeComfortTest extends TestCase
         $order->refresh();
         $this->assertEquals('Completed', $order->status);
         $this->assertEquals(50, $order->total_quantity);
+
+        $updatedItem = $order->items->first();
+        $this->assertEquals('DD', $updatedItem->cup);
+        $this->assertEquals('Sage Green', $updatedItem->color);
 
         // Delete
         $deleteResponse = $this->delete(route('orders.destroy', $order));

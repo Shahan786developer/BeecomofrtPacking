@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Create New Order — Hashmi Brothers')
+@section('body_class', 'sidebar-collapsed')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none text-secondary">Dashboard</a></li>
@@ -131,10 +132,10 @@
         <!-- ORDER HEADER CONFIGURATION CARD -->
         <div class="order-booking-card p-3 p-md-4">
             <div class="row g-3">
-                <!-- Customer Selection -->
+                <!-- Customer Selection (Searchable TomSelect Dropdown) -->
                 <div class="col-12 col-md-4">
                     <label class="form-label required fw-bold small text-secondary">Customer</label>
-                    <select name="customer_id" id="customerId" class="form-select @error('customer_id') is-invalid @enderror" required>
+                    <select name="customer_id" id="customerId" class="form-select searchable-select @error('customer_id') is-invalid @enderror" required placeholder="-- Select Customer --">
                         <option value="">-- Select Customer --</option>
                         @foreach($customers as $c)
                             <option value="{{ $c->id }}" {{ old('customer_id') == $c->id ? 'selected' : '' }}>
@@ -203,7 +204,14 @@
                         <span class="badge bg-primary rounded-pill px-2.5 py-1.5 article-badge">Article #1</span>
                         <div class="d-flex align-items-center gap-2 flex-grow-1">
                             <label class="small fw-bold text-secondary text-nowrap mb-0">Select Article</label>
-                            <input list="articleSuggestions" name="articles[0][article_name]" class="form-control form-control-sm fw-bold text-dark article-name-input" placeholder="-- Select Article --" value="{{ old('articles.0.article_name', 'COMFORT FIT 32-42') }}" required>
+                            <select name="articles[0][article_name]" class="form-select form-select-sm fw-bold article-select searchable-select" placeholder="-- Select Article --" required>
+                                <option value="">-- Select Article --</option>
+                                @foreach($availableArticles as $art)
+                                    <option value="{{ $art }}" {{ old('articles.0.article_name', 'COMFORT FIT 32-42') == $art ? 'selected' : '' }}>
+                                        {{ $art }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -216,18 +224,30 @@
                     </div>
                 </div>
 
-                <!-- Article Details Sub-header -->
-                <div class="px-3 py-1.5 bg-light-subtle border-bottom d-flex justify-content-between align-items-center">
-                    <span class="fw-bold small text-secondary">Article Details (Color, Cup & Sizes)</span>
-                    <span class="small text-muted font-monospace">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
+                <!-- Article Details Sub-header & Custom Color Input Top Bar -->
+                <div class="px-3 py-2 bg-light-subtle border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <span class="fw-bold small text-dark">Article Details (Color, Cup & Sizes)</span>
+                        <span class="small text-muted ms-2 d-none d-md-inline font-monospace">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
+                    </div>
+
+                    <!-- Add New Color Top Bar Text Field -->
+                    <div class="d-flex align-items-center gap-1.5 ms-auto">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
+                            <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
+                                <i class="bi bi-plus-lg"></i> Add Color
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table size-matrix-table align-middle">
                         <thead>
                             <tr>
-                                <th style="width: 140px;" class="text-start ps-3">Color</th>
-                                <th style="width: 65px;">Cup</th>
+                                <th style="width: 150px;" class="text-start ps-3">Color</th>
+                                <th style="width: 70px;">Cup</th>
                                 <th class="th-std">32</th>
                                 <th class="th-std">34</th>
                                 <th class="th-std">36</th>
@@ -240,7 +260,7 @@
                                 <th class="th-plus">50</th>
                                 <th style="width: 75px;" title="Standard Rate (32-42)">Rate Std</th>
                                 <th style="width: 75px;" title="Plus Size Rate (44-50)">Rate Plus</th>
-                                <th style="width: 90px;">Total</th>
+                                <th style="width: 95px;">Total</th>
                                 <th style="width: 40px;"></th>
                             </tr>
                         </thead>
@@ -248,13 +268,17 @@
                             <!-- Row 0 -->
                             <tr class="item-row" data-row-index="0">
                                 <td class="ps-3">
-                                    <input list="colorSuggestions" name="articles[0][items][0][color]" class="form-control form-control-sm text-uppercase fw-semibold" placeholder="-- Select --" value="SKIN">
+                                    <select name="articles[0][items][0][color]" class="form-select form-select-sm fw-semibold color-select">
+                                        @foreach($availableColors as $col)
+                                            <option value="{{ $col }}" {{ strtolower($col) === 'skin' ? 'selected' : '' }}>{{ $col }}</option>
+                                        @endforeach
+                                    </select>
                                 </td>
                                 <td>
-                                    <select name="articles[0][items][0][cup]" class="form-select form-select-sm text-center fw-bold">
-                                        <option value="B" selected>B</option>
-                                        <option value="C">C</option>
-                                        <option value="D">D</option>
+                                    <select name="articles[0][items][0][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
+                                        @foreach($cupOptions as $cup)
+                                            <option value="{{ $cup }}" {{ $cup === 'B' ? 'selected' : '' }}>{{ $cup }}</option>
+                                        @endforeach
                                     </select>
                                 </td>
                                 <!-- Standard Sizes (32 - 42) -->
@@ -311,19 +335,6 @@
 
     </div>
 
-    <!-- DATALISTS FOR AUTOCOMPLETE -->
-    <datalist id="articleSuggestions">
-        @foreach($availableArticles as $art)
-            <option value="{{ $art }}">
-        @endforeach
-    </datalist>
-
-    <datalist id="colorSuggestions">
-        @foreach($availableColors as $col)
-            <option value="{{ $col }}">
-        @endforeach
-    </datalist>
-
     <!-- STICKY ORDER BOTTOM SUMMARY BAR -->
     <div class="sticky-order-summary">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -363,6 +374,25 @@
 document.addEventListener('DOMContentLoaded', function () {
     const container = document.getElementById('articlesContainer');
     const addArticleBtn = document.getElementById('addNewArticleBtn');
+
+    // Default colors array
+    const defaultColors = @json($availableColors);
+    const cupOptions = @json($cupOptions);
+    const availableArticles = @json($availableArticles);
+
+    // Initialize TomSelect on article selects
+    function initArticleTomSelect(selectEl) {
+        if (!selectEl || selectEl.tomselect) return;
+        new TomSelect(selectEl, {
+            create: true,
+            sortField: { field: "text", direction: "asc" },
+            placeholder: "-- Select Article --",
+            allowEmptyOption: true,
+        });
+    }
+
+    // Initialize TomSelect for existing article selects
+    document.querySelectorAll('.article-select').forEach(initArticleTomSelect);
 
     function recalculateAll() {
         let grandTotalQty = 0;
@@ -424,7 +454,66 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Helper to generate a new item row
+    function createRowElement(artIdx, rowIdx, initialColor = 'Skin', initialCup = 'B') {
+        const newRow = document.createElement('tr');
+        newRow.className = 'item-row';
+        newRow.dataset.rowIndex = rowIdx;
+
+        let colorOptionsHtml = '';
+        let colorFound = false;
+        defaultColors.forEach(col => {
+            const isSelected = col.toLowerCase() === initialColor.toLowerCase();
+            if (isSelected) colorFound = true;
+            colorOptionsHtml += `<option value="${col}" ${isSelected ? 'selected' : ''}>${col}</option>`;
+        });
+        if (!colorFound && initialColor) {
+            colorOptionsHtml = `<option value="${initialColor}" selected>${initialColor}</option>` + colorOptionsHtml;
+        }
+
+        let cupOptionsHtml = '';
+        cupOptions.forEach(cup => {
+            cupOptionsHtml += `<option value="${cup}" ${cup === initialCup ? 'selected' : ''}>${cup}</option>`;
+        });
+
+        newRow.innerHTML = `
+            <td class="ps-3">
+                <select name="articles[${artIdx}][items][${rowIdx}][color]" class="form-select form-select-sm fw-semibold color-select">
+                    ${colorOptionsHtml}
+                </select>
+            </td>
+            <td>
+                <select name="articles[${artIdx}][items][${rowIdx}][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
+                    ${cupOptionsHtml}
+                </select>
+            </td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_32]" class="form-control form-control-sm size-input input-std" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_34]" class="form-control form-control-sm size-input input-std" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_36]" class="form-control form-control-sm size-input input-std" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_38]" class="form-control form-control-sm size-input input-std" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_40]" class="form-control form-control-sm size-input input-std" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_42]" class="form-control form-control-sm size-input input-std" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_44]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_46]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_48]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
+            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_50]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
+            <td><input type="number" min="0" step="0.5" name="articles[${artIdx}][items][${rowIdx}][rate_std]" class="form-control form-control-sm text-center rate-std-input" placeholder="0"></td>
+            <td><input type="number" min="0" step="0.5" name="articles[${artIdx}][items][${rowIdx}][rate_plus]" class="form-control form-control-sm text-center rate-plus-input" placeholder="0"></td>
+            <td class="text-center">
+                <span class="badge bg-success font-monospace fw-bold px-2 py-1 row-total-badge">Total: 0 pcs</span>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-link text-danger p-0 remove-row-btn" title="Delete Row">
+                    <i class="bi bi-x-circle fs-6"></i>
+                </button>
+            </td>
+        `;
+
+        return newRow;
+    }
+
     container.addEventListener('click', function (e) {
+        // Add Color Row Button
         const addColorBtn = e.target.closest('.add-color-row-btn');
         if (addColorBtn) {
             const artBlock = addColorBtn.closest('.article-block');
@@ -432,47 +521,37 @@ document.addEventListener('DOMContentLoaded', function () {
             const artIdx = artBlock.dataset.articleIndex;
             const nextRowIdx = tbody.querySelectorAll('.item-row').length;
 
-            const newRow = document.createElement('tr');
-            newRow.className = 'item-row';
-            newRow.dataset.rowIndex = nextRowIdx;
-            newRow.innerHTML = `
-                <td class="ps-3">
-                    <input list="colorSuggestions" name="articles[${artIdx}][items][${nextRowIdx}][color]" class="form-control form-control-sm text-uppercase fw-semibold" placeholder="-- Select --" value="BLACK">
-                </td>
-                <td>
-                    <select name="articles[${artIdx}][items][${nextRowIdx}][cup]" class="form-select form-select-sm text-center fw-bold">
-                        <option value="B" selected>B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                    </select>
-                </td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_32]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_34]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_36]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_38]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_40]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_42]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_44]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_46]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_48]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${nextRowIdx}][size_50]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                <td><input type="number" min="0" step="0.5" name="articles[${artIdx}][items][${nextRowIdx}][rate_std]" class="form-control form-control-sm text-center rate-std-input" placeholder="0"></td>
-                <td><input type="number" min="0" step="0.5" name="articles[${artIdx}][items][${nextRowIdx}][rate_plus]" class="form-control form-control-sm text-center rate-plus-input" placeholder="0"></td>
-                <td class="text-center">
-                    <span class="badge bg-success font-monospace fw-bold px-2 py-1 row-total-badge">Total: 0 pcs</span>
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-link text-danger p-0 remove-row-btn" title="Delete Row">
-                        <i class="bi bi-x-circle fs-6"></i>
-                    </button>
-                </td>
-            `;
-
+            const newRow = createRowElement(artIdx, nextRowIdx, 'Black', 'B');
             tbody.appendChild(newRow);
             recalculateAll();
             return;
         }
 
+        // Add Custom Color Button from Top Bar
+        const addCustomColorBtn = e.target.closest('.add-custom-color-btn');
+        if (addCustomColorBtn) {
+            const artBlock = addCustomColorBtn.closest('.article-block');
+            const inputEl = artBlock.querySelector('.new-custom-color-input');
+            const colorVal = inputEl ? inputEl.value.trim() : '';
+
+            if (!colorVal) {
+                if (inputEl) inputEl.focus();
+                return;
+            }
+
+            const tbody = artBlock.querySelector('.rows-tbody');
+            const artIdx = artBlock.dataset.articleIndex;
+            const nextRowIdx = tbody.querySelectorAll('.item-row').length;
+
+            const newRow = createRowElement(artIdx, nextRowIdx, colorVal, 'B');
+            tbody.appendChild(newRow);
+
+            if (inputEl) inputEl.value = '';
+            recalculateAll();
+            return;
+        }
+
+        // Remove Row
         const removeRowBtn = e.target.closest('.remove-row-btn');
         if (removeRowBtn) {
             const row = removeRowBtn.closest('.item-row');
@@ -486,6 +565,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Remove Article Block
         const removeArtBtn = e.target.closest('.remove-article-btn');
         if (removeArtBtn) {
             const artBlock = removeArtBtn.closest('.article-block');
@@ -497,8 +577,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Enter key support on new-custom-color-input
+    container.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('new-custom-color-input') && e.key === 'Enter') {
+            e.preventDefault();
+            const artBlock = e.target.closest('.article-block');
+            const btn = artBlock.querySelector('.add-custom-color-btn');
+            if (btn) btn.click();
+        }
+    });
+
+    // Add New Article Block
     addArticleBtn.addEventListener('click', function () {
         const nextArtIdx = container.querySelectorAll('.article-block').length;
+
+        let articleOptionsHtml = '<option value="">-- Select Article --</option>';
+        availableArticles.forEach(art => {
+            articleOptionsHtml += `<option value="${art}">${art}</option>`;
+        });
+
+        let colorOptionsHtml = '';
+        defaultColors.forEach(col => {
+            colorOptionsHtml += `<option value="${col}" ${col.toLowerCase() === 'skin' ? 'selected' : ''}>${col}</option>`;
+        });
+
+        let cupOptionsHtml = '';
+        cupOptions.forEach(cup => {
+            cupOptionsHtml += `<option value="${cup}" ${cup === 'B' ? 'selected' : ''}>${cup}</option>`;
+        });
 
         const newBlock = document.createElement('div');
         newBlock.className = 'article-block';
@@ -509,7 +615,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="badge bg-primary rounded-pill px-2.5 py-1.5 article-badge">Article #${nextArtIdx + 1}</span>
                     <div class="d-flex align-items-center gap-2 flex-grow-1">
                         <label class="small fw-bold text-secondary text-nowrap mb-0">Select Article</label>
-                        <input list="articleSuggestions" name="articles[${nextArtIdx}][article_name]" class="form-control form-control-sm fw-bold text-dark article-name-input" placeholder="-- Select Article --" required>
+                        <select name="articles[${nextArtIdx}][article_name]" class="form-select form-select-sm fw-bold article-select searchable-select" placeholder="-- Select Article --" required>
+                            ${articleOptionsHtml}
+                        </select>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
@@ -522,17 +630,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
 
-            <div class="px-3 py-1.5 bg-light-subtle border-bottom d-flex justify-content-between align-items-center">
-                <span class="fw-bold small text-secondary">Article Details (Color, Cup & Sizes)</span>
-                <span class="small text-muted font-monospace">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
+            <!-- Article Details Sub-header & Custom Color Input Top Bar -->
+            <div class="px-3 py-2 bg-light-subtle border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <span class="fw-bold small text-dark">Article Details (Color, Cup & Sizes)</span>
+                    <span class="small text-muted ms-2 d-none d-md-inline font-monospace">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
+                </div>
+
+                <div class="d-flex align-items-center gap-1.5 ms-auto">
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
+                        <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
+                            <i class="bi bi-plus-lg"></i> Add Color
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="table-responsive">
                 <table class="table size-matrix-table align-middle">
                     <thead>
                         <tr>
-                            <th style="width: 140px;" class="text-start ps-3">Color</th>
-                            <th style="width: 65px;">Cup</th>
+                            <th style="width: 150px;" class="text-start ps-3">Color</th>
+                            <th style="width: 70px;">Cup</th>
                             <th class="th-std">32</th>
                             <th class="th-std">34</th>
                             <th class="th-std">36</th>
@@ -545,20 +665,20 @@ document.addEventListener('DOMContentLoaded', function () {
                             <th class="th-plus">50</th>
                             <th style="width: 75px;" title="Standard Rate (32-42)">Rate Std</th>
                             <th style="width: 75px;" title="Plus Size Rate (44-50)">Rate Plus</th>
-                            <th style="width: 90px;">Total</th>
+                            <th style="width: 95px;">Total</th>
                             <th style="width: 40px;"></th>
                         </tr>
                     </thead>
                     <tbody class="rows-tbody">
                         <tr class="item-row" data-row-index="0">
                             <td class="ps-3">
-                                <input list="colorSuggestions" name="articles[${nextArtIdx}][items][0][color]" class="form-control form-control-sm text-uppercase fw-semibold" placeholder="-- Select --" value="SKIN">
+                                <select name="articles[${nextArtIdx}][items][0][color]" class="form-select form-select-sm fw-semibold color-select">
+                                    ${colorOptionsHtml}
+                                </select>
                             </td>
                             <td>
-                                <select name="articles[${nextArtIdx}][items][0][cup]" class="form-select form-select-sm text-center fw-bold">
-                                    <option value="B" selected>B</option>
-                                    <option value="C">C</option>
-                                    <option value="D">D</option>
+                                <select name="articles[${nextArtIdx}][items][0][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
+                                    ${cupOptionsHtml}
                                 </select>
                             </td>
                             <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_32]" class="form-control form-control-sm size-input input-std" value="0"></td>
@@ -597,6 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         container.appendChild(newBlock);
+        initArticleTomSelect(newBlock.querySelector('.article-select'));
         recalculateAll();
     });
 
