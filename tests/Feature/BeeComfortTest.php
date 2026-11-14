@@ -733,6 +733,31 @@ class BeeComfortTest extends TestCase
     }
 
     /**
+     * Test Dashboard loads cleanly when a direct return without a linked sale exists
+     */
+    public function test_dashboard_with_direct_returns_without_sale_link(): void
+    {
+        $customer = Customer::first();
+        $this->assertNotNull($customer);
+
+        // Create a direct return record with sale_id = null
+        $directReturn = \App\Models\ReturnRecord::create([
+            'return_no' => 'RET-DIRECT-001',
+            'return_type' => 'bee_comfort',
+            'sale_id' => null,
+            'customer_id' => $customer->id,
+            'return_date' => Carbon::today(),
+            'total_amount' => 1500.00,
+            'reason' => 'Direct customer return intake',
+        ]);
+
+        $response = $this->get(route('dashboard'));
+        $response->assertStatus(200);
+        $response->assertSee('RET-DIRECT-001');
+        $response->assertSee('Direct Return');
+    }
+
+    /**
      * Test SIN Sequential Invoice Numbering for Bee Comfort (BC-SIN-XX) and China (CH-SIN-XX)
      */
     public function test_sin_invoice_numbering_series(): void

@@ -573,8 +573,16 @@
                                         {{ $ret->return_no }}
                                     </a>
                                 </td>
-                                <td class="py-3 font-monospace small text-primary">{{ $ret->sale->invoice_no }}</td>
-                                <td class="py-3 text-dark fw-semibold">{{ $ret->customer->name }}</td>
+                                <td class="py-3 font-monospace small">
+                                    @if($ret->sale)
+                                        <a href="{{ route('sales.show', $ret->sale) }}" class="text-primary text-decoration-none">
+                                            {{ $ret->sale->invoice_no }}
+                                        </a>
+                                    @else
+                                        <span class="badge bg-light text-secondary border">Direct Return</span>
+                                    @endif
+                                </td>
+                                <td class="py-3 text-dark fw-semibold">{{ $ret->customer->name ?? '—' }}</td>
                                 <td class="pe-4 py-3 text-end font-monospace fw-bold text-danger">Rs. {{ number_format($ret->total_amount, 2) }}</td>
                             </tr>
                             @empty
