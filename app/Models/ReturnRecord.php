@@ -43,9 +43,16 @@ class ReturnRecord extends Model
         return $this->hasMany(ReturnDetail::class, 'return_id');
     }
 
-    public static function generateNextReturnNo(string $returnType = 'bee_comfort'): string
+    public static function generateNextReturnNo(?string $returnType = null): string
     {
-        $prefixTag = ($returnType === 'china') ? 'CH-RET-' : 'BC-RET-';
+        if ($returnType === 'china') {
+            $prefixTag = 'CH-RET-';
+        } elseif ($returnType === 'bee_comfort') {
+            $prefixTag = 'BC-RET-';
+        } else {
+            $prefixTag = 'RET-';
+        }
+
         $prefix = $prefixTag . date('Ymd') . '-';
         $latest = static::where('return_no', 'like', $prefix . '%')
             ->orderByDesc('id')

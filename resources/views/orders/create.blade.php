@@ -11,71 +11,77 @@
 
 @push('styles')
 <style>
-    .order-booking-card {
+    /* Vibrant Top Header Banner */
+    .order-header-banner {
+        background: #0060df;
+        border-radius: 8px;
+        padding: 12px 20px;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 96, 223, 0.2);
+    }
+
+    /* Top Order Details Card */
+    .order-top-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        border-radius: 8px;
+        padding: 20px 24px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
 
-    .article-block {
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-    }
-
-    .article-header {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 0.85rem 1.25rem;
-    }
-
-    .size-matrix-table {
-        margin-bottom: 0;
-        font-size: 0.86rem;
-    }
-
-    .size-matrix-table thead th {
-        background: #f1f5f9;
-        color: #334155;
+    /* Vibrant Section Banner */
+    .order-section-banner {
+        background: #0060df;
+        color: #ffffff;
+        border-radius: 8px;
+        padding: 10px 18px;
         font-weight: 700;
-        font-size: 0.74rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        text-align: center;
-        padding: 0.55rem 0.35rem;
-        border: 1px solid #cbd5e1;
-        vertical-align: middle;
+        box-shadow: 0 2px 6px rgba(0, 96, 223, 0.15);
     }
 
-    .size-matrix-table thead th.th-std {
-        background: #e0f2fe;
-        color: #0369a1;
+    /* Article Card with Blue Border */
+    .order-article-box {
+        background: #ffffff;
+        border: 2px solid #0060df;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 96, 223, 0.06);
     }
 
-    .size-matrix-table thead th.th-plus {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .size-matrix-table tbody td {
-        padding: 0.45rem 0.35rem;
-        vertical-align: middle;
+    /* Matrix Row Card with Green Left Accent */
+    .size-matrix-row-card {
+        background: #f8fafc;
         border: 1px solid #e2e8f0;
+        border-left: 5px solid #10b981;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 14px;
+    }
+
+    /* Size Input Styling */
+    .size-input-box {
+        text-align: center;
+    }
+
+    .size-input-label {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 4px;
     }
 
     .size-input {
         width: 100%;
-        min-width: 48px;
         text-align: center;
         font-family: 'JetBrains Mono', monospace;
         font-weight: 700;
+        font-size: 0.9rem;
         padding: 0.35rem 0.2rem;
         border-radius: 6px;
-        font-size: 0.86rem;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        height: 38px;
     }
 
     .size-input:focus {
@@ -83,16 +89,71 @@
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
-    /* Fixed Bottom Action Bar */
-    .sticky-order-summary {
-        position: sticky;
-        bottom: 0;
-        background: #ffffff;
-        border-top: 2px solid #e2e8f0;
-        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
-        padding: 1rem 1.5rem;
-        z-index: 1000;
-        border-radius: 12px 12px 0 0;
+    /* Plus Size Inputs (Warm Yellow/Cream) */
+    .size-input.input-plus {
+        background-color: #fef9c3 !important;
+        border-color: #fde047 !important;
+        color: #854d0e !important;
+    }
+
+    /* Article Total Bar */
+    .article-total-bar {
+        background: #cffafe;
+        border: 1px solid #a5f3fc;
+        border-radius: 6px;
+        padding: 10px 18px;
+    }
+
+    /* Grand Total Card (Purple/Indigo) */
+    .grand-total-card {
+        background: #6366f1;
+        border-radius: 12px;
+        padding: 26px 20px;
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+    }
+
+    .grand-total-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        opacity: 0.95;
+        letter-spacing: 0.4px;
+    }
+
+    .grand-total-number {
+        font-size: 3.6rem;
+        font-weight: 900;
+        line-height: 1.1;
+        margin: 6px 0;
+        font-family: 'JetBrains Mono', monospace;
+        color: #ffffff;
+    }
+
+    .grand-total-subtitle {
+        font-size: 0.88rem;
+        opacity: 0.85;
+    }
+
+    /* Sleek TomSelect Dropdown Customization */
+    .ts-control {
+        border-radius: 6px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 0.45rem 0.75rem !important;
+        font-size: 0.9rem !important;
+        background-color: #ffffff !important;
+        min-height: 38px !important;
+    }
+
+    .ts-dropdown {
+        border-radius: 6px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid #e2e8f0 !important;
+        z-index: 1050 !important;
+    }
+
+    .ts-dropdown .active {
+        background-color: #0060df !important;
+        color: #ffffff !important;
     }
 </style>
 @endpush
@@ -103,17 +164,15 @@
 
     <div class="d-flex flex-column gap-3 mb-5">
 
-        <!-- HEADER TITLE -->
-        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
-            <div>
-                <div class="d-flex align-items-center gap-2">
-                    <h1 class="h3 fw-bold text-dark mb-0">Create New Order - Hashmi Brothers</h1>
-                </div>
-                <p class="text-secondary small mb-0 mt-1">Multi-article booking with Cup, Color, and 10-Size matrix quantity breakdown.</p>
+        <!-- 1. TOP HEADER BANNER -->
+        <div class="order-header-banner d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2 fw-bold fs-5">
+                <i class="bi bi-cart3 fs-4"></i>
+                <span>Create New Order - Hashmi Brothers</span>
             </div>
             <div>
-                <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary btn-sm px-3">
-                    <i class="bi bi-arrow-left me-1"></i> Back to Orders
+                <a href="{{ route('orders.index') }}" class="btn btn-sm btn-light text-dark fw-semibold px-3 py-1 shadow-sm rounded">
+                    ← Back to Orders
                 </a>
             </div>
         </div>
@@ -129,12 +188,14 @@
             </div>
         @endif
 
-        <!-- ORDER HEADER CONFIGURATION CARD -->
-        <div class="order-booking-card p-3 p-md-4">
+        <!-- 2. TOP ORDER DETAILS CONFIGURATION CARD -->
+        <div class="order-top-card">
             <div class="row g-3">
-                <!-- Customer Selection (Searchable TomSelect Dropdown) -->
-                <div class="col-12 col-md-4">
-                    <label class="form-label required fw-bold small text-secondary">Customer</label>
+                <!-- Customer Selection -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label required fw-bold small text-secondary">
+                        Customer <span class="text-danger">*</span>
+                    </label>
                     <select name="customer_id" id="customerId" class="form-select searchable-select @error('customer_id') is-invalid @enderror" required placeholder="-- Select Customer --">
                         <option value="">-- Select Customer --</option>
                         @foreach($customers as $c)
@@ -148,18 +209,11 @@
                     @enderror
                 </div>
 
-                <!-- Order No -->
-                <div class="col-12 col-sm-6 col-md-3">
-                    <label class="form-label required fw-bold small text-secondary">Order / Voucher No</label>
-                    <input type="text" name="order_no" class="form-control font-monospace fw-bold @error('order_no') is-invalid @enderror" value="{{ old('order_no', $nextOrderNo) }}" required>
-                    @error('order_no')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
                 <!-- Order Date -->
-                <div class="col-12 col-sm-6 col-md-3">
-                    <label class="form-label required fw-bold small text-secondary">Order Date</label>
+                <div class="col-12 col-md-6">
+                    <label class="form-label required fw-bold small text-secondary">
+                        Order Date <span class="text-danger">*</span>
+                    </label>
                     <input type="date" name="order_date" class="form-control @error('order_date') is-invalid @enderror" value="{{ old('order_date', date('Y-m-d')) }}" required>
                     @error('order_date')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -167,7 +221,7 @@
                 </div>
 
                 <!-- Order Status -->
-                <div class="col-12 col-sm-6 col-md-2">
+                <div class="col-12 col-md-6">
                     <label class="form-label required fw-bold small text-secondary">Status</label>
                     <select name="status" class="form-select @error('status') is-invalid @enderror" required>
                         <option value="Pending" {{ old('status', 'Pending') === 'Pending' ? 'selected' : '' }}>Pending</option>
@@ -179,7 +233,16 @@
                     @enderror
                 </div>
 
-                <!-- Notes / Special Instructions -->
+                <!-- Order / Voucher No -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label required fw-bold small text-secondary">Order / Voucher No</label>
+                    <input type="text" name="order_no" class="form-control font-monospace fw-bold @error('order_no') is-invalid @enderror" value="{{ old('order_no', $nextOrderNo) }}" required>
+                    @error('order_no')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Special Booking Instructions -->
                 <div class="col-12">
                     <label class="form-label fw-bold small text-secondary">Special Booking Instructions / Remarks</label>
                     <input type="text" name="notes" class="form-control form-control-sm" placeholder="e.g. Deliver before next Monday, pack in 1-dozen boxes..." value="{{ old('notes') }}">
@@ -187,184 +250,189 @@
             </div>
         </div>
 
-        <!-- SECTION TITLE: ORDER ARTICLES -->
-        <div class="d-flex align-items-center justify-content-between mt-2">
-            <h5 class="fw-bold text-dark mb-0">
-                <i class="bi bi-box-seam text-primary me-2"></i>Order Articles
-            </h5>
-            <span class="small text-secondary">Add multiple articles and configure size breakdowns</span>
+        <!-- 3. SECTION BANNER: ORDER ARTICLES -->
+        <div class="order-section-banner d-flex align-items-center gap-2">
+            <i class="bi bi-box-seam fs-5"></i>
+            <span class="fw-bold fs-6">Order Articles</span>
         </div>
 
-        <!-- ARTICLES CONTAINER -->
+        <!-- 4. ARTICLES CONTAINER -->
         <div id="articlesContainer">
             <!-- Article Block #1 -->
-            <div class="article-block" data-article-index="0">
-                <div class="article-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 650px;">
-                        <span class="badge bg-primary rounded-pill px-2.5 py-1.5 article-badge">Article #1</span>
-                        <div class="d-flex align-items-center gap-2 flex-grow-1">
-                            <label class="small fw-bold text-secondary text-nowrap mb-0">Select Article</label>
-                            <select name="articles[0][article_name]" class="form-select form-select-sm fw-bold article-select searchable-select" placeholder="-- Select Article --" required>
-                                <option value="">-- Select Article --</option>
-                                @foreach($availableArticles as $art)
-                                    <option value="{{ $art }}" {{ old('articles.0.article_name', 'COMFORT FIT 32-42') == $art ? 'selected' : '' }}>
-                                        {{ $art }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+            <div class="order-article-box article-block" data-article-index="0">
+                <!-- Article Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light text-dark border fs-7 font-monospace px-2.5 py-1.5">
-                            Article Total: <span class="article-total-pieces fw-bold text-primary">0</span> pcs
-                        </span>
-                        <button type="button" class="btn btn-outline-danger btn-sm py-0.5 px-2 remove-article-btn d-none" title="Remove Article">
-                            <i class="bi bi-trash"></i>
+                        <i class="bi bi-box-seam text-primary fs-5"></i>
+                        <span class="fw-bold text-primary fs-5 article-badge">Article #1</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm px-3 py-1 fw-bold remove-article-btn d-none">
+                        <i class="bi bi-trash-fill me-1"></i> Remove Article
+                    </button>
+                </div>
+
+                <!-- Select Article Dropdown -->
+                <div class="mb-3">
+                    <label class="form-label required fw-bold small text-secondary mb-1">
+                        Select Article <span class="text-danger">*</span>
+                    </label>
+                    <select name="articles[0][article_name]" class="form-select article-select searchable-select" placeholder="Select an article" required>
+                        <option value="">Select an article</option>
+                        @foreach($availableArticles as $art)
+                            <option value="{{ $art }}" {{ old('articles.0.article_name', 'COMFORT FIT 32-42') == $art ? 'selected' : '' }}>
+                                {{ $art }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Article Details Sub-header & Add Custom Color Field -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                    <label class="fw-bold small text-secondary mb-0">
+                        Article Details (Color, Cup & Sizes) <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="input-group input-group-sm" style="width: 260px;">
+                        <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
+                        <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
+                            <i class="bi bi-plus-lg"></i> Add Color
                         </button>
                     </div>
                 </div>
 
-                <!-- Article Details Sub-header & Custom Color Input Top Bar -->
-                <div class="px-3 py-2 bg-light-subtle border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <div>
-                        <span class="fw-bold small text-dark">Article Details (Color, Cup & Sizes)</span>
-                        <span class="small text-muted ms-2 d-none d-md-inline font-monospace">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
-                    </div>
+                <!-- Rows Container for this Article -->
+                <div class="article-rows-list">
+                    <!-- Row 0 -->
+                    <div class="size-matrix-row-card item-row" data-row-index="0">
+                        <!-- Top Line: Color, Cup, and Remove Row button -->
+                        <div class="row g-2 align-items-end mb-3">
+                            <div class="col-12 col-sm-6 col-md-4">
+                                <label class="form-label fw-bold small text-secondary mb-1">Color <span class="text-danger">*</span></label>
+                                <select name="articles[0][items][0][color]" class="form-select form-select-sm fw-semibold color-select">
+                                    <option value="">-- Select --</option>
+                                    @foreach($availableColors as $col)
+                                        <option value="{{ $col }}" {{ strtolower($col) === 'skin' ? 'selected' : '' }}>{{ $col }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label class="form-label fw-bold small text-secondary mb-1">Cup <span class="text-danger">*</span></label>
+                                <select name="articles[0][items][0][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
+                                    @foreach($cupOptions as $cup)
+                                        <option value="{{ $cup }}" {{ $cup === 'B' ? 'selected' : '' }}>{{ $cup }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-5 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100 py-1.5 remove-row-btn fw-semibold" title="Remove Row">
+                                    <i class="bi bi-x-circle me-1"></i> Remove Row
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Add New Color Top Bar Text Field -->
-                    <div class="d-flex align-items-center gap-1.5 ms-auto">
-                        <div class="input-group input-group-sm" style="width: 250px;">
-                            <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
-                            <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
-                                <i class="bi bi-plus-lg"></i> Add Color
-                            </button>
+                        <!-- Sub-header: Sizes note and Row Total Badge -->
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold text-dark">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
+                            <span class="badge bg-success font-monospace fw-bold px-3 py-1.5 row-total-badge fs-7">Total: 0 pcs</span>
+                        </div>
+
+                        <!-- 10 Sizes Horizontal Grid -->
+                        <div class="row g-2 align-items-end mt-1">
+                            <div class="col size-input-box">
+                                <div class="size-input-label">32</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_32]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">34</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_34]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">36</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_36]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">38</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_38]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">40</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_40]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">42</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_42]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+
+                            <!-- Plus Sizes (44 - 50) with Light Amber Background -->
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">44</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_44]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">46</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_46]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">48</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_48]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">50</div>
+                                <input type="number" min="0" step="1" name="articles[0][items][0][size_50]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+
+                            <!-- Standard & Plus Rate Hidden Inputs -->
+                            <input type="hidden" name="articles[0][items][0][rate_std]" class="rate-std-input" value="0">
+                            <input type="hidden" name="articles[0][items][0][rate_plus]" class="rate-plus-input" value="0">
                         </div>
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table size-matrix-table align-middle">
-                        <thead>
-                            <tr>
-                                <th style="width: 150px;" class="text-start ps-3">Color</th>
-                                <th style="width: 70px;">Cup</th>
-                                <th class="th-std">32</th>
-                                <th class="th-std">34</th>
-                                <th class="th-std">36</th>
-                                <th class="th-std">38</th>
-                                <th class="th-std">40</th>
-                                <th class="th-std">42</th>
-                                <th class="th-plus">44</th>
-                                <th class="th-plus">46</th>
-                                <th class="th-plus">48</th>
-                                <th class="th-plus">50</th>
-                                <th style="width: 75px;" title="Standard Rate (32-42)">Rate Std</th>
-                                <th style="width: 75px;" title="Plus Size Rate (44-50)">Rate Plus</th>
-                                <th style="width: 95px;">Total</th>
-                                <th style="width: 40px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="rows-tbody">
-                            <!-- Row 0 -->
-                            <tr class="item-row" data-row-index="0">
-                                <td class="ps-3">
-                                    <select name="articles[0][items][0][color]" class="form-select form-select-sm fw-semibold color-select">
-                                        @foreach($availableColors as $col)
-                                            <option value="{{ $col }}" {{ strtolower($col) === 'skin' ? 'selected' : '' }}>{{ $col }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td>
-                                    <select name="articles[0][items][0][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
-                                        @foreach($cupOptions as $cup)
-                                            <option value="{{ $cup }}" {{ $cup === 'B' ? 'selected' : '' }}>{{ $cup }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <!-- Standard Sizes (32 - 42) -->
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_32]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_34]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_36]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_38]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_40]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_42]" class="form-control form-control-sm size-input input-std" value="0"></td>
-
-                                <!-- Plus Sizes (44 - 50) -->
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_44]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_46]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_48]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                                <td><input type="number" min="0" step="1" name="articles[0][items][0][size_50]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-
-                                <!-- Rates -->
-                                <td><input type="number" min="0" step="0.5" name="articles[0][items][0][rate_std]" class="form-control form-control-sm text-center rate-std-input" placeholder="0"></td>
-                                <td><input type="number" min="0" step="0.5" name="articles[0][items][0][rate_plus]" class="form-control form-control-sm text-center rate-plus-input" placeholder="0"></td>
-
-                                <!-- Row Total -->
-                                <td class="text-center">
-                                    <span class="badge bg-success font-monospace fw-bold px-2 py-1 row-total-badge">Total: 0 pcs</span>
-                                </td>
-
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-link text-danger p-0 remove-row-btn" title="Delete Row">
-                                        <i class="bi bi-x-circle fs-6"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Centered Teal + Add Row Button -->
+                <div class="text-center my-3">
+                    <button type="button" class="btn text-white px-4 py-1.5 fw-bold add-color-row-btn" style="background-color: #0d9488; border: none; border-radius: 6px;">
+                        <i class="bi bi-plus me-1"></i> Add Row
+                    </button>
                 </div>
 
-                <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-outline-primary btn-sm px-3 add-color-row-btn">
-                        <i class="bi bi-plus-lg me-1"></i> Add Color / Cup Row
-                    </button>
-                    <span class="small fw-bold text-dark font-monospace">
-                        Article Total: <span class="article-total-pieces text-primary">0</span> pcs
+                <!-- Article Total Bottom Bar -->
+                <div class="article-total-bar d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark">
+                        <i class="bi bi-info-circle-fill text-info me-1"></i> Article Total:
+                    </span>
+                    <span class="badge bg-primary fs-6 px-3 py-1.5 rounded-pill font-monospace article-total-pieces">
+                        0 pcs
                     </span>
                 </div>
             </div>
         </div>
 
-        <!-- ADD ARTICLE BUTTON -->
+        <!-- 5. GREEN + ADD ARTICLE BUTTON -->
         <div>
-            <button type="button" id="addNewArticleBtn" class="btn btn-outline-success px-3 shadow-sm d-inline-flex align-items-center gap-2">
+            <button type="button" id="addNewArticleBtn" class="btn btn-success fw-bold px-4 py-2 d-inline-flex align-items-center gap-2 rounded shadow-sm" style="background-color: #198754; border: none;">
                 <i class="bi bi-plus-circle-fill"></i>
-                <span class="fw-bold">Add Another Article</span>
+                <span>Add Article</span>
             </button>
         </div>
 
-    </div>
-
-    <!-- STICKY ORDER BOTTOM SUMMARY BAR -->
-    <div class="sticky-order-summary">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div class="d-flex flex-wrap align-items-center gap-4">
-                <div>
-                    <div class="text-secondary small fw-bold text-uppercase">Total Articles</div>
-                    <div class="h5 fw-bold text-dark mb-0 font-monospace" id="summaryTotalArticles">1</div>
-                </div>
-                <div>
-                    <div class="text-secondary small fw-bold text-uppercase">Total Color Lines</div>
-                    <div class="h5 fw-bold text-dark mb-0 font-monospace" id="summaryTotalRows">1</div>
-                </div>
-                <div class="border-start ps-4">
-                    <div class="text-secondary small fw-bold text-uppercase">Grand Total Quantity</div>
-                    <div class="h3 fw-black text-success mb-0 font-monospace">
-                        <span id="summaryGrandTotalQty">0</span> <span class="fs-6 fw-normal text-secondary">Total pieces across all items</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('orders.index') }}" class="btn btn-light border px-3">
-                    Cancel
-                </a>
-                <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm d-inline-flex align-items-center gap-2">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <span>Save & Book Order</span>
-                </button>
-            </div>
+        <!-- 6. PURPLE GRAND TOTAL CARD -->
+        <div class="grand-total-card text-center my-4">
+            <div class="grand-total-title">Grand Total Quantity</div>
+            <div class="grand-total-number" id="summaryGrandTotalQty">0</div>
+            <div class="grand-total-subtitle">Total pieces across all items</div>
         </div>
+
+        <!-- 7. SAVE / CANCEL ACTION BUTTONS -->
+        <div class="d-flex justify-content-end align-items-center gap-2 mt-2 mb-5">
+            <a href="{{ route('orders.index') }}" class="btn btn-light border px-4 py-2 fw-semibold">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-5 py-2.5 fw-bold shadow-sm d-inline-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>Save & Book Order</span>
+            </button>
+        </div>
+
     </div>
 </form>
 @endsection
@@ -372,35 +440,50 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('orderBookingForm');
     const container = document.getElementById('articlesContainer');
     const addArticleBtn = document.getElementById('addNewArticleBtn');
 
-    // Default colors array
+    // Default arrays from backend
     const defaultColors = @json($availableColors);
     const cupOptions = @json($cupOptions);
     const availableArticles = @json($availableArticles);
 
-    // Initialize TomSelect on article selects
-    function initArticleTomSelect(selectEl) {
-        if (!selectEl || selectEl.tomselect) return;
-        new TomSelect(selectEl, {
-            create: true,
-            sortField: { field: "text", direction: "asc" },
-            placeholder: "-- Select Article --",
-            allowEmptyOption: true,
-        });
+    // Safe TomSelect Initializer
+    function safeInitTomSelect(selectEl, placeholderText = "Select an article") {
+        if (!selectEl) return null;
+        if (selectEl.tomselect) return selectEl.tomselect;
+        if (typeof TomSelect === 'undefined') return null;
+
+        try {
+            return new TomSelect(selectEl, {
+                create: true,
+                sortField: { field: "text", direction: "asc" },
+                placeholder: placeholderText,
+                allowEmptyOption: true,
+                maxOptions: 500,
+            });
+        } catch (e) {
+            console.warn('TomSelect init warning:', e);
+            return null;
+        }
     }
 
-    // Initialize TomSelect for existing article selects
-    document.querySelectorAll('.article-select').forEach(initArticleTomSelect);
+    // Initialize customer dropdown
+    const customerSelect = document.getElementById('customerId');
+    if (customerSelect) {
+        safeInitTomSelect(customerSelect, "-- Select Customer --");
+    }
 
+    // Initialize article selects
+    document.querySelectorAll('.article-select').forEach(function(el) {
+        safeInitTomSelect(el, "Select an article");
+    });
+
+    // Recalculate totals
     function recalculateAll() {
         let grandTotalQty = 0;
-        let totalArticles = 0;
-        let totalRows = 0;
-
         const articleBlocks = container.querySelectorAll('.article-block');
-        totalArticles = articleBlocks.length;
 
         articleBlocks.forEach((artBlock, artIdx) => {
             const badge = artBlock.querySelector('.article-badge');
@@ -408,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const removeArtBtn = artBlock.querySelector('.remove-article-btn');
             if (removeArtBtn) {
-                if (totalArticles > 1) {
+                if (articleBlocks.length > 1) {
                     removeArtBtn.classList.remove('d-none');
                 } else {
                     removeArtBtn.classList.add('d-none');
@@ -417,7 +500,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let articleQty = 0;
             const rows = artBlock.querySelectorAll('.item-row');
-            totalRows += rows.length;
 
             rows.forEach((row) => {
                 let rowQty = 0;
@@ -436,39 +518,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 articleQty += rowQty;
             });
 
-            artBlock.querySelectorAll('.article-total-pieces').forEach(el => {
-                el.textContent = articleQty;
-            });
+            const artTotalPieces = artBlock.querySelector('.article-total-pieces');
+            if (artTotalPieces) {
+                artTotalPieces.textContent = `${articleQty} pcs`;
+            }
 
             grandTotalQty += articleQty;
         });
 
-        document.getElementById('summaryTotalArticles').textContent = totalArticles;
-        document.getElementById('summaryTotalRows').textContent = totalRows;
-        document.getElementById('summaryGrandTotalQty').textContent = grandTotalQty.toLocaleString();
+        const grandTotalDisplay = document.getElementById('summaryGrandTotalQty');
+        if (grandTotalDisplay) {
+            grandTotalDisplay.textContent = grandTotalQty.toLocaleString();
+        }
     }
 
-    container.addEventListener('input', function (e) {
-        if (e.target.classList.contains('size-input') || e.target.classList.contains('rate-std-input') || e.target.classList.contains('rate-plus-input')) {
+    // Input event for real-time recalculation
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.classList.contains('size-input')) {
             recalculateAll();
         }
     });
 
-    // Helper to generate a new item row
+    // Helper to generate a new row element
     function createRowElement(artIdx, rowIdx, initialColor = 'Skin', initialCup = 'B') {
-        const newRow = document.createElement('tr');
-        newRow.className = 'item-row';
+        const newRow = document.createElement('div');
+        newRow.className = 'size-matrix-row-card item-row';
         newRow.dataset.rowIndex = rowIdx;
 
-        let colorOptionsHtml = '';
+        let colorOptionsHtml = '<option value="">-- Select --</option>';
         let colorFound = false;
         defaultColors.forEach(col => {
             const isSelected = col.toLowerCase() === initialColor.toLowerCase();
             if (isSelected) colorFound = true;
             colorOptionsHtml += `<option value="${col}" ${isSelected ? 'selected' : ''}>${col}</option>`;
         });
-        if (!colorFound && initialColor) {
-            colorOptionsHtml = `<option value="${initialColor}" selected>${initialColor}</option>` + colorOptionsHtml;
+        if (!colorFound && initialColor && initialColor.trim() !== '') {
+            colorOptionsHtml += `<option value="${initialColor}" selected>${initialColor}</option>`;
         }
 
         let cupOptionsHtml = '';
@@ -477,59 +562,103 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         newRow.innerHTML = `
-            <td class="ps-3">
-                <select name="articles[${artIdx}][items][${rowIdx}][color]" class="form-select form-select-sm fw-semibold color-select">
-                    ${colorOptionsHtml}
-                </select>
-            </td>
-            <td>
-                <select name="articles[${artIdx}][items][${rowIdx}][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
-                    ${cupOptionsHtml}
-                </select>
-            </td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_32]" class="form-control form-control-sm size-input input-std" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_34]" class="form-control form-control-sm size-input input-std" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_36]" class="form-control form-control-sm size-input input-std" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_38]" class="form-control form-control-sm size-input input-std" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_40]" class="form-control form-control-sm size-input input-std" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_42]" class="form-control form-control-sm size-input input-std" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_44]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_46]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_48]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-            <td><input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_50]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-            <td><input type="number" min="0" step="0.5" name="articles[${artIdx}][items][${rowIdx}][rate_std]" class="form-control form-control-sm text-center rate-std-input" placeholder="0"></td>
-            <td><input type="number" min="0" step="0.5" name="articles[${artIdx}][items][${rowIdx}][rate_plus]" class="form-control form-control-sm text-center rate-plus-input" placeholder="0"></td>
-            <td class="text-center">
-                <span class="badge bg-success font-monospace fw-bold px-2 py-1 row-total-badge">Total: 0 pcs</span>
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-link text-danger p-0 remove-row-btn" title="Delete Row">
-                    <i class="bi bi-x-circle fs-6"></i>
-                </button>
-            </td>
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-12 col-sm-6 col-md-4">
+                    <label class="form-label fw-bold small text-secondary mb-1">Color <span class="text-danger">*</span></label>
+                    <select name="articles[${artIdx}][items][${rowIdx}][color]" class="form-select form-select-sm fw-semibold color-select">
+                        ${colorOptionsHtml}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label fw-bold small text-secondary mb-1">Cup <span class="text-danger">*</span></label>
+                    <select name="articles[${artIdx}][items][${rowIdx}][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
+                        ${cupOptionsHtml}
+                    </select>
+                </div>
+                <div class="col-12 col-md-5 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100 py-1.5 remove-row-btn fw-semibold" title="Remove Row">
+                        <i class="bi bi-x-circle me-1"></i> Remove Row
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-bold text-dark">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
+                <span class="badge bg-success font-monospace fw-bold px-3 py-1.5 row-total-badge fs-7">Total: 0 pcs</span>
+            </div>
+
+            <div class="row g-2 align-items-end mt-1">
+                <div class="col size-input-box">
+                    <div class="size-input-label">32</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_32]" class="form-control form-control-sm size-input input-std" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label">34</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_34]" class="form-control form-control-sm size-input input-std" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label">36</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_36]" class="form-control form-control-sm size-input input-std" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label">38</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_38]" class="form-control form-control-sm size-input input-std" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label">40</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_40]" class="form-control form-control-sm size-input input-std" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label">42</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_42]" class="form-control form-control-sm size-input input-std" value="0">
+                </div>
+
+                <div class="col size-input-box">
+                    <div class="size-input-label text-warning-emphasis">44</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_44]" class="form-control form-control-sm size-input input-plus" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label text-warning-emphasis">46</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_46]" class="form-control form-control-sm size-input input-plus" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label text-warning-emphasis">48</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_48]" class="form-control form-control-sm size-input input-plus" value="0">
+                </div>
+                <div class="col size-input-box">
+                    <div class="size-input-label text-warning-emphasis">50</div>
+                    <input type="number" min="0" step="1" name="articles[${artIdx}][items][${rowIdx}][size_50]" class="form-control form-control-sm size-input input-plus" value="0">
+                </div>
+
+                <input type="hidden" name="articles[${artIdx}][items][${rowIdx}][rate_std]" class="rate-std-input" value="0">
+                <input type="hidden" name="articles[${artIdx}][items][${rowIdx}][rate_plus]" class="rate-plus-input" value="0">
+            </div>
         `;
 
         return newRow;
     }
 
-    container.addEventListener('click', function (e) {
-        // Add Color Row Button
+    // Unified click delegation for all buttons
+    document.addEventListener('click', function (e) {
+        // 1. Add Row Button (+ Add Row)
         const addColorBtn = e.target.closest('.add-color-row-btn');
         if (addColorBtn) {
+            e.preventDefault();
             const artBlock = addColorBtn.closest('.article-block');
-            const tbody = artBlock.querySelector('.rows-tbody');
+            const rowsList = artBlock.querySelector('.article-rows-list');
             const artIdx = artBlock.dataset.articleIndex;
-            const nextRowIdx = tbody.querySelectorAll('.item-row').length;
+            const nextRowIdx = rowsList.querySelectorAll('.item-row').length;
 
-            const newRow = createRowElement(artIdx, nextRowIdx, 'Black', 'B');
-            tbody.appendChild(newRow);
+            const newRow = createRowElement(artIdx, nextRowIdx, 'Skin', 'B');
+            rowsList.appendChild(newRow);
             recalculateAll();
             return;
         }
 
-        // Add Custom Color Button from Top Bar
+        // 2. Add Custom Color Button from header
         const addCustomColorBtn = e.target.closest('.add-custom-color-btn');
         if (addCustomColorBtn) {
+            e.preventDefault();
             const artBlock = addCustomColorBtn.closest('.article-block');
             const inputEl = artBlock.querySelector('.new-custom-color-input');
             const colorVal = inputEl ? inputEl.value.trim() : '';
@@ -539,24 +668,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const tbody = artBlock.querySelector('.rows-tbody');
+            const rowsList = artBlock.querySelector('.article-rows-list');
             const artIdx = artBlock.dataset.articleIndex;
-            const nextRowIdx = tbody.querySelectorAll('.item-row').length;
+            const nextRowIdx = rowsList.querySelectorAll('.item-row').length;
 
             const newRow = createRowElement(artIdx, nextRowIdx, colorVal, 'B');
-            tbody.appendChild(newRow);
+            rowsList.appendChild(newRow);
 
             if (inputEl) inputEl.value = '';
             recalculateAll();
             return;
         }
 
-        // Remove Row
+        // 3. Remove Row Button
         const removeRowBtn = e.target.closest('.remove-row-btn');
         if (removeRowBtn) {
+            e.preventDefault();
             const row = removeRowBtn.closest('.item-row');
-            const tbody = row.closest('.rows-tbody');
-            if (tbody.querySelectorAll('.item-row').length > 1) {
+            const rowsList = row.closest('.article-rows-list');
+            if (rowsList.querySelectorAll('.item-row').length > 1) {
                 row.remove();
             } else {
                 row.querySelectorAll('.size-input').forEach(i => i.value = '0');
@@ -565,9 +695,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Remove Article Block
+        // 4. Remove Article Block Button
         const removeArtBtn = e.target.closest('.remove-article-btn');
         if (removeArtBtn) {
+            e.preventDefault();
             const artBlock = removeArtBtn.closest('.article-block');
             if (container.querySelectorAll('.article-block').length > 1) {
                 artBlock.remove();
@@ -575,11 +706,166 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             return;
         }
+
+        // 5. Add Another Article Button (+ Add Article)
+        const addArtBtnClick = e.target.closest('#addNewArticleBtn');
+        if (addArtBtnClick) {
+            e.preventDefault();
+            const nextArtIdx = container.querySelectorAll('.article-block').length;
+
+            let articleOptionsHtml = '<option value="">Select an article</option>';
+            availableArticles.forEach(art => {
+                articleOptionsHtml += `<option value="${art}">${art}</option>`;
+            });
+
+            let colorOptionsHtml = '<option value="">-- Select --</option>';
+            defaultColors.forEach(col => {
+                const isSelected = col.toLowerCase() === 'skin';
+                colorOptionsHtml += `<option value="${col}" ${isSelected ? 'selected' : ''}>${col}</option>`;
+            });
+
+            let cupOptionsHtml = '';
+            cupOptions.forEach(cup => {
+                cupOptionsHtml += `<option value="${cup}" ${cup === 'B' ? 'selected' : ''}>${cup}</option>`;
+            });
+
+            const newBlock = document.createElement('div');
+            newBlock.className = 'order-article-box article-block';
+            newBlock.dataset.articleIndex = nextArtIdx;
+            newBlock.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-box-seam text-primary fs-5"></i>
+                        <span class="fw-bold text-primary fs-5 article-badge">Article #${nextArtIdx + 1}</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm px-3 py-1 fw-bold remove-article-btn">
+                        <i class="bi bi-trash-fill me-1"></i> Remove Article
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label required fw-bold small text-secondary mb-1">
+                        Select Article <span class="text-danger">*</span>
+                    </label>
+                    <select name="articles[${nextArtIdx}][article_name]" class="form-select article-select searchable-select" placeholder="Select an article" required>
+                        ${articleOptionsHtml}
+                    </select>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                    <label class="fw-bold small text-secondary mb-0">
+                        Article Details (Color, Cup & Sizes) <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group input-group-sm" style="width: 260px;">
+                        <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
+                        <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
+                            <i class="bi bi-plus-lg"></i> Add Color
+                        </button>
+                    </div>
+                </div>
+
+                <div class="article-rows-list">
+                    <div class="size-matrix-row-card item-row" data-row-index="0">
+                        <div class="row g-2 align-items-end mb-3">
+                            <div class="col-12 col-sm-6 col-md-4">
+                                <label class="form-label fw-bold small text-secondary mb-1">Color <span class="text-danger">*</span></label>
+                                <select name="articles[${nextArtIdx}][items][0][color]" class="form-select form-select-sm fw-semibold color-select">
+                                    ${colorOptionsHtml}
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label class="form-label fw-bold small text-secondary mb-1">Cup <span class="text-danger">*</span></label>
+                                <select name="articles[${nextArtIdx}][items][0][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
+                                    ${cupOptionsHtml}
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-5 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100 py-1.5 remove-row-btn fw-semibold" title="Remove Row">
+                                    <i class="bi bi-x-circle me-1"></i> Remove Row
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold text-dark">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
+                            <span class="badge bg-success font-monospace fw-bold px-3 py-1.5 row-total-badge fs-7">Total: 0 pcs</span>
+                        </div>
+
+                        <div class="row g-2 align-items-end mt-1">
+                            <div class="col size-input-box">
+                                <div class="size-input-label">32</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_32]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">34</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_34]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">36</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_36]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">38</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_38]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">40</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_40]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label">42</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_42]" class="form-control form-control-sm size-input input-std" value="0">
+                            </div>
+
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">44</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_44]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">46</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_46]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">48</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_48]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+                            <div class="col size-input-box">
+                                <div class="size-input-label text-warning-emphasis">50</div>
+                                <input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_50]" class="form-control form-control-sm size-input input-plus" value="0">
+                            </div>
+
+                            <input type="hidden" name="articles[${nextArtIdx}][items][0][rate_std]" class="rate-std-input" value="0">
+                            <input type="hidden" name="articles[${nextArtIdx}][items][0][rate_plus]" class="rate-plus-input" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center my-3">
+                    <button type="button" class="btn text-white px-4 py-1.5 fw-bold add-color-row-btn" style="background-color: #0d9488; border: none; border-radius: 6px;">
+                        <i class="bi bi-plus me-1"></i> Add Row
+                    </button>
+                </div>
+
+                <div class="article-total-bar d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark">
+                        <i class="bi bi-info-circle-fill text-info me-1"></i> Article Total:
+                    </span>
+                    <span class="badge bg-primary fs-6 px-3 py-1.5 rounded-pill font-monospace article-total-pieces">
+                        0 pcs
+                    </span>
+                </div>
+            `;
+
+            container.appendChild(newBlock);
+            safeInitTomSelect(newBlock.querySelector('.article-select'), "Select an article");
+            recalculateAll();
+            return;
+        }
     });
 
-    // Enter key support on new-custom-color-input
-    container.addEventListener('keydown', function(e) {
-        if (e.target.classList.contains('new-custom-color-input') && e.key === 'Enter') {
+    // Enter key support on new custom color input
+    document.addEventListener('keydown', function (e) {
+        if (e.target && e.target.classList.contains('new-custom-color-input') && e.key === 'Enter') {
             e.preventDefault();
             const artBlock = e.target.closest('.article-block');
             const btn = artBlock.querySelector('.add-custom-color-btn');
@@ -587,140 +873,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Add New Article Block
-    addArticleBtn.addEventListener('click', function () {
-        const nextArtIdx = container.querySelectorAll('.article-block').length;
-
-        let articleOptionsHtml = '<option value="">-- Select Article --</option>';
-        availableArticles.forEach(art => {
-            articleOptionsHtml += `<option value="${art}">${art}</option>`;
-        });
-
-        let colorOptionsHtml = '';
-        defaultColors.forEach(col => {
-            colorOptionsHtml += `<option value="${col}" ${col.toLowerCase() === 'skin' ? 'selected' : ''}>${col}</option>`;
-        });
-
-        let cupOptionsHtml = '';
-        cupOptions.forEach(cup => {
-            cupOptionsHtml += `<option value="${cup}" ${cup === 'B' ? 'selected' : ''}>${cup}</option>`;
-        });
-
-        const newBlock = document.createElement('div');
-        newBlock.className = 'article-block';
-        newBlock.dataset.articleIndex = nextArtIdx;
-        newBlock.innerHTML = `
-            <div class="article-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 650px;">
-                    <span class="badge bg-primary rounded-pill px-2.5 py-1.5 article-badge">Article #${nextArtIdx + 1}</span>
-                    <div class="d-flex align-items-center gap-2 flex-grow-1">
-                        <label class="small fw-bold text-secondary text-nowrap mb-0">Select Article</label>
-                        <select name="articles[${nextArtIdx}][article_name]" class="form-select form-select-sm fw-bold article-select searchable-select" placeholder="-- Select Article --" required>
-                            ${articleOptionsHtml}
-                        </select>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-light text-dark border fs-7 font-monospace px-2.5 py-1.5">
-                        Article Total: <span class="article-total-pieces fw-bold text-primary">0</span> pcs
-                    </span>
-                    <button type="button" class="btn btn-outline-danger btn-sm py-0.5 px-2 remove-article-btn" title="Remove Article">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Article Details Sub-header & Custom Color Input Top Bar -->
-            <div class="px-3 py-2 bg-light-subtle border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div>
-                    <span class="fw-bold small text-dark">Article Details (Color, Cup & Sizes)</span>
-                    <span class="small text-muted ms-2 d-none d-md-inline font-monospace">Sizes (32-42: Standard Rate | 44-50: Plus Size Rate)</span>
-                </div>
-
-                <div class="d-flex align-items-center gap-1.5 ms-auto">
-                    <div class="input-group input-group-sm" style="width: 250px;">
-                        <input type="text" class="form-control form-control-sm new-custom-color-input" placeholder="Type new color...">
-                        <button type="button" class="btn btn-outline-primary btn-sm add-custom-color-btn text-nowrap" title="Add row with this new color">
-                            <i class="bi bi-plus-lg"></i> Add Color
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table size-matrix-table align-middle">
-                    <thead>
-                        <tr>
-                            <th style="width: 150px;" class="text-start ps-3">Color</th>
-                            <th style="width: 70px;">Cup</th>
-                            <th class="th-std">32</th>
-                            <th class="th-std">34</th>
-                            <th class="th-std">36</th>
-                            <th class="th-std">38</th>
-                            <th class="th-std">40</th>
-                            <th class="th-std">42</th>
-                            <th class="th-plus">44</th>
-                            <th class="th-plus">46</th>
-                            <th class="th-plus">48</th>
-                            <th class="th-plus">50</th>
-                            <th style="width: 75px;" title="Standard Rate (32-42)">Rate Std</th>
-                            <th style="width: 75px;" title="Plus Size Rate (44-50)">Rate Plus</th>
-                            <th style="width: 95px;">Total</th>
-                            <th style="width: 40px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="rows-tbody">
-                        <tr class="item-row" data-row-index="0">
-                            <td class="ps-3">
-                                <select name="articles[${nextArtIdx}][items][0][color]" class="form-select form-select-sm fw-semibold color-select">
-                                    ${colorOptionsHtml}
-                                </select>
-                            </td>
-                            <td>
-                                <select name="articles[${nextArtIdx}][items][0][cup]" class="form-select form-select-sm text-center fw-bold cup-select">
-                                    ${cupOptionsHtml}
-                                </select>
-                            </td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_32]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_34]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_36]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_38]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_40]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_42]" class="form-control form-control-sm size-input input-std" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_44]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_46]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_48]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                            <td><input type="number" min="0" step="1" name="articles[${nextArtIdx}][items][0][size_50]" class="form-control form-control-sm size-input input-plus bg-warning-subtle" value="0"></td>
-                            <td><input type="number" min="0" step="0.5" name="articles[${nextArtIdx}][items][0][rate_std]" class="form-control form-control-sm text-center rate-std-input" placeholder="0"></td>
-                            <td><input type="number" min="0" step="0.5" name="articles[${nextArtIdx}][items][0][rate_plus]" class="form-control form-control-sm text-center rate-plus-input" placeholder="0"></td>
-                            <td class="text-center">
-                                <span class="badge bg-success font-monospace fw-bold px-2 py-1 row-total-badge">Total: 0 pcs</span>
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-link text-danger p-0 remove-row-btn" title="Delete Row">
-                                    <i class="bi bi-x-circle fs-6"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center">
-                <button type="button" class="btn btn-outline-primary btn-sm px-3 add-color-row-btn">
-                    <i class="bi bi-plus-lg me-1"></i> Add Color / Cup Row
-                </button>
-                <span class="small fw-bold text-dark font-monospace">
-                    Article Total: <span class="article-total-pieces text-primary">0</span> pcs
-                </span>
-            </div>
-        `;
-
-        container.appendChild(newBlock);
-        initArticleTomSelect(newBlock.querySelector('.article-select'));
-        recalculateAll();
-    });
-
+    // Run initial calculation
     recalculateAll();
 });
 </script>

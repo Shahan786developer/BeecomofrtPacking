@@ -15,12 +15,15 @@
             <h1 class="h4 fw-bold text-dark mb-0">Customer Bill Returns</h1>
             <p class="text-secondary small mb-0">Merchandise returns, separate China and Bee Comfort bill returns, and stock restorations.</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('returns.create', ['return_type' => 'bee_comfort']) }}" class="btn btn-primary fw-bold shadow-sm">
-                <i class="bi bi-arrow-counterclockwise me-1"></i> + New Bee Comfort Return
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{{ route('returns.create') }}" class="btn btn-warning fw-bold text-dark shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> + New Bill Return
             </a>
-            <a href="{{ route('returns.create', ['return_type' => 'china']) }}" class="btn btn-danger fw-bold shadow-sm">
-                <i class="bi bi-box-seam me-1"></i> + New China Return
+            <a href="{{ route('returns.create', ['return_type' => 'bee_comfort']) }}" class="btn btn-outline-primary btn-sm fw-bold">
+                + Bee Comfort
+            </a>
+            <a href="{{ route('returns.create', ['return_type' => 'china']) }}" class="btn btn-outline-danger btn-sm fw-bold">
+                + China
             </a>
         </div>
     </div>
@@ -120,11 +123,15 @@
                             </div>
                         </td>
 
-                        <!-- Original Invoice -->
+                        <!-- Original Invoice / Reference -->
                         <td class="py-3">
-                            <a href="{{ route('sales.show', $ret->sale) }}" class="text-primary fw-bold text-decoration-none font-monospace">
-                                {{ $ret->sale->invoice_no }}
-                            </a>
+                            @if($ret->sale)
+                                <a href="{{ route('sales.show', $ret->sale) }}" class="text-primary fw-bold text-decoration-none font-monospace">
+                                    {{ $ret->sale->invoice_no }}
+                                </a>
+                            @else
+                                <span class="badge bg-light text-secondary border">Direct Return</span>
+                            @endif
                         </td>
 
                         <!-- Customer Details -->

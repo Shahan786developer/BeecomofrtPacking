@@ -20,8 +20,13 @@
                 <h1 class="h3 fw-bold text-dark mb-0">Merchandise Return Receipt</h1>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('sales.show', $return->sale) }}" class="btn btn-outline-primary">
-                    <i class="bi bi-receipt me-1"></i> View Original Invoice
+                @if($return->sale)
+                    <a href="{{ route('sales.show', $return->sale) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-receipt me-1"></i> View Original Invoice
+                    </a>
+                @endif
+                <a href="{{ route('returns.edit', $return) }}" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil me-1"></i> Edit Return
                 </a>
                 <button onclick="window.print()" class="btn btn-primary">
                     <i class="bi bi-printer me-1"></i> Print Receipt
@@ -72,13 +77,20 @@
                 </div>
 
                 <div class="col-sm-6 text-sm-end">
-                    <span class="text-secondary text-uppercase fw-bold fs-7 d-block mb-1">Original Invoice Reference:</span>
-                    <div class="h5 fw-bold font-monospace mb-1">
-                        <a href="{{ route('sales.show', $return->sale) }}" class="text-primary text-decoration-none">
-                            {{ $return->sale->invoice_no }}
-                        </a>
-                    </div>
-                    <div class="text-secondary small">Invoice Date: {{ $return->sale->invoice_date->format('d M Y') }}</div>
+                    <span class="text-secondary text-uppercase fw-bold fs-7 d-block mb-1">Return Reference:</span>
+                    @if($return->sale)
+                        <div class="h5 fw-bold font-monospace mb-1">
+                            <a href="{{ route('sales.show', $return->sale) }}" class="text-primary text-decoration-none">
+                                {{ $return->sale->invoice_no }}
+                            </a>
+                        </div>
+                        <div class="text-secondary small">Invoice Date: {{ $return->sale->invoice_date->format('d M Y') }}</div>
+                    @else
+                        <div class="h6 fw-bold text-dark mb-1">
+                            <span class="badge bg-light text-secondary border px-2 py-1">Direct Customer Return</span>
+                        </div>
+                        <div class="text-secondary small">Voucher Intake</div>
+                    @endif
                     <div class="text-success small fw-bold mt-1">
                         <i class="bi bi-check-circle-fill me-1"></i> Stock Automatically Restored into Inventory
                     </div>

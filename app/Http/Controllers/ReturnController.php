@@ -17,7 +17,7 @@ class ReturnController extends Controller
 {
     public function index(Request $request)
     {
-        $returnType = $request->input('return_type'); // null, 'bee_comfort', or 'china'
+        $returnType = $request->input('return_type'); // null, 'all', 'bee_comfort', or 'china'
         $query = ReturnRecord::with(['customer', 'sale', 'details']);
 
         if ($returnType && in_array($returnType, ['bee_comfort', 'china'])) {
@@ -57,74 +57,109 @@ class ReturnController extends Controller
 
     public function create(Request $request)
     {
-        $selectedSaleId = $request->input('sale_id');
+        $customers = Customer::orderBy('name')->get();
+        $selectedCustomerId = $request->input('customer_id');
+
+        $returnType = $request->input('return_type');
+        $saleId = $request->input('sale_id');
         $selectedSale = null;
-        if ($selectedSaleId) {
-            $selectedSale = Sale::with(['customer', 'details' => function ($q) {
-                $q->whereColumn('quantity', '>', 'returned_quantity');
-            }, 'details.product.category', 'details.product.dozen'])->find($selectedSaleId);
 
+        if ($saleId) {
+            $selectedSale = Sale::with(['customer', 'details.product.category', 'details.product.dozen'])->find($saleId);
             if ($selectedSale) {
-                $returnType = $selectedSale->bill_type ?? 'bee_comfort';
-            }
-        }
-
-        if (!isset($returnType)) {
-            $returnType = $request->input('return_type', 'bee_comfort');
-            if (!in_array($returnType, ['bee_comfort', 'china'])) {
-                $returnType = 'bee_comfort';
+                $selectedCustomerId = $selectedSale->customer_id;
+                if (!$returnType) {
+                    $returnType = $selectedSale->bill_type;
+                }
             }
         }
 
         $nextReturnNo = ReturnRecord::generateNextReturnNo($returnType);
         $today = Carbon::today()->format('Y-m-d');
 
-        // Only sales matching the return type that have at least one returnable item
-        $sales = Sale::with(['customer', 'details' => function ($q) {
-            $q->whereColumn('quantity', '>', 'returned_quantity');
-        }])
-        ->where('bill_type', $returnType)
-        ->whereHas('details', function ($q) {
-            $q->whereColumn('quantity', '>', 'returned_quantity');
-        })
-        ->orderBy('id', 'desc')
-        ->get();
+        // All products from all categories (Bee Comfort and China unified)
+        $products = Product::with(['category', 'dozen', 'sku'])
+            ->orderBy('product_code')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'sku_code' => $p->sku_code,
+                    'title' => $p->title,
+                    'parent_category' => $p->parent_category ?? 'Bee Comfort',
+                    'stock_quantity' => $p->stock_quantity,
+                    'selling_price' => (float) $p->selling_price,
+                ];
+            });
 
-        return view('returns.create', compact('nextReturnNo', 'today', 'sales', 'selectedSaleId', 'selectedSale', 'returnType'));
+        return view('returns.create', compact('customers', 'selectedCustomerId', 'nextReturnNo', 'today', 'products', 'returnType', 'selectedSale'));
     }
 
     public function store(Request $request)
     {
+        // Auto-fill customer_id from sale if sale_id is provided but customer_id is not
+        if (!$request->filled('customer_id') && $request->filled('sale_id')) {
+            $sale = Sale::find($request->input('sale_id'));
+            if ($sale) {
+                $request->merge(['customer_id' => $sale->customer_id]);
+                if (!$request->filled('return_type')) {
+                    $request->merge(['return_type' => $sale->bill_type]);
+                }
+            }
+        }
+
+        // If items are submitted with sale_detail_id without product_id, auto-populate product_id & validate eligible qty
+        $items = $request->input('items', []);
+        if (is_array($items)) {
+            $modifiedItems = [];
+            foreach ($items as $idx => $it) {
+                if (isset($it['sale_detail_id']) && (!isset($it['product_id']) || empty($it['product_id']))) {
+                    $sDetail = SaleDetail::find($it['sale_detail_id']);
+                    if ($sDetail) {
+                        $it['product_id'] = $sDetail->product_id;
+                        if (!isset($it['unit_price'])) {
+                            $it['unit_price'] = $sDetail->unit_price;
+                        }
+                        if (isset($it['quantity']) && (int)$it['quantity'] > $sDetail->eligible_return_quantity) {
+                            throw ValidationException::withMessages([
+                                'items' => ["Return quantity for '{$sDetail->product_title}' exceeds eligible quantity of {$sDetail->eligible_return_quantity}."],
+                            ]);
+                        }
+                    }
+                }
+                $modifiedItems[$idx] = $it;
+            }
+            $request->merge(['items' => $modifiedItems]);
+        }
+
         $validated = $request->validate([
-            'return_type' => 'required|in:bee_comfort,china',
-            'sale_id' => 'required|exists:sales,id',
+            'customer_id' => 'required|exists:customers,id',
             'return_no' => 'required|string|unique:returns,return_no',
             'return_date' => 'required|date',
             'reason' => 'nullable|string|max:500',
+            'return_type' => 'nullable|string|max:50',
             'items' => 'required|array|min:1',
-            'items.*.sale_detail_id' => 'required|exists:sale_details,id',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.sale_detail_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
         ], [
-            'sale_id.required' => 'Please select the original sales invoice.',
-            'items.required' => 'At least one return item must be added.',
-            'items.min' => 'At least one return item must be added.',
+            'customer_id.required' => 'Please select a customer for this return.',
+            'items.required' => 'At least one product item must be added to the return.',
+            'items.min' => 'At least one product item must be added to the return.',
             'items.*.quantity.min' => 'Return quantity must be at least 1.',
         ]);
 
-        $sale = Sale::findOrFail($validated['sale_id']);
-        if ($sale->bill_type !== $validated['return_type']) {
-            return back()->withInput()->withErrors([
-                'sale_id' => "Cannot process return: Invoice {$sale->invoice_no} is a " . ($sale->bill_type === 'china' ? 'China' : 'Bee Comfort') . " bill, but this return is locked to " . ($validated['return_type'] === 'china' ? 'China' : 'Bee Comfort') . " category."
-            ]);
-        }
+        $customer = Customer::findOrFail($validated['customer_id']);
 
-        $return = DB::transaction(function () use ($validated, $sale) {
+        $return = DB::transaction(function () use ($validated, $customer, $request) {
+            $returnType = !empty($validated['return_type']) ? $validated['return_type'] : 'bee_comfort';
 
             $return = ReturnRecord::create([
                 'return_no' => trim($validated['return_no']),
-                'return_type' => $validated['return_type'],
-                'sale_id' => $sale->id,
-                'customer_id' => $sale->customer_id,
+                'return_type' => $returnType,
+                'sale_id' => $request->input('sale_id') ?: null,
+                'customer_id' => $customer->id,
                 'return_date' => $validated['return_date'],
                 'total_amount' => 0,
                 'reason' => $validated['reason'] ?? null,
@@ -133,51 +168,39 @@ class ReturnController extends Controller
             $totalAmount = 0.0;
 
             foreach ($validated['items'] as $itemData) {
-                $saleDetail = SaleDetail::lockForUpdate()->findOrFail($itemData['sale_detail_id']);
-
-                if ($saleDetail->sale_id !== $sale->id) {
-                    throw ValidationException::withMessages([
-                        'items' => "Item '{$saleDetail->product_title}' does not belong to Invoice #{$sale->invoice_no}.",
-                    ]);
-                }
-
+                $product = Product::with(['category', 'dozen'])->lockForUpdate()->findOrFail($itemData['product_id']);
                 $returnQty = (int) $itemData['quantity'];
-                $eligibleQty = $saleDetail->eligible_return_quantity;
-
-                // Validation: Do not allow returning more than the eligible quantity sold
-                if ($returnQty > $eligibleQty) {
-                    throw ValidationException::withMessages([
-                        'items' => "Cannot return {$returnQty} units of '{$saleDetail->product_title}'. Maximum returnable quantity is {$eligibleQty}.",
-                    ]);
-                }
-
-                $unitPrice = (float) $saleDetail->unit_price;
+                $unitPrice = isset($itemData['unit_price']) && is_numeric($itemData['unit_price'])
+                    ? (float) $itemData['unit_price']
+                    : (float) $product->selling_price;
                 $lineTotal = (float) ($returnQty * $unitPrice);
                 $totalAmount += $lineTotal;
 
-                // Save complete return details
                 ReturnDetail::create([
                     'return_id' => $return->id,
-                    'sale_detail_id' => $saleDetail->id,
-                    'product_id' => $saleDetail->product_id,
-                    'product_title' => $saleDetail->product_title,
-                    'sku_code' => $saleDetail->sku_code,
+                    'sale_detail_id' => $itemData['sale_detail_id'] ?? null,
+                    'product_id' => $product->id,
+                    'product_title' => $product->title,
+                    'sku_code' => $product->sku_code,
                     'unit_price' => $unitPrice,
                     'quantity' => $returnQty,
                     'total_amount' => $lineTotal,
                 ]);
 
-                // Update returned quantity on sale detail
-                $saleDetail->increment('returned_quantity', $returnQty);
+                if (!empty($itemData['sale_detail_id'])) {
+                    $sDetail = SaleDetail::find($itemData['sale_detail_id']);
+                    if ($sDetail) {
+                        $sDetail->increment('returned_quantity', $returnQty);
+                    }
+                }
 
-                // On successful return submission, add the returned quantity to the same product's stock
-                $product = Product::lockForUpdate()->findOrFail($saleDetail->product_id);
+                // On successful return submission, automatically restore warehouse stock
                 $product->recordStockChange(
                     quantityChange: +$returnQty,
                     type: 'return',
                     referenceId: $return->id,
                     referenceType: ReturnRecord::class,
-                    notes: "Customer return #{$return->return_no} from Invoice #{$sale->invoice_no}"
+                    notes: "Customer return #{$return->return_no} for {$customer->name}"
                 );
             }
 
@@ -186,8 +209,13 @@ class ReturnController extends Controller
             return $return;
         });
 
-        return redirect()->route('returns.index', ['return_type' => $return->return_type])
-            ->with('success', "Return record #{$return->return_no} processed successfully. Stock restored.");
+        $redirectParams = [];
+        if (!empty($validated['return_type']) && in_array($validated['return_type'], ['bee_comfort', 'china'])) {
+            $redirectParams['return_type'] = $validated['return_type'];
+        }
+
+        return redirect()->route('returns.index', $redirectParams)
+            ->with('success', "Return record #{$return->return_no} processed successfully. Stock restored & credited to {$customer->name}'s ledger.");
     }
 
     public function show(ReturnRecord $return)
@@ -198,30 +226,54 @@ class ReturnController extends Controller
 
     public function edit(ReturnRecord $return)
     {
-        $return->load(['customer', 'sale.details', 'details']);
-        return view('returns.edit', compact('return'));
+        $customers = Customer::orderBy('name')->get();
+        $return->load(['customer', 'details.product']);
+
+        $products = Product::with(['category', 'dozen', 'sku'])
+            ->orderBy('product_code')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'sku_code' => $p->sku_code,
+                    'title' => $p->title,
+                    'parent_category' => $p->parent_category ?? 'Bee Comfort',
+                    'stock_quantity' => $p->stock_quantity,
+                    'selling_price' => (float) $p->selling_price,
+                ];
+            });
+
+        return view('returns.edit', compact('return', 'customers', 'products'));
     }
 
     public function update(Request $request, ReturnRecord $return)
     {
         $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
             'return_date' => 'required|date',
             'reason' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
-            'items.*.sale_detail_id' => 'required|exists:sale_details,id',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.sale_detail_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
         ], [
+            'customer_id.required' => 'Please select a customer for this return.',
             'items.required' => 'At least one return item must be added.',
             'items.min' => 'At least one return item must be added.',
             'items.*.quantity.min' => 'Return quantity must be at least 1.',
         ]);
 
-        DB::transaction(function () use ($return, $validated) {
-            // Revert previously returned quantities on sale_details and product stock
+        $customer = Customer::findOrFail($validated['customer_id']);
+
+        DB::transaction(function () use ($return, $validated, $customer) {
+            // Revert previous returned stock changes
             foreach ($return->details as $oldDetail) {
-                $saleDetail = SaleDetail::lockForUpdate()->find($oldDetail->sale_detail_id);
-                if ($saleDetail) {
-                    $saleDetail->decrement('returned_quantity', $oldDetail->quantity);
+                if ($oldDetail->sale_detail_id) {
+                    $sDetail = SaleDetail::find($oldDetail->sale_detail_id);
+                    if ($sDetail) {
+                        $sDetail->decrement('returned_quantity', min($sDetail->returned_quantity, $oldDetail->quantity));
+                    }
                 }
 
                 $product = Product::lockForUpdate()->find($oldDetail->product_id);
@@ -241,51 +293,56 @@ class ReturnController extends Controller
 
             $totalAmount = 0.0;
             foreach ($validated['items'] as $itemData) {
-                $saleDetail = SaleDetail::lockForUpdate()->findOrFail($itemData['sale_detail_id']);
+                $product = Product::with(['category', 'dozen'])->lockForUpdate()->findOrFail($itemData['product_id']);
                 $returnQty = (int) $itemData['quantity'];
-                $eligibleQty = $saleDetail->eligible_return_quantity;
-
-                if ($returnQty > $eligibleQty) {
-                    throw ValidationException::withMessages([
-                        'items' => "Cannot return {$returnQty} units of '{$saleDetail->product_title}'. Maximum returnable quantity is {$eligibleQty}.",
-                    ]);
-                }
-
-                $unitPrice = (float) $saleDetail->unit_price;
+                $unitPrice = isset($itemData['unit_price']) && is_numeric($itemData['unit_price'])
+                    ? (float) $itemData['unit_price']
+                    : (float) $product->selling_price;
                 $lineTotal = (float) ($returnQty * $unitPrice);
                 $totalAmount += $lineTotal;
 
                 ReturnDetail::create([
                     'return_id' => $return->id,
-                    'sale_detail_id' => $saleDetail->id,
-                    'product_id' => $saleDetail->product_id,
-                    'product_title' => $saleDetail->product_title,
-                    'sku_code' => $saleDetail->sku_code,
+                    'sale_detail_id' => $itemData['sale_detail_id'] ?? null,
+                    'product_id' => $product->id,
+                    'product_title' => $product->title,
+                    'sku_code' => $product->sku_code,
                     'unit_price' => $unitPrice,
                     'quantity' => $returnQty,
                     'total_amount' => $lineTotal,
                 ]);
 
-                $saleDetail->increment('returned_quantity', $returnQty);
+                if (!empty($itemData['sale_detail_id'])) {
+                    $sDetail = SaleDetail::find($itemData['sale_detail_id']);
+                    if ($sDetail) {
+                        $sDetail->increment('returned_quantity', $returnQty);
+                    }
+                }
 
-                $product = Product::lockForUpdate()->findOrFail($saleDetail->product_id);
+                // Restore warehouse stock
                 $product->recordStockChange(
                     quantityChange: +$returnQty,
                     type: 'return',
                     referenceId: $return->id,
                     referenceType: ReturnRecord::class,
-                    notes: "Updated customer return #{$return->return_no}"
+                    notes: "Updated customer return #{$return->return_no} for {$customer->name}"
                 );
             }
 
             $return->update([
+                'customer_id' => $customer->id,
                 'return_date' => $validated['return_date'],
                 'reason' => $validated['reason'] ?? null,
                 'total_amount' => $totalAmount,
             ]);
         });
 
-        return redirect()->route('returns.index', ['return_type' => $return->return_type])
+        $redirectParams = [];
+        if (!empty($return->return_type) && in_array($return->return_type, ['bee_comfort', 'china'])) {
+            $redirectParams['return_type'] = $return->return_type;
+        }
+
+        return redirect()->route('returns.index', $redirectParams)
             ->with('success', "Return record #{$return->return_no} updated successfully.");
     }
 }

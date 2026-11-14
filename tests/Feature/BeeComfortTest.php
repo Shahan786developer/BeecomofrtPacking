@@ -279,6 +279,54 @@ class BeeComfortTest extends TestCase
         $saleDetail->refresh();
         $this->assertEquals(4, $saleDetail->returned_quantity);
         $this->assertEquals(6, $saleDetail->eligible_return_quantity);
+
+        // 4. Test Direct Return Intake (No Original Invoice Required)
+        $stockBeforeDirect = $product->fresh()->stock_quantity;
+        $directResponse = $this->post(route('returns.store'), [
+            'customer_id' => $customer->id,
+            'return_no' => 'RET-DIRECT-TEST-01',
+            'return_date' => date('Y-m-d'),
+            'reason' => 'Direct return from customer',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => 3,
+                    'unit_price' => $product->selling_price,
+                ],
+            ],
+        ]);
+        $directResponse->assertRedirect(route('returns.index'));
+        $directReturn = ReturnRecord::where('return_no', 'RET-DIRECT-TEST-01')->first();
+        $this->assertNotNull($directReturn);
+        $this->assertNull($directReturn->sale_id);
+        $this->assertEquals($customer->id, $directReturn->customer_id);
+        $this->assertEquals($stockBeforeDirect + 3, $product->fresh()->stock_quantity);
+
+        // 5. Test Direct Return Create View UI elements
+        $createPage = $this->get(route('returns.create'));
+        $createPage->assertStatus(200);
+        $createPage->assertSee('Customer Account');
+        $createPage->assertSee('Search &amp; Select Product to Return', false);
+        $createPage->assertSee('Scan Returned SKU Barcode');
+        $createPage->assertSee('Fast Return Billing');
+
+        // 6. Test Direct Return Show View (no sale_id null pointer error)
+        $showPage = $this->get(route('returns.show', $directReturn));
+        $showPage->assertStatus(200);
+        $showPage->assertSee('Direct Customer Return');
+        $showPage->assertDontSee('View Original Invoice');
+
+        // 7. Test Direct Return Edit View (no sale_id null pointer error)
+        $editPage = $this->get(route('returns.edit', $directReturn));
+        $editPage->assertStatus(200);
+        $editPage->assertSee('Edit Customer Bill Return');
+        $editPage->assertSee('Update Return Bill');
+
+        // 8. Test Direct Return in Index List
+        $indexPage = $this->get(route('returns.index'));
+        $indexPage->assertStatus(200);
+        $indexPage->assertSee($directReturn->return_no);
+        $indexPage->assertSee('Direct Return');
     }
 
     /**
