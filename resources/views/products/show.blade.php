@@ -20,14 +20,16 @@
                 <span class="badge bg-dark font-monospace px-3 py-2 fs-7">
                     <i class="bi bi-upc me-1"></i> SKU: {{ $product->sku_code }}
                 </span>
+                @if($product->bill_no)
                 <span class="badge bg-light text-secondary border px-3 py-2 fs-7">
                     Bill No: {{ $product->bill_no }}
                 </span>
+                @endif
                 <span class="badge bg-light text-secondary border px-3 py-2 fs-7">
                     Code: {{ $product->product_code }}
                 </span>
             </div>
-            <!-- Unified Dynamic Title (Requirement #1) -->
+            <!-- Unified Dynamic Title -->
             <h1 class="h3 fw-bold text-dark mb-0">{{ $product->title }}</h1>
         </div>
         <div class="d-flex gap-2">
@@ -77,9 +79,15 @@
                         <i class="bi bi-tag text-primary fs-5"></i>
                     </div>
                     <div class="h2 fw-black text-dark mb-1 font-monospace">
-                        Rs. {{ number_format($product->selling_price, 2) }}
+                        @if(!is_null($product->selling_price))
+                            Rs. {{ number_format($product->selling_price, 2) }}
+                        @else
+                            <span class="text-secondary fs-4">—</span>
+                        @endif
                     </div>
-                    <span class="text-secondary small">Fixed rate loaded during barcode scan</span>
+                    <span class="text-secondary small">
+                        {{ !is_null($product->selling_price) ? 'Fixed rate loaded during barcode scan' : 'No selling price configured' }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -93,9 +101,19 @@
                         <i class="bi bi-cash-stack text-secondary fs-5"></i>
                     </div>
                     <div class="h2 fw-black text-secondary mb-1 font-monospace">
-                        Rs. {{ number_format($product->actual_price, 2) }}
+                        @if(!is_null($product->actual_price))
+                            Rs. {{ number_format($product->actual_price, 2) }}
+                        @else
+                            <span class="text-secondary fs-4">—</span>
+                        @endif
                     </div>
-                    <span class="text-secondary small">Margin: <strong class="text-success">Rs. {{ number_format($product->selling_price - $product->actual_price, 2) }}</strong></span>
+                    <span class="text-secondary small">
+                        @if(!is_null($product->selling_price) && !is_null($product->actual_price))
+                            Margin: <strong class="text-success">Rs. {{ number_format($product->selling_price - $product->actual_price, 2) }}</strong>
+                        @else
+                            Direct inventory tracking
+                        @endif
+                    </span>
                 </div>
             </div>
         </div>
@@ -109,10 +127,14 @@
                         <i class="bi bi-percent text-info fs-5"></i>
                     </div>
                     <div class="h4 fw-bold text-dark mb-1">
-                        {{ $product->pricingRule->name }}
+                        {{ $product->pricingRule?->name ?? 'None' }}
                     </div>
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                        +{{ number_format($product->pricingRule->percentage, 2) }}% markup rule
+                        @if($product->pricingRule)
+                            +{{ number_format($product->pricingRule->percentage, 2) }}% markup rule
+                        @else
+                            No rule applied
+                        @endif
                     </span>
                 </div>
             </div>
@@ -134,8 +156,9 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Date & Time</th>
+                        <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Date &amp; Time</th>
                         <th class="py-3 text-secondary text-uppercase fs-7">Type</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Customer / Company</th>
                         <th class="py-3 text-center text-secondary text-uppercase fs-7">Change</th>
                         <th class="py-3 text-center text-secondary text-uppercase fs-7">Previous Stock</th>
                         <th class="py-3 text-center text-secondary text-uppercase fs-7">New Stock</th>
@@ -149,9 +172,24 @@
                             {{ $move->created_at->format('d M Y, H:i') }}
                         </td>
                         <td class="py-3">
-                            <span class="badge {{ $move->type === 'sale' ? 'bg-primary-subtle text-primary' : ($move->type === 'return' ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success') }} text-uppercase">
+                            <span class="badge {{ $move->type === 'sale' ? 'bg-primary-subtle text-primary' : ($move->type === 'return' ? 'bg-warning-subtle text-warning' : ($move->type === 'adjustment' ? 'bg-info-subtle text-info' : 'bg-success-subtle text-success')) }} text-uppercase">
                                 {{ $move->type }}
                             </span>
+                        </td>
+                        <!-- Customer / Company Column (Only for Stock Out / Sales) -->
+                        <td class="py-3">
+                            @if(($move->type === 'sale' || $move->quantity_change < 0) && $move->customer)
+                                <div>
+                                    <span class="fw-bold text-dark">
+                                        <i class="bi bi-person-fill text-secondary me-1"></i>{{ $move->customer->name }}
+                                    </span>
+                                    @if($move->customer->owner_name)
+                                        <span class="text-secondary small d-block ps-3">({{ $move->customer->owner_name }})</span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
                         </td>
                         <td class="py-3 text-center fw-bold {{ $move->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
                             {{ $move->quantity_change > 0 ? '+' : '' }}{{ $move->quantity_change }}
@@ -162,7 +200,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-secondary">No stock movements recorded yet.</td>
+                        <td colspan="7" class="text-center py-4 text-secondary">No stock movements recorded yet.</td>
                     </tr>
                     @endforelse
                 </tbody>

@@ -105,11 +105,28 @@
                         <select name="customer_id" id="customer_id" required class="searchable-select form-select form-select-sm">
                             <option value="">Select Customer...</option>
                             @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
-                                    {{ $customer->name }} ({{ $customer->phone ?: ($customer->city ?: 'No Contact') }})
+                                <option value="{{ $customer->id }}" 
+                                    data-previous-balance="{{ $customer->getPreviousBalance() }}"
+                                    data-phone="{{ $customer->phone }}"
+                                    data-owner="{{ $customer->owner_name }}"
+                                    data-city="{{ $customer->city }}"
+                                    {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
+                                    {{ $customer->name }} — Owner: {{ $customer->owner_name ?: '—' }} • City: {{ $customer->city ?: '—' }}
                                 </option>
                             @endforeach
                         </select>
+                        <div class="mt-1 d-flex flex-wrap align-items-center justify-content-between gap-1">
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input" type="checkbox" name="show_previous_balance" id="show_previous_balance" value="1" {{ old('show_previous_balance') ? 'checked' : '' }}>
+                                <label class="form-check-label small fw-bold text-dark" for="show_previous_balance" style="font-size: 0.75rem;">
+                                    <i class="bi bi-wallet2 text-primary me-0.5"></i> Show Prev Balance
+                                </label>
+                            </div>
+                            <div id="customer-balance-badge" class="badge bg-light text-dark border px-2 py-0.5 fs-8 d-none">
+                                Balance: <span id="customer-balance-amount" class="fw-bold font-monospace text-primary">Rs. 0.00</span>
+                            </div>
+                        </div>
+                        <input type="hidden" name="previous_balance" id="previous_balance_input" value="{{ old('previous_balance', 0) }}">
                     </div>
 
                     <!-- Invoice Date -->
@@ -200,13 +217,21 @@
 
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" id="invoice-items-table">
+                    @php
+                        $canEditRate = ($billType === 'bee_comfort' && (auth()->user()?->isSuperAdmin() ?? false));
+                    @endphp
                     <thead class="table-light">
                         <tr>
                             <th class="ps-3 py-2 text-center text-secondary text-uppercase fs-7" style="width: 40px;">#</th>
-                            <th class="py-2 text-secondary text-uppercase fs-7">Product Description (Unified Title)</th>
+                            <th class="py-2 text-secondary text-uppercase fs-7">Product Title</th>
                             <th class="py-2 text-secondary text-uppercase fs-7" style="width: 110px;">SKU</th>
                             <th class="py-2 text-center text-secondary text-uppercase fs-7" style="width: 90px;">Stock</th>
-                            <th class="py-2 text-end text-secondary text-uppercase fs-7" style="width: 120px;">Rate (Rs.)</th>
+                            <th class="py-2 text-end text-secondary text-uppercase fs-7" style="width: {{ $canEditRate ? '135px' : '110px' }};">
+                                Rate (Rs.)
+                                @if($canEditRate)
+                                    <span class="badge bg-success-subtle text-success fs-9 ms-0.5" title="Editable by Super Admin"><i class="bi bi-pencil-fill"></i></span>
+                                @endif
+                            </th>
                             <th class="py-2 text-center text-secondary text-uppercase fs-7" style="width: 110px;">Quantity</th>
                             <th class="py-2 text-end text-secondary text-uppercase fs-7" style="width: 130px;">Amount (Rs.)</th>
                             <th class="pe-3 py-2 text-center text-secondary text-uppercase fs-7" style="width: 50px;">Del</th>
@@ -227,7 +252,7 @@
             <div class="card-footer bg-light border-top p-3">
                 <div class="row g-3 align-items-center">
                     <!-- Remarks / Notes -->
-                    <div class="col-12 col-md-7">
+                    <div class="col-12 col-md-6">
                         <label for="notes" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                             Notes / Remarks
                         </label>
@@ -235,13 +260,23 @@
                     </div>
 
                     <!-- Total & Save Button -->
-                    <div class="col-12 col-md-5">
-                        <div class="d-flex align-items-center justify-content-between p-2.5 bg-white border rounded">
-                            <div>
-                                <span class="text-secondary small d-block">Total Payable:</span>
-                                <span id="total-amount-display" class="h4 fw-black {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} font-monospace mb-0">Rs. 0.00</span>
+                    <div class="col-12 col-md-6">
+                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between p-2.5 bg-white border rounded gap-2">
+                            <div class="d-flex flex-column">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-secondary small">Current Bill:</span>
+                                    <span id="bill-subtotal-display" class="fw-bold font-monospace text-dark fs-7">Rs. 0.00</span>
+                                </div>
+                                <div id="previous-balance-row" class="d-flex align-items-center gap-2 d-none">
+                                    <span class="text-danger small fw-semibold">+ Prev Balance:</span>
+                                    <span id="previous-balance-display" class="fw-bold font-monospace text-danger fs-7">Rs. 0.00</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mt-0.5">
+                                    <span class="text-secondary small fw-bold text-uppercase">Net Payable:</span>
+                                    <span id="total-amount-display" class="h4 fw-black {{ $billType === 'china' ? 'text-danger' : 'text-primary' }} font-monospace mb-0">Rs. 0.00</span>
+                                </div>
                             </div>
-                            <button type="submit" id="btn-submit-invoice" disabled class="btn {{ $billType === 'china' ? 'btn-danger' : 'btn-primary' }} fw-bold px-4 shadow-sm">
+                            <button type="submit" id="btn-submit-invoice" disabled class="btn {{ $billType === 'china' ? 'btn-danger' : 'btn-primary' }} fw-bold px-4 py-2 shadow-sm">
                                 <i class="bi bi-check2-circle me-1"></i> Save Invoice
                             </button>
                         </div>
@@ -305,14 +340,36 @@
                         <input type="text" id="modal_cust_city" placeholder="e.g. Lahore, Karachi" class="form-control form-control-sm">
                     </div>
                     <div class="col-12 col-sm-6">
-                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Email</label>
-                        <input type="email" id="modal_cust_email" placeholder="customer@domain.com" class="form-control form-control-sm">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Credit / Recovery Term</label>
+                        <select id="modal_cust_credit_days" class="form-select form-select-sm">
+                            <option value="">None / Cash Basis</option>
+                            <option value="7">7 Days (Weekly)</option>
+                            <option value="15">15 Days (Bi-Weekly)</option>
+                            <option value="30">30 Days (Monthly)</option>
+                        </select>
                     </div>
                 </div>
 
-                <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Physical Address</label>
-                    <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control form-control-sm">
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">NTN (Optional)</label>
+                        <input type="text" id="modal_cust_ntn" placeholder="e.g. 1234567-8" class="form-control form-control-sm font-monospace">
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">STRN (Optional)</label>
+                        <input type="text" id="modal_cust_strn" placeholder="e.g. 12-34-5678-901-23" class="form-control form-control-sm font-monospace">
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Email</label>
+                        <input type="email" id="modal_cust_email" placeholder="customer@domain.com" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Physical Address</label>
+                        <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control form-control-sm">
+                    </div>
                 </div>
             </div>
 
@@ -488,6 +545,13 @@
         renderInvoiceTable();
     }
 
+    function updateRowPrice(index, newPrice) {
+        let p = parseFloat(newPrice);
+        if (isNaN(p) || p < 0) p = 0;
+        invoiceRows[index].price = p;
+        renderInvoiceTable();
+    }
+
     // Handles keyboard navigation on quantity input:
     // Tab -> Focus back to product dropdown
     // Enter -> Save / Generate bill
@@ -514,6 +578,97 @@
         }
     }
 
+    const canEditRate = {{ $canEditRate ? 'true' : 'false' }};
+    const custSelect = document.getElementById('customer_id');
+    const showPrevBalCheckbox = document.getElementById('show_previous_balance');
+    const prevBalInput = document.getElementById('previous_balance_input');
+    const prevBalBadge = document.getElementById('customer-balance-badge');
+    const prevBalAmount = document.getElementById('customer-balance-amount');
+    const prevBalRow = document.getElementById('previous-balance-row');
+    const prevBalDisplay = document.getElementById('previous-balance-display');
+    const billSubtotalDisplay = document.getElementById('bill-subtotal-display');
+
+    let currentPreviousBalance = 0.0;
+
+    function fetchCustomerPreviousBalance(customerId) {
+        if (!customerId) {
+            currentPreviousBalance = 0.0;
+            updateBalanceUI();
+            return;
+        }
+
+        const opt = custSelect ? custSelect.querySelector(`option[value="${customerId}"]`) : null;
+        if (opt && opt.dataset && opt.dataset.previousBalance !== undefined) {
+            currentPreviousBalance = parseFloat(opt.dataset.previousBalance) || 0.0;
+            updateBalanceUI();
+        }
+
+        // Live real-time fetch from server API
+        fetch(`/api/customers/${encodeURIComponent(customerId)}/balance`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.found) {
+                    currentPreviousBalance = parseFloat(data.previous_balance) || 0.0;
+                    updateBalanceUI();
+                }
+            })
+            .catch(err => {
+                console.error('Balance fetch error:', err);
+            });
+    }
+
+    function updateBalanceUI() {
+        if (prevBalInput) prevBalInput.value = currentPreviousBalance.toFixed(2);
+        if (prevBalAmount) prevBalAmount.textContent = 'Rs. ' + currentPreviousBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (prevBalDisplay) prevBalDisplay.textContent = 'Rs. ' + currentPreviousBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const hasCust = custSelect && custSelect.value;
+        if (hasCust && prevBalBadge) {
+            prevBalBadge.classList.remove('d-none');
+        } else if (prevBalBadge) {
+            prevBalBadge.classList.add('d-none');
+        }
+
+        const showPrev = showPrevBalCheckbox && showPrevBalCheckbox.checked;
+        if (showPrev && prevBalRow) {
+            prevBalRow.classList.remove('d-none');
+        } else if (prevBalRow) {
+            prevBalRow.classList.add('d-none');
+        }
+
+        // Recalculate totals
+        let billTotal = 0.0;
+        invoiceRows.forEach(row => {
+            billTotal += (row.quantity * row.price);
+        });
+        if (billSubtotalDisplay) {
+            billSubtotalDisplay.textContent = 'Rs. ' + billTotal.toFixed(2);
+        }
+        const grandPayable = showPrev ? (billTotal + currentPreviousBalance) : billTotal;
+        totalAmountDisplay.textContent = 'Rs. ' + grandPayable.toFixed(2);
+    }
+
+    if (showPrevBalCheckbox) {
+        showPrevBalCheckbox.addEventListener('change', updateBalanceUI);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(() => {
+            if (custSelect && custSelect.tomselect) {
+                custSelect.tomselect.on('change', function(val) {
+                    fetchCustomerPreviousBalance(val);
+                });
+            } else if (custSelect) {
+                custSelect.addEventListener('change', function() {
+                    fetchCustomerPreviousBalance(this.value);
+                });
+            }
+            if (custSelect && custSelect.value) {
+                fetchCustomerPreviousBalance(custSelect.value);
+            }
+        }, 300);
+    });
+
     function renderInvoiceTable(highlightIndex = -1, isExisting = false) {
         if (invoiceRows.length === 0) {
             itemsBody.innerHTML = `
@@ -525,7 +680,9 @@
                 </tr>
             `;
             itemsBadge.textContent = '0 Items Added';
-            totalAmountDisplay.textContent = 'Rs. 0.00';
+            if (billSubtotalDisplay) billSubtotalDisplay.textContent = 'Rs. 0.00';
+            const showPrev = showPrevBalCheckbox && showPrevBalCheckbox.checked;
+            totalAmountDisplay.textContent = 'Rs. ' + (showPrev ? currentPreviousBalance : 0.0).toFixed(2);
             btnSubmit.disabled = true;
             return;
         }
@@ -539,6 +696,17 @@
             total += lineTotal;
             totalItems += row.quantity;
             const isTarget = (idx === highlightIndex);
+
+            const rateHtml = canEditRate ? `
+                <input type="number" step="0.01" min="0" name="items[${idx}][unit_price]" id="rate-input-${idx}"
+                    value="${row.price.toFixed(2)}" required
+                    onchange="updateRowPrice(${idx}, this.value)"
+                    class="form-control form-control-sm text-end fw-bold font-monospace py-1"
+                    style="max-width: 95px; display: inline-block;">
+            ` : `
+                <span class="font-monospace small">Rs. ${row.price.toFixed(2)}</span>
+                <input type="hidden" name="items[${idx}][unit_price]" value="${row.price.toFixed(2)}">
+            `;
 
             html += `
                 <tr id="row-${idx}" class="${isTarget ? 'row-highlight-pulse' : ''}">
@@ -555,8 +723,8 @@
                             ${row.stock} pcs
                         </span>
                     </td>
-                    <td class="py-2 text-end font-monospace small">
-                        Rs. ${row.price.toFixed(2)}
+                    <td class="py-2 text-end">
+                        ${rateHtml}
                     </td>
                     <td class="py-2 text-center">
                         <input type="number" name="items[${idx}][quantity]" id="qty-input-${idx}"
@@ -580,7 +748,10 @@
 
         itemsBody.innerHTML = html;
         itemsBadge.textContent = `${invoiceRows.length} Line(s) (${totalItems} pcs)`;
-        totalAmountDisplay.textContent = 'Rs. ' + total.toFixed(2);
+        if (billSubtotalDisplay) billSubtotalDisplay.textContent = 'Rs. ' + total.toFixed(2);
+        const showPrev = showPrevBalCheckbox && showPrevBalCheckbox.checked;
+        const grandPayable = showPrev ? (total + currentPreviousBalance) : total;
+        totalAmountDisplay.textContent = 'Rs. ' + grandPayable.toFixed(2);
         btnSubmit.disabled = false;
 
         // Auto-focus quantity input of the added/updated product and select text so user can immediately type quantity
@@ -612,6 +783,12 @@
         const city = document.getElementById('modal_cust_city').value.trim();
         const email = document.getElementById('modal_cust_email').value.trim();
         const addr = document.getElementById('modal_cust_address').value.trim();
+        const ntnEl = document.getElementById('modal_cust_ntn');
+        const strnEl = document.getElementById('modal_cust_strn');
+        const ntn = ntnEl ? ntnEl.value.trim() : null;
+        const strn = strnEl ? strnEl.value.trim() : null;
+        const creditDaysEl = document.getElementById('modal_cust_credit_days');
+        const creditDays = creditDaysEl ? creditDaysEl.value : null;
 
         if (!name) {
             alert('Customer name is required.');
@@ -635,26 +812,31 @@
                 city: city,
                 email: email,
                 address: addr,
+                ntn: ntn || null,
+                strn: strn || null,
+                credit_days: creditDays ? parseInt(creditDays) : null,
             })
         })
         .then(r => r.json())
         .then(data => {
             if (data.customer) {
                 const cust = data.customer;
-                const custSelect = document.getElementById('customer_id');
+                const custText = `${cust.name} — Owner: ${cust.owner_name || '—'} • City: ${cust.city || '—'}`;
                 if (custSelect && custSelect.tomselect) {
                     custSelect.tomselect.addOption({
                         value: cust.id,
-                        text: `${cust.name} (${cust.phone || cust.city || 'Active'})`
+                        text: custText
                     });
                     custSelect.tomselect.setValue(cust.id);
                 } else if (custSelect) {
                     const opt = document.createElement('option');
                     opt.value = cust.id;
-                    opt.textContent = `${cust.name} (${cust.phone || cust.city || 'Active'})`;
+                    opt.textContent = custText;
+                    opt.dataset.previousBalance = 0;
                     opt.selected = true;
                     custSelect.appendChild(opt);
                 }
+                fetchCustomerPreviousBalance(cust.id);
                 if (customerModalInstance) customerModalInstance.hide();
                 showFeedback(`Customer '${cust.name}' registered & selected.`);
             } else {

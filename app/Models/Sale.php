@@ -12,6 +12,7 @@ class Sale extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'invoice_no',
         'bill_type',
         'customer_id',
@@ -19,6 +20,8 @@ class Sale extends Model
         'subtotal',
         'discount',
         'total_amount',
+        'show_previous_balance',
+        'previous_balance',
         'notes',
     ];
 
@@ -27,7 +30,14 @@ class Sale extends Model
         'subtotal' => 'float',
         'discount' => 'float',
         'total_amount' => 'float',
+        'show_previous_balance' => 'boolean',
+        'previous_balance' => 'float',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function customer(): BelongsTo
     {

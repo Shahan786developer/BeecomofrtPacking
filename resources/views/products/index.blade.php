@@ -46,12 +46,30 @@
 
                 <!-- Action Buttons: Create & Print -->
                 <div class="col-12 col-md-5 col-lg-4 d-flex justify-content-md-end gap-2">
-                    <a href="{{ route('products.create') }}" class="btn btn-primary fw-bold shadow-sm flex-fill flex-md-grow-0">
-                        <i class="bi bi-plus-lg me-1"></i> Create Product
-                    </a>
+                    @if(Auth::user()->hasPermission('products', 'create'))
+                    <div class="dropdown flex-fill flex-md-grow-0">
+                        <button class="btn btn-primary fw-bold shadow-sm dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-plus-lg me-1"></i> Register Product
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li>
+                                <a class="dropdown-item py-2 fw-semibold" href="{{ route('products.create', ['type' => 'bee_comfort']) }}">
+                                    <i class="bi bi-shield-check text-primary me-2"></i> Bee Comfort Product
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 fw-semibold" href="{{ route('products.create', ['type' => 'china']) }}">
+                                    <i class="bi bi-box-seam text-danger me-2"></i> China Product
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    @endif
+                    @if(Auth::user()->hasPermission('barcode', 'print'))
                     <a href="{{ route('barcode.index') }}" class="btn btn-outline-primary fw-bold flex-fill flex-md-grow-0">
                         <i class="bi bi-printer me-1"></i> Print Barcodes
                     </a>
+                    @endif
                 </div>
             </div>
 
@@ -119,36 +137,46 @@
 
                         <!-- Bill No -->
                         <td class="py-3 font-monospace small text-secondary">
-                            {{ $product->bill_no }}
+                            {{ $product->bill_no ?: '—' }}
                         </td>
 
                         <!-- Actual Purchase Price (Rupees) -->
                         <td class="py-3 text-end font-monospace text-secondary">
-                            Rs. {{ number_format($product->actual_price, 2) }}
+                            @if(!is_null($product->actual_price))
+                                Rs. {{ number_format($product->actual_price, 2) }}
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
                         </td>
 
                         <!-- Selling Price (Rupees) -->
                         <td class="py-3 text-end">
-                            <span class="fw-black text-dark font-monospace fs-6">
-                                Rs. {{ number_format($product->selling_price, 2) }}
-                            </span>
-                        </td>
-
-                        <!-- Available Stock -->
-                        <td class="py-3 text-center">
-                            @if($product->stock_quantity > 0)
-                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">
-                                    {{ $product->stock_quantity }} units
-                                </span>
-                            @elseif($product->stock_quantity == 0)
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1">
-                                    0 (Zero)
+                            @if(!is_null($product->selling_price))
+                                <span class="fw-black text-dark font-monospace fs-6">
+                                    Rs. {{ number_format($product->selling_price, 2) }}
                                 </span>
                             @else
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1">
-                                    {{ $product->stock_quantity }} (Negative)
-                                </span>
+                                <span class="text-muted">—</span>
                             @endif
+                        </td>
+
+                        <!-- Available Stock (with click-to-edit) -->
+                        <td class="py-3 text-center">
+                            <a href="{{ route('products.edit', $product) }}" class="text-decoration-none" title="Click to edit product stock">
+                                @if($product->stock_quantity > 0)
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">
+                                        {{ $product->stock_quantity }} units <i class="bi bi-pencil fs-8 ms-1"></i>
+                                    </span>
+                                @elseif($product->stock_quantity == 0)
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1">
+                                        0 (Zero) <i class="bi bi-pencil fs-8 ms-1"></i>
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1">
+                                        {{ $product->stock_quantity }} (Negative) <i class="bi bi-pencil fs-8 ms-1"></i>
+                                    </span>
+                                @endif
+                            </a>
                         </td>
 
                         <!-- Action Icons (View, Edit, Print) -->
@@ -157,12 +185,16 @@
                                 <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info" title="View Product">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary" title="Edit Product">
+                                @if(Auth::user()->hasPermission('products', 'update'))
+                                <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary" title="Edit Product / Stock">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                @endif
+                                @if(Auth::user()->hasPermission('barcode', 'print'))
                                 <a href="{{ route('barcode.index', ['product_id' => $product->id]) }}" class="btn btn-sm btn-outline-dark" title="Print Barcode Labels">
                                     <i class="bi bi-printer"></i>
                                 </a>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -171,10 +203,14 @@
                         <td colspan="7" class="text-center py-5 text-secondary">
                             <i class="bi bi-box-seam display-6 d-block mb-2 text-secondary"></i>
                             <h6 class="fw-bold text-dark">No products found.</h6>
-                            <p class="small text-secondary mb-3">Add your first product to generate automated SKU barcodes and inventory tracking.</p>
-                            <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus-lg me-1"></i> Create First Product
-                            </a>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ route('products.create', ['type' => 'bee_comfort']) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-shield-check me-1"></i> Register Bee Comfort Product
+                                </a>
+                                <a href="{{ route('products.create', ['type' => 'china']) }}" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-box-seam me-1"></i> Register China Product
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @endforelse

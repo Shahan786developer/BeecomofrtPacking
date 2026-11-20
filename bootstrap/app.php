@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
             guests: '/login',
             users: '/dashboard'
         );
+
+        $middleware->alias([
+            'superadmin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

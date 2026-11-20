@@ -15,8 +15,16 @@
         <!-- Header -->
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
             <div>
-                <h1 class="h3 fw-bold text-dark mb-1">Edit Product</h1>
-                <p class="text-secondary small mb-0">Modify product details, category, or pricing rule. SKU is permanently locked.</p>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge {{ $product->parent_category === 'China' ? 'bg-danger text-white' : 'bg-primary text-white' }} px-2.5 py-1 text-uppercase fw-bold fs-7">
+                        {{ $product->parent_category }}
+                    </span>
+                    <span class="badge bg-dark font-monospace px-2.5 py-1 fs-7">
+                        SKU: {{ $product->sku_code }}
+                    </span>
+                </div>
+                <h1 class="h3 fw-bold text-dark mb-1">Edit Product: {{ $product->title }}</h1>
+                <p class="text-secondary small mb-0">Modify product codes, category, warehouse stock quantity, and pricing details.</p>
             </div>
             <div>
                 <a href="{{ route('products.show', $product) }}" class="btn btn-outline-secondary">
@@ -35,7 +43,7 @@
                     <!-- Section 1: Classification -->
                     <div>
                         <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
-                            <i class="bi bi-tag text-primary me-1"></i> 1. Product Classification
+                            <i class="bi bi-tag {{ $product->parent_category === 'China' ? 'text-danger' : 'text-primary' }} me-1"></i> 1. Product Classification
                         </h6>
 
                         <div class="row g-3">
@@ -43,7 +51,7 @@
                                 <label for="parent_category" class="form-label small fw-bold text-secondary text-uppercase mb-1">
                                     Parent Category <span class="text-danger">*</span>
                                 </label>
-                                <select name="parent_category" id="parent_category" required class="form-select fw-bold border-primary-subtle text-primary">
+                                <select name="parent_category" id="parent_category" required class="form-select fw-bold {{ $product->parent_category === 'China' ? 'border-danger-subtle text-danger' : 'border-primary-subtle text-primary' }}">
                                     @foreach($parentCategories as $pCat)
                                         <option value="{{ $pCat }}" {{ old('parent_category', $product->parent_category ?? 'Bee Comfort') === $pCat ? 'selected' : '' }}>
                                             {{ $pCat }}
@@ -101,7 +109,7 @@
                     <!-- Section 2: Codes & Current Stock -->
                     <div>
                         <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
-                            <i class="bi bi-upc text-primary me-1"></i> 2. Codes & Inventory Status
+                            <i class="bi bi-upc {{ $product->parent_category === 'China' ? 'text-danger' : 'text-primary' }} me-1"></i> 2. Codes &amp; Inventory Status
                         </h6>
 
                         <div class="row g-3">
@@ -114,28 +122,40 @@
                             </div>
 
                             <div class="col-12 col-md-4">
-                                <label for="sku_code" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    SKU Code
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="sku_code" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                        SKU Code <span class="text-danger">*</span>
+                                    </label>
+                                    <span class="badge bg-light {{ $product->parent_category === 'China' ? 'text-danger' : 'text-primary' }} border">Editable</span>
+                                </div>
                                 <input type="text" name="sku_code" id="sku_code" value="{{ old('sku_code', $product->sku_code) }}" required
-                                    class="form-control font-monospace fw-bold text-primary fs-6">
+                                    class="form-control font-monospace fw-bold {{ $product->parent_category === 'China' ? 'text-danger' : 'text-primary' }} fs-6">
                             </div>
 
+                            <!-- Editable Warehouse Stock Quantity -->
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Current Warehouse Stock
-                                </label>
-                                <div class="form-control bg-light fw-bold font-monospace text-dark">
-                                    {{ $product->stock_quantity }} units
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="stock_quantity" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                        Warehouse Stock Quantity <span class="text-danger">*</span>
+                                    </label>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Editable Stock</span>
                                 </div>
+                                <div class="input-group">
+                                    <input type="number" name="stock_quantity" id="stock_quantity" 
+                                        value="{{ old('stock_quantity', $product->stock_quantity) }}" required
+                                        class="form-control fw-bold font-monospace text-dark fs-6 border-primary-subtle">
+                                    <span class="input-group-text bg-light text-secondary">units</span>
+                                </div>
+                                <div class="form-text small text-secondary">Modifying this value logs an adjustment movement in the stock ledger.</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section 3: Pricing -->
-                    <div>
+                    @if($product->parent_category === 'China')
+                    <!-- Section 3: Pricing (Only for China) -->
+                    <div id="pricing-section">
                         <h6 class="fw-bold text-secondary text-uppercase border-bottom pb-2 mb-3">
-                            <i class="bi bi-cash-coin text-primary me-1"></i> 3. Pricing Configuration (Rupees Rs.)
+                            <i class="bi bi-cash-coin text-danger me-1"></i> 3. Pricing Configuration (Rupees Rs.)
                         </h6>
 
                         <div class="row g-3">
@@ -145,7 +165,8 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-secondary">Rs.</span>
-                                    <input type="number" step="0.01" min="0" name="actual_price" id="actual_price" value="{{ old('actual_price', $product->actual_price) }}" required
+                                    <input type="number" step="0.01" min="0" name="actual_price" id="actual_price" 
+                                        value="{{ old('actual_price', $product->actual_price) }}" required
                                         class="form-control fw-bold font-monospace text-dark">
                                 </div>
                             </div>
@@ -169,12 +190,14 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-secondary">Rs.</span>
-                                    <input type="number" step="0.01" min="0" name="selling_price" id="selling_price" value="{{ old('selling_price', $product->selling_price) }}"
+                                    <input type="number" step="0.01" min="0" name="selling_price" id="selling_price" 
+                                        value="{{ old('selling_price', $product->selling_price) }}"
                                         class="form-control fw-black text-dark font-monospace fs-6">
                                 </div>
                             </div>
                         </div>
                     </div>
+                    @endif
 
                     <div class="pt-4 border-top d-flex justify-content-end gap-2">
                         <a href="{{ route('products.show', $product) }}" class="btn btn-outline-secondary">
@@ -200,6 +223,7 @@
         const sellingPriceInput = document.getElementById('selling_price');
 
         function recalc() {
+            if (!actualInput || !ruleSelect || !sellingPriceInput) return;
             const actual = parseFloat(actualInput.value) || 0;
             let pct = 35;
 
@@ -216,9 +240,12 @@
             }
         }
 
-        actualInput.addEventListener('input', recalc);
+        if (actualInput) {
+            actualInput.addEventListener('input', recalc);
+        }
+
         setTimeout(() => {
-            if (ruleSelect.tomselect) ruleSelect.tomselect.on('change', recalc);
+            if (ruleSelect && ruleSelect.tomselect) ruleSelect.tomselect.on('change', recalc);
         }, 300);
     });
 </script>

@@ -191,47 +191,6 @@
             color: #0f172a;
         }
 
-        /* Metric Summary Cards */
-        .summary-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .summary-mini-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px 12px;
-            text-align: center;
-        }
-
-        .summary-mini-card.highlight {
-            background: #eff6ff;
-            border-color: #93c5fd;
-        }
-
-        .summary-mini-card.balance {
-            background: #fef2f2;
-            border-color: #fca5a5;
-        }
-
-        .smc-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-
-        .smc-value {
-            font-size: 14px;
-            font-weight: 800;
-            font-family: monospace;
-            color: #0f172a;
-        }
-
         /* Table Design */
         .statement-table {
             width: 100%;
@@ -241,9 +200,11 @@
         }
 
         .statement-table th {
-            background-color: #0f172a;
-            color: #ffffff;
-            font-weight: 700;
+            background-color: #f8fafc;
+            color: #0f172a;
+            border-top: 1px solid #cbd5e1;
+            border-bottom: 2px solid #0f172a;
+            font-weight: 800;
             text-transform: uppercase;
             font-size: 10.5px;
             letter-spacing: 0.6px;
@@ -392,26 +353,6 @@
                 </div>
             </div>
 
-            <!-- METRIC CARDS -->
-            <div class="summary-cards-grid">
-                <div class="summary-mini-card">
-                    <div class="smc-label">Opening Balance</div>
-                    <div class="smc-value">Rs. {{ number_format($openingBalance, 2) }}</div>
-                </div>
-                <div class="summary-mini-card highlight">
-                    <div class="smc-label">Total Invoiced (Debits)</div>
-                    <div class="smc-value">Rs. {{ number_format($rangeDebits, 2) }}</div>
-                </div>
-                <div class="summary-mini-card">
-                    <div class="smc-label">Payments &amp; Returns (Credits)</div>
-                    <div class="smc-value">Rs. {{ number_format($rangeCredits, 2) }}</div>
-                </div>
-                <div class="summary-mini-card balance">
-                    <div class="smc-label">Closing Balance Due</div>
-                    <div class="smc-value text-balance">Rs. {{ number_format($closingBalance, 2) }}</div>
-                </div>
-            </div>
-
             <!-- LEDGER TRANSACTIONS TABLE -->
             <table class="statement-table">
                 <thead>
@@ -426,18 +367,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if($openingBalance > 0)
-                    <tr>
-                        <td class="fw-mono">{{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d M Y') : '—' }}</td>
-                        <td class="fw-mono">—</td>
-                        <td><span class="type-badge" style="background:#f1f5f9; color:#475569;">OPENING</span></td>
-                        <td><strong>Balance Brought Forward</strong></td>
-                        <td class="text-right fw-mono">—</td>
-                        <td class="text-right fw-mono">—</td>
-                        <td class="text-right fw-mono fw-bold">Rs. {{ number_format($openingBalance, 2) }}</td>
-                    </tr>
-                    @endif
-
                     @forelse($withBalance as $tx)
                     <tr>
                         <td class="fw-mono">{{ $tx['date_formatted'] }}</td>
@@ -447,6 +376,8 @@
                                 <span class="type-badge type-sale">SALE BILL</span>
                             @elseif($tx['type'] === 'return')
                                 <span class="type-badge type-return">RETURN</span>
+                            @elseif($tx['type'] === 'jv')
+                                <span class="type-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">JV VOUCHER</span>
                             @else
                                 <span class="type-badge type-receipt">CASH PAID</span>
                             @endif
@@ -456,6 +387,8 @@
                                 Sale Invoice ({{ $tx['items_count'] }} items)
                             @elseif($tx['type'] === 'return')
                                 Bill Return {{ $tx['related_doc_no'] ? '(Ref: ' . $tx['related_doc_no'] . ')' : '' }}
+                            @elseif($tx['type'] === 'jv')
+                                Journal Voucher {{ !empty($tx['reference_no']) ? '(Ref: ' . $tx['reference_no'] . ')' : '' }}
                             @else
                                 Payment Voucher
                             @endif

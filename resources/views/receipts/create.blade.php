@@ -51,21 +51,27 @@
 
                             <!-- Customer Selection -->
                             <div class="col-12 col-md-5">
-                                <label for="customer_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                                    Customer Account <span class="text-danger">*</span>
-                                </label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="customer_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">
+                                        Customer Account <span class="text-danger">*</span>
+                                    </label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 btn-customer-scanner" data-target="customer_id" title="Scan Customer Barcode with Camera">
+                                        <i class="bi bi-camera me-1"></i> Scan Barcode
+                                    </button>
+                                </div>
                                 <select name="customer_id" id="customer_id" required class="searchable-select form-select">
                                     <option value="">Select customer paying cash...</option>
                                     @foreach($customers as $c)
                                         <option value="{{ $c->id }}" 
                                             {{ (old('customer_id', $selectedCustomerId) == $c->id) ? 'selected' : '' }}
                                             data-name="{{ $c->name }}"
+                                            data-code="{{ $c->formatted_code }}"
                                             data-owner="{{ $c->owner_name }}"
                                             data-invoiced="{{ $c->total_invoiced }}"
                                             data-paid="{{ $c->total_paid }}"
                                             data-returned="{{ $c->total_returned }}"
                                             data-due="{{ $c->balance_due }}">
-                                            {{ $c->name }} {{ $c->owner_name ? '('.$c->owner_name.')' : '' }} — [Pending Due: Rs. {{ number_format($c->balance_due, 2) }}]
+                                            {{ $c->search_dropdown_label }} — [Pending Due: Rs. {{ number_format($c->balance_due, 2) }}]
                                         </option>
                                     @endforeach
                                 </select>
@@ -84,15 +90,17 @@
                     <!-- Live Customer Balance Preview Card -->
                     <div id="customer-balance-box" class="card border-0 bg-light p-3 rounded-3 d-none">
                         <div class="row g-3 text-center align-items-center">
+                            @if(Auth::user()->isSuperAdmin())
                             <div class="col-12 col-sm-4 border-end">
                                 <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Total Invoiced</span>
                                 <span id="disp-total-invoiced" class="h5 fw-bold font-monospace text-dark mb-0">Rs. 0.00</span>
                             </div>
-                            <div class="col-12 col-sm-4 border-end">
+                            @endif
+                            <div class="col-12 {{ Auth::user()->isSuperAdmin() ? 'col-sm-4 border-end' : 'col-sm-6 border-end' }}">
                                 <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Previously Received</span>
                                 <span id="disp-total-paid" class="h5 fw-bold font-monospace text-success mb-0">Rs. 0.00</span>
                             </div>
-                            <div class="col-12 col-sm-4">
+                            <div class="col-12 {{ Auth::user()->isSuperAdmin() ? 'col-sm-4' : 'col-sm-6' }}">
                                 <span class="text-danger small fw-bold text-uppercase d-block mb-1">Current Outstanding Due</span>
                                 <span id="disp-balance-due" class="h4 fw-black font-monospace text-danger mb-0">Rs. 0.00</span>
                             </div>
@@ -128,6 +136,8 @@
                                 </label>
                                 <select name="payment_method" id="payment_method" required class="form-select form-select-lg">
                                     <option value="cash" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Cash in Hand</option>
+                                    <option value="easypaisa" {{ old('payment_method') === 'easypaisa' ? 'selected' : '' }}>EasyPaisa</option>
+                                    <option value="jazzcash" {{ old('payment_method') === 'jazzcash' ? 'selected' : '' }}>JazzCash</option>
                                     <option value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer / Online</option>
                                     <option value="cheque" {{ old('payment_method') === 'cheque' ? 'selected' : '' }}>Bank Cheque</option>
                                     <option value="other" {{ old('payment_method') === 'other' ? 'selected' : '' }}>Other</option>
@@ -177,6 +187,8 @@
 
     </div>
 </div>
+
+@include('components.customer-barcode-scanner')
 @endsection
 
 @push('scripts')
@@ -211,9 +223,15 @@
 
                 currentCustomerDue = due;
 
-                dispInvoiced.textContent = 'Rs. ' + invoiced.toFixed(2);
-                dispPaid.textContent = 'Rs. ' + (paid + returned).toFixed(2);
-                dispDue.textContent = 'Rs. ' + due.toFixed(2);
+                if (dispInvoiced) {
+                    dispInvoiced.textContent = 'Rs. ' + invoiced.toFixed(2);
+                }
+                if (dispPaid) {
+                    dispPaid.textContent = 'Rs. ' + (paid + returned).toFixed(2);
+                }
+                if (dispDue) {
+                    dispDue.textContent = 'Rs. ' + due.toFixed(2);
+                }
 
                 balanceBox.classList.remove('d-none');
             }

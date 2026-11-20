@@ -53,6 +53,18 @@ class Product extends Model
         return "{$categoryName} ({$dozenLabel}) {$code}";
     }
 
+    /**
+     * Clean product title without pieces or product code (for Sales Invoices)
+     * e.g. "Comfort Fit"
+     */
+    public function getCleanTitleAttribute(): string
+    {
+        if ($this->category && !empty($this->category->name)) {
+            return $this->category->name;
+        }
+        return trim(preg_replace('/\s*\([^)]*(?:pieces?|pcs)[^)]*\)[^$]*/i', '', (string)$this->title));
+    }
+
     public function setProductCodeAttribute($value): void
     {
         $this->attributes['product_code'] = strtoupper(trim((string) $value));
@@ -120,9 +132,9 @@ class Product extends Model
     /**
      * Atomically adjust stock and maintain movement history.
      */
-    public function recordStockChange(int $quantityChange, string $type, ?int $referenceId = null, ?string $referenceType = null, ?string $notes = null): StockMovement
+    public function recordStockChange(int $quantityChange, string $type, ?int $referenceId = null, ?string $referenceType = null, ?string $notes = null, ?int $customerId = null): StockMovement
     {
-        return DB::transaction(function () use ($quantityChange, $type, $referenceId, $referenceType, $notes) {
+        return DB::transaction(function () use ($quantityChange, $type, $referenceId, $referenceType, $notes, $customerId) {
             $prevStock = $this->stock_quantity;
             $newStock = $prevStock + $quantityChange;
 
@@ -143,6 +155,7 @@ class Product extends Model
 
             return StockMovement::create([
                 'product_id' => $this->id,
+                'customer_id' => $customerId,
                 'type' => $type,
                 'quantity_change' => $quantityChange,
                 'previous_stock' => $prevStock,

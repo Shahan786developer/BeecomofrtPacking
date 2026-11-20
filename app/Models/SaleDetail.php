@@ -51,4 +51,17 @@ class SaleDetail extends Model
     {
         return max(0, $this->quantity - $this->returned_quantity);
     }
+
+    /**
+     * Clean product title without pieces or code (for sales invoices)
+     */
+    public function getCleanProductTitleAttribute(): string
+    {
+        if ($this->product && $this->product->category && !empty($this->product->category->name)) {
+            return $this->product->category->name;
+        }
+        $raw = $this->product_title ?? '';
+        $clean = preg_replace('/\s*\([^)]*(?:pieces?|pcs)[^)]*\)[^$]*/i', '', $raw);
+        return trim($clean ?: $raw);
+    }
 }

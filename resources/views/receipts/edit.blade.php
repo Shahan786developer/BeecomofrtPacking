@@ -34,11 +34,16 @@
                         </div>
 
                         <div class="col-12 col-md-5">
-                            <label for="customer_id" class="form-label small fw-bold text-secondary text-uppercase mb-1">Customer Account <span class="text-danger">*</span></label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="customer_id" class="form-label small fw-bold text-secondary text-uppercase mb-0">Customer Account <span class="text-danger">*</span></label>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 btn-customer-scanner" data-target="customer_id" title="Scan Customer Barcode with Camera">
+                                    <i class="bi bi-camera me-1"></i> Scan Barcode
+                                </button>
+                            </div>
                             <select name="customer_id" id="customer_id" required class="searchable-select form-select">
                                 @foreach($customers as $c)
-                                    <option value="{{ $c->id }}" {{ old('customer_id', $receipt->customer_id) == $c->id ? 'selected' : '' }}>
-                                        {{ $c->name }} {{ $c->owner_name ? '('.$c->owner_name.')' : '' }}
+                                    <option value="{{ $c->id }}" data-code="{{ $c->formatted_code }}" {{ old('customer_id', $receipt->customer_id) == $c->id ? 'selected' : '' }}>
+                                        {{ $c->search_dropdown_label }}
                                     </option>
                                 @endforeach
                             </select>
@@ -63,6 +68,8 @@
                             <label for="payment_method" class="form-label small fw-bold text-secondary text-uppercase mb-1">Payment Method <span class="text-danger">*</span></label>
                             <select name="payment_method" id="payment_method" required class="form-select form-select-lg">
                                 <option value="cash" {{ old('payment_method', $receipt->payment_method) === 'cash' ? 'selected' : '' }}>Cash in Hand</option>
+                                <option value="easypaisa" {{ old('payment_method', $receipt->payment_method) === 'easypaisa' ? 'selected' : '' }}>EasyPaisa</option>
+                                <option value="jazzcash" {{ old('payment_method', $receipt->payment_method) === 'jazzcash' ? 'selected' : '' }}>JazzCash</option>
                                 <option value="bank_transfer" {{ old('payment_method', $receipt->payment_method) === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer / Online</option>
                                 <option value="cheque" {{ old('payment_method', $receipt->payment_method) === 'cheque' ? 'selected' : '' }}>Bank Cheque</option>
                                 <option value="other" {{ old('payment_method', $receipt->payment_method) === 'other' ? 'selected' : '' }}>Other</option>
@@ -85,4 +92,6 @@
 
     </div>
 </div>
+
+@include('components.customer-barcode-scanner')
 @endsection

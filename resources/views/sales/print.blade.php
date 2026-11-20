@@ -155,37 +155,37 @@
         }
 
         .badge-bee-comfort {
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #bfdbfe;
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #000000;
         }
 
         .badge-china {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #000000;
         }
 
         .meta-details {
             margin-top: 8px;
             font-size: 12px;
-            color: #334155;
+            color: #000000;
             line-height: 1.6;
         }
 
         .meta-details strong {
             font-family: 'Courier New', Courier, monospace;
             font-size: 13px;
-            color: #0f172a;
+            color: #000000;
         }
 
         /* Customer Card */
         .info-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin-bottom: 18px;
+            background: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 4px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
         }
 
         .info-card-header {
@@ -193,21 +193,21 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #64748b;
+            color: #000000;
             margin-bottom: 6px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #000000;
             padding-bottom: 4px;
         }
 
         .customer-company {
             font-size: 16px;
             font-weight: 700;
-            color: #0f172a;
+            color: #000000;
         }
 
         .info-row {
             font-size: 12px;
-            color: #334155;
+            color: #000000;
             margin-top: 3px;
             display: flex;
             align-items: baseline;
@@ -216,7 +216,7 @@
 
         .info-label {
             font-size: 11px;
-            color: #64748b;
+            color: #333333;
             min-width: 60px;
         }
 
@@ -228,15 +228,15 @@
         }
 
         .items-table th {
-            background: #0f172a;
-            color: #ffffff;
+            background: #ffffff;
+            color: #000000;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             padding: 8px 10px;
             text-align: left;
-            border: 1px solid #0f172a;
+            border: 1px solid #000000;
         }
 
         .items-table th.text-center, .items-table td.text-center {
@@ -249,18 +249,18 @@
 
         .items-table td {
             padding: 8px 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #000000;
             font-size: 12px;
-            color: #1e293b;
+            color: #000000;
         }
 
         .items-table tbody tr:nth-child(even) {
-            background-color: #f8fafc;
+            background-color: #ffffff;
         }
 
         .item-title {
-            font-weight: 600;
-            color: #0f172a;
+            font-weight: 700;
+            color: #000000;
             font-size: 12.5px;
         }
 
@@ -324,14 +324,17 @@
         }
 
         .totals-table tr.total-row {
-            background: #0f172a;
-            color: #ffffff;
+            background: #ffffff;
+            color: #000000;
+            border-top: 2px solid #000000;
+            border-bottom: 2px solid #000000;
         }
 
         .totals-table tr.total-row td {
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 800;
             padding: 8px 10px;
+            color: #000000;
         }
 
         .totals-table .amount {
@@ -395,17 +398,37 @@
             }
 
             .items-table th {
-                background-color: #0f172a !important;
-                color: #ffffff !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+                border: 1px solid #000000 !important;
+            }
+
+            .items-table td {
+                border: 1px solid #000000 !important;
+                color: #000000 !important;
+                background: #ffffff !important;
             }
 
             .totals-table tr.total-row {
-                background-color: #0f172a !important;
-                color: #ffffff !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+                border-top: 2px solid #000000 !important;
+                border-bottom: 2px solid #000000 !important;
+            }
+
+            .totals-table tr.total-row td {
+                color: #000000 !important;
             }
 
             .bill-badge {
-                border-color: #94a3b8 !important;
+                border: 1px solid #000000 !important;
+                color: #000000 !important;
+                background: #ffffff !important;
+            }
+
+            .info-card {
+                background: #ffffff !important;
+                border: 1px solid #000000 !important;
             }
         }
     </style>
@@ -444,7 +467,20 @@
                         <div class="brand-tagline">{{ $company->tagline }}</div>
                     @endif
                     <div class="brand-contact">
-                        {{ $company->address ?? 'Warehouse • Pakistan' }} &bull; {{ $company->email ?? 'orders@beecomfort.com' }}
+                        @if(!empty($company->address))
+                            <div>{{ $company->address }}</div>
+                        @endif
+                        <div>
+                            @if(!empty($company->phone))
+                                <span>Phone: {{ $company->phone }}</span>
+                            @endif
+                            @if(!empty($company->phone) && !empty($company->email))
+                                &bull;
+                            @endif
+                            @if(!empty($company->email))
+                                <span>{{ $company->email }}</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -469,17 +505,10 @@
                 <div class="info-card-header">Bill To Customer / Buyer</div>
                 <div class="customer-company">{{ $sale->customer->name }}</div>
                 
-                @if($sale->customer->owner_name)
+                @if($sale->customer->phone)
                     <div class="info-row">
-                        <span class="info-label">Owner:</span>
-                        <strong>{{ $sale->customer->owner_name }}</strong>
-                    </div>
-                @endif
-
-                @if($sale->customer->city)
-                    <div class="info-row">
-                        <span class="info-label">City:</span>
-                        <span>{{ $sale->customer->city }}</span>
+                        <span class="info-label">Phone:</span>
+                        <strong>{{ $sale->customer->phone }}</strong>
                     </div>
                 @endif
 
@@ -491,12 +520,12 @@
                 @endif
             </div>
 
-            <!-- Items Table (SKU Column Removed) -->
+            <!-- Items Table (Clean Product Title, No pieces/code inside title) -->
             <table class="items-table">
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 35px;">#</th>
-                        <th>Product Title &amp; Unified Specification</th>
+                        <th>Product Title</th>
                         <th class="text-center" style="width: 90px;">Unit Pack</th>
                         <th class="text-center" style="width: 70px;">Qty</th>
                         <th class="text-right" style="width: 110px;">Rate (Rs.)</th>
@@ -508,10 +537,7 @@
                     <tr>
                         <td class="text-center font-monospace">{{ $index + 1 }}</td>
                         <td>
-                            <div class="item-title">{{ $item->product_title }}</div>
-                            <div class="item-subtext">
-                                Code: {{ $item->product->product_code ?? '—' }} &bull; Category: {{ $item->product->category->name ?? '—' }}
-                            </div>
+                            <div class="item-title">{{ $item->clean_product_title }}</div>
                         </td>
                         <td class="text-center small">{{ $item->product->dozen->label ?? 'Unit' }}</td>
                         <td class="text-center font-monospace" style="font-weight: 700;">{{ $item->quantity }}</td>
@@ -549,10 +575,26 @@
                             <td class="amount">- Rs. {{ number_format($sale->discount, 2) }}</td>
                         </tr>
                         @endif
-                        <tr class="total-row">
-                            <td>Grand Total:</td>
-                            <td class="amount">Rs. {{ number_format($sale->total_amount, 2) }}</td>
-                        </tr>
+
+                        @if($sale->show_previous_balance)
+                            <tr>
+                                <td>Current Bill:</td>
+                                <td class="amount">Rs. {{ number_format($sale->total_amount, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Previous Balance:</td>
+                                <td class="amount">Rs. {{ number_format($sale->previous_balance, 2) }}</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>Total Payable:</td>
+                                <td class="amount">Rs. {{ number_format($sale->total_amount + $sale->previous_balance, 2) }}</td>
+                            </tr>
+                        @else
+                            <tr class="total-row">
+                                <td>Grand Total:</td>
+                                <td class="amount">Rs. {{ number_format($sale->total_amount, 2) }}</td>
+                            </tr>
+                        @endif
                     </table>
                 </div>
             </div>

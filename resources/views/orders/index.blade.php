@@ -190,12 +190,14 @@
             </div>
             <p class="text-secondary small mb-0 mt-1">Book customer articles by Cup, Color, and 10-size matrix breakdown (32 to 50) with clean grouping.</p>
         </div>
+        @if(Auth::user()->hasPermission('orders', 'create'))
         <div class="d-flex align-items-center gap-2">
             <a href="{{ route('orders.create') }}" class="btn btn-primary px-3 shadow-sm d-inline-flex align-items-center gap-2">
                 <i class="bi bi-plus-circle-fill"></i>
                 <span>Book New Order</span>
             </a>
         </div>
+        @endif
     </div>
 
     <!-- QUICK METRIC SUMMARY CARDS -->
@@ -262,7 +264,7 @@
         <div class="fw-bold text-dark small mb-2"><i class="bi bi-funnel me-1 text-primary"></i> Filter Orders</div>
         <form method="GET" action="{{ route('orders.index') }}" class="row g-2 align-items-end">
             <!-- Voucher / Order No Dropdown & Search -->
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-2">
                 <label class="form-label small fw-bold text-secondary mb-1">Voucher No</label>
                 <div class="input-group input-group-sm">
                     <select name="order_no" class="form-select form-select-sm">
@@ -277,17 +279,32 @@
             </div>
 
             <!-- Customer with Code -->
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-2">
                 <label class="form-label small fw-bold text-secondary mb-1">Customer</label>
                 <select name="customer_id" class="form-select form-select-sm">
                     <option value="">All Customers</option>
                     @foreach($customers as $c)
                         <option value="{{ $c->id }}" {{ request('customer_id') == $c->id ? 'selected' : '' }}>
-                            {{ $c->name }} ({{ $c->formatted_code }})
+                            {{ $c->search_dropdown_label }}
                         </option>
                     @endforeach
                 </select>
             </div>
+
+            @if(Auth::user()->isSuperAdmin())
+            <!-- Filter by User (Super Admin only) -->
+            <div class="col-12 col-sm-6 col-md-2">
+                <label class="form-label small fw-bold text-secondary mb-1">Created By (User)</label>
+                <select name="user_id" class="form-select form-select-sm">
+                    <option value="">All Users</option>
+                    @foreach($users as $u)
+                        <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>
+                            {{ $u->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
 
             <!-- Start Date -->
             <div class="col-6 col-md-2">
@@ -317,7 +334,7 @@
                 <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold" title="Apply Filter">
                     <i class="bi bi-funnel-fill"></i>
                 </button>
-                @if(request()->anyFilled(['order_no', 'customer_id', 'status', 'start_date', 'end_date']))
+                @if(request()->anyFilled(['order_no', 'customer_id', 'user_id', 'status', 'start_date', 'end_date']))
                     <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
                         <i class="bi bi-x-lg"></i>
                     </a>
@@ -375,6 +392,11 @@
                             <tr class="order-group-first-row">
                                 <td rowspan="{{ $rowCount }}" class="cell-order-header text-start">
                                     <span class="badge bg-primary font-monospace fs-7 px-2.5 py-1.5">{{ $order->order_no }}</span>
+                                    @if(Auth::user()->isSuperAdmin() && $order->user)
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle mt-1 d-block text-truncate" style="max-width: 100px;" title="Created by {{ $order->user->name }}">
+                                            <i class="bi bi-person me-1"></i>{{ $order->user->name }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td rowspan="{{ $rowCount }}" class="cell-order-header text-center">
                                     <span class="fw-semibold text-secondary small font-monospace">
@@ -427,12 +449,17 @@
                                 <!-- Actions Rowspan -->
                                 <td rowspan="{{ $rowCount }}" class="cell-order-header text-center" style="white-space: nowrap;">
                                     <div class="d-flex align-items-center justify-content-center gap-1.5 flex-wrap">
+                                        @if(Auth::user()->hasPermission('orders', 'update'))
                                         <a href="{{ route('orders.edit', $order) }}" class="btn-action-pill btn-edit-pill" title="Edit Order">
                                             ✏️ Edit
                                         </a>
+                                        @endif
+                                        @if(Auth::user()->hasPermission('orders', 'print'))
                                         <a href="{{ route('orders.print', $order) }}" class="btn-action-pill btn-view-pill" title="View / Print Receipt" target="_blank">
                                             👁️ View
                                         </a>
+                                        @endif
+                                        @if(Auth::user()->hasPermission('orders', 'delete'))
                                         <form method="POST" action="{{ route('orders.destroy', $order) }}" class="d-inline" onsubmit="return confirm('Delete Order {{ $order->order_no }}?');">
                                             @csrf
                                             @method('DELETE')
@@ -440,6 +467,7 @@
                                                 🗑️ Delete
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -496,8 +524,21 @@
                                 <td class="text-center"><span class="badge-qty-total">0</span></td>
                                 <td class="cell-order-header text-center" style="white-space: nowrap;">
                                     <div class="d-flex align-items-center justify-content-center gap-1.5 flex-wrap">
+                                        @if(Auth::user()->hasPermission('orders', 'update'))
                                         <a href="{{ route('orders.edit', $order) }}" class="btn-action-pill btn-edit-pill">✏️ Edit</a>
+                                        @endif
+                                        @if(Auth::user()->hasPermission('orders', 'print'))
                                         <a href="{{ route('orders.print', $order) }}" class="btn-action-pill btn-view-pill" target="_blank">👁️ View</a>
+                                        @endif
+                                        @if(Auth::user()->hasPermission('orders', 'delete'))
+                                        <form method="POST" action="{{ route('orders.destroy', $order) }}" class="d-inline" onsubmit="return confirm('Delete Order {{ $order->order_no }}?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-delete-pill" title="Delete Order">
+                                                🗑️ Delete
+                                            </button>
+                                        </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

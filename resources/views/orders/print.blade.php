@@ -293,7 +293,10 @@
             <!-- HEADER -->
             <div class="header-top">
                 <div>
-                    <div class="company-name">{{ $companyProfile->company_name ?? 'BEE COMFORT' }}</div>
+                    @if(!empty($companyProfile->logo) && file_exists(public_path($companyProfile->logo)))
+                        <img src="{{ asset($companyProfile->logo) }}" alt="{{ $companyProfile->name ?? 'Bee Comfort' }}" style="max-height: 50px; max-width: 180px; object-fit: contain; margin-bottom: 6px; display: block;">
+                    @endif
+                    <div class="company-name">{{ $companyProfile->name ?? 'BEE COMFORT' }}</div>
                     <div class="company-subtitle">{{ $companyProfile->tagline ?? 'Packing & Garments Solutions • Hashmi Brothers' }}</div>
                     <div class="company-contacts">
                         {{ $companyProfile->address ?? 'Warehouse • Pakistan' }}<br>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
 use App\Models\PricingRule;
 use App\Models\Product;
 use App\Models\Sale;
@@ -138,6 +139,25 @@ class ApiController extends Controller
             'customer_name' => $sale->customer->name,
             'invoice_date' => $sale->invoice_date->format('Y-m-d'),
             'items' => $items,
+        ]);
+    }
+
+    /**
+     * Get live customer balance from ledger
+     */
+    public function getCustomerBalance(Customer $customer)
+    {
+        $balance = $customer->getPreviousBalance();
+        return response()->json([
+            'found' => true,
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->name,
+            'owner_name' => $customer->owner_name,
+            'city' => $customer->city,
+            'phone' => $customer->phone,
+            'previous_balance' => (float) $balance,
+            'balance' => (float) $balance,
+            'formatted_balance' => number_format($balance, 2),
         ]);
     }
 }

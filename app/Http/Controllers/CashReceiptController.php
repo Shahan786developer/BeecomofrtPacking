@@ -5,17 +5,44 @@ namespace App\Http\Controllers;
 use App\Models\CashReceipt;
 use App\Models\CompanyProfile;
 use App\Models\Customer;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CashReceiptController extends Controller
 {
     public function index(Request $request)
     {
-        $query = CashReceipt::with('customer');
+        $currentUser = Auth::user();
+        $isSuperAdmin = $currentUser->isSuperAdmin();
+
+        $query = CashReceipt::with(['customer', 'user']);
+        $totalQuery = CashReceipt::query();
+
+        // Scope to user if not Super Admin
+        if (!$isSuperAdmin) {
+            $query->where('user_id', $currentUser->id);
+            $totalQuery->where('user_id', $currentUser->id);
+        } else {
+            // Super Admin user filter
+            if ($request->filled('user_id') && $request->user_id !== 'all') {
+                $query->where('user_id', $request->user_id);
+                $totalQuery->where('user_id', $request->user_id);
+            }
+        }
+
+        // Default to Today if no specific date range or search is supplied
+        $todayStr = Carbon::today()->toDateString();
+        $hasCustomDate = $request->filled('from_date') || $request->filled('to_date');
+        $hasExplicitAll = $request->has('all_dates') && $request->all_dates == '1';
+
+        $isDefaultToday = !$hasCustomDate && !$hasExplicitAll;
+        $fromDate = $request->filled('from_date') ? $request->input('from_date') : ($isDefaultToday ? $todayStr : null);
+        $toDate = $request->filled('to_date') ? $request->input('to_date') : ($isDefaultToday ? $todayStr : null);
 
         if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
+            $searchFilter = function ($q) use ($search) {
                 $q->where('voucher_no', 'like', "%{$search}%")
                   ->orWhere('notes', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
@@ -23,26 +50,32 @@ class CashReceiptController extends Controller
                          ->orWhere('owner_name', 'like', "%{$search}%")
                          ->orWhere('phone', 'like', "%{$search}%");
                   });
-            });
+            };
+            $query->where($searchFilter);
+            $totalQuery->where($searchFilter);
         }
 
         if ($customerId = $request->input('customer_id')) {
             $query->where('customer_id', $customerId);
+            $totalQuery->where('customer_id', $customerId);
         }
 
-        if ($fromDate = $request->input('from_date')) {
+        if ($fromDate) {
             $query->whereDate('payment_date', '>=', $fromDate);
+            $totalQuery->whereDate('payment_date', '>=', $fromDate);
         }
 
-        if ($toDate = $request->input('to_date')) {
+        if ($toDate) {
             $query->whereDate('payment_date', '<=', $toDate);
+            $totalQuery->whereDate('payment_date', '<=', $toDate);
         }
 
         $receipts = $query->orderByDesc('id')->paginate(15)->withQueryString();
-        $totalCollected = (float) CashReceipt::sum('amount');
+        $totalCollected = (float) $totalQuery->sum('amount');
         $customers = Customer::orderBy('name')->get();
+        $users = $isSuperAdmin ? User::orderBy('name')->get() : collect();
 
-        return view('receipts.index', compact('receipts', 'totalCollected', 'customers'));
+        return view('receipts.index', compact('receipts', 'totalCollected', 'customers', 'users', 'fromDate', 'toDate', 'isDefaultToday'));
     }
 
     public function create(Request $request)
@@ -69,6 +102,8 @@ class CashReceiptController extends Controller
             'amount.min' => 'Payment amount must be greater than zero.',
         ]);
 
+        $validated['user_id'] = Auth::id();
+
         $receipt = CashReceipt::create($validated);
         $customer = $receipt->customer;
 
@@ -86,20 +121,36 @@ class CashReceiptController extends Controller
 
     public function show(CashReceipt $receipt)
     {
-        $receipt->load('customer');
+        $this->checkReceiptOwnership($receipt);
+
+        $receipt->load(['customer', 'user']);
         $company = CompanyProfile::getActive();
 
         return view('receipts.show', compact('receipt', 'company'));
     }
 
+    public function print(CashReceipt $receipt)
+    {
+        $this->checkReceiptOwnership($receipt);
+
+        $receipt->load(['customer', 'user']);
+        $company = CompanyProfile::getActive();
+
+        return view('receipts.print', compact('receipt', 'company'));
+    }
+
     public function edit(CashReceipt $receipt)
     {
+        $this->checkReceiptOwnership($receipt);
+
         $customers = Customer::orderBy('name')->get();
         return view('receipts.edit', compact('receipt', 'customers'));
     }
 
     public function update(Request $request, CashReceipt $receipt)
     {
+        $this->checkReceiptOwnership($receipt);
+
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'payment_date' => 'required|date',
@@ -116,10 +167,22 @@ class CashReceiptController extends Controller
 
     public function destroy(CashReceipt $receipt)
     {
+        $this->checkReceiptOwnership($receipt);
+
         $voucherNo = $receipt->voucher_no;
         $receipt->delete();
 
         return redirect()->route('receipts.index')
             ->with('success', "Cash Receipt {$voucherNo} removed successfully.");
+    }
+
+    /**
+     * Enforce ownership check: users only access their own vouchers.
+     */
+    protected function checkReceiptOwnership(CashReceipt $receipt): void
+    {
+        if (!Auth::user()->isSuperAdmin() && $receipt->user_id && $receipt->user_id != Auth::id()) {
+            abort(403, 'Unauthorized access: You are only allowed to view and manage your own cash receipt vouchers.');
+        }
     }
 }

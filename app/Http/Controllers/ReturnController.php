@@ -13,12 +13,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 class ReturnController extends Controller
 {
     public function index(Request $request)
     {
+        $currentUser = Auth::user();
+        $isSuperAdmin = $currentUser->isSuperAdmin();
+
         $returnType = $request->input('return_type'); // null, 'all', 'bee_comfort', or 'china'
-        $query = ReturnRecord::with(['customer', 'sale', 'details']);
+        $query = ReturnRecord::with(['customer', 'sale', 'details', 'user']);
+        $countsQuery = ReturnRecord::query();
+
+        // Scope to user if not Super Admin
+        if (!$isSuperAdmin) {
+            $query->where('user_id', $currentUser->id);
+            $countsQuery->where('user_id', $currentUser->id);
+        } else {
+            // Super Admin user filter
+            if ($request->filled('user_id') && $request->user_id !== 'all') {
+                $query->where('user_id', $request->user_id);
+                $countsQuery->where('user_id', $request->user_id);
+            }
+        }
 
         if ($returnType && in_array($returnType, ['bee_comfort', 'china'])) {
             $query->where('return_type', $returnType);
@@ -48,11 +67,12 @@ class ReturnController extends Controller
 
         $returns = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
-        $beeComfortCount = ReturnRecord::where('return_type', 'bee_comfort')->count();
-        $chinaCount = ReturnRecord::where('return_type', 'china')->count();
-        $allCount = ReturnRecord::count();
+        $beeComfortCount = (clone $countsQuery)->where('return_type', 'bee_comfort')->count();
+        $chinaCount = (clone $countsQuery)->where('return_type', 'china')->count();
+        $allCount = (clone $countsQuery)->count();
+        $users = $isSuperAdmin ? User::orderBy('name')->get() : collect();
 
-        return view('returns.index', compact('returns', 'returnType', 'beeComfortCount', 'chinaCount', 'allCount'));
+        return view('returns.index', compact('returns', 'returnType', 'beeComfortCount', 'chinaCount', 'allCount', 'users'));
     }
 
     public function create(Request $request)
@@ -156,6 +176,7 @@ class ReturnController extends Controller
             $returnType = !empty($validated['return_type']) ? $validated['return_type'] : 'bee_comfort';
 
             $return = ReturnRecord::create([
+                'user_id' => Auth::id(),
                 'return_no' => trim($validated['return_no']),
                 'return_type' => $returnType,
                 'sale_id' => $request->input('sale_id') ?: null,
@@ -220,12 +241,14 @@ class ReturnController extends Controller
 
     public function show(ReturnRecord $return)
     {
-        $return->load(['customer', 'sale', 'details.product.category', 'details.product.dozen']);
+        $this->checkReturnOwnership($return);
+        $return->load(['customer', 'sale', 'details.product.category', 'details.product.dozen', 'user']);
         return view('returns.show', compact('return'));
     }
 
     public function edit(ReturnRecord $return)
     {
+        $this->checkReturnOwnership($return);
         $customers = Customer::orderBy('name')->get();
         $return->load(['customer', 'details.product']);
 
@@ -248,6 +271,8 @@ class ReturnController extends Controller
 
     public function update(Request $request, ReturnRecord $return)
     {
+        $this->checkReturnOwnership($return);
+
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'return_date' => 'required|date',
@@ -344,5 +369,15 @@ class ReturnController extends Controller
 
         return redirect()->route('returns.index', $redirectParams)
             ->with('success', "Return record #{$return->return_no} updated successfully.");
+    }
+
+    /**
+     * Enforce data ownership: regular users can only access their own return records.
+     */
+    protected function checkReturnOwnership(ReturnRecord $return): void
+    {
+        if (!Auth::user()->isSuperAdmin() && $return->user_id && $return->user_id != Auth::id()) {
+            abort(403, 'Unauthorized access: You are only allowed to view and manage your own bill return records.');
+        }
     }
 }

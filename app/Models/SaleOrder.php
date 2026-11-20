@@ -13,6 +13,7 @@ class SaleOrder extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'order_no',
         'customer_id',
         'order_date',
@@ -27,6 +28,11 @@ class SaleOrder extends Model
         'total_quantity' => 'integer',
         'total_amount' => 'decimal:2',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function customer(): BelongsTo
     {

@@ -15,6 +15,7 @@
             <h1 class="h4 fw-bold text-dark mb-0">Customer Bill Returns</h1>
             <p class="text-secondary small mb-0">Merchandise returns, separate China and Bee Comfort bill returns, and stock restorations.</p>
         </div>
+        @if(Auth::user()->hasPermission('returns', 'create'))
         <div class="d-flex flex-wrap align-items-center gap-2">
             <a href="{{ route('returns.create') }}" class="btn btn-warning fw-bold text-dark shadow-sm">
                 <i class="bi bi-arrow-counterclockwise me-1"></i> + New Bill Return
@@ -26,6 +27,7 @@
                 + China
             </a>
         </div>
+        @endif
     </div>
 
     <!-- CONTROLS & TABS: BEE COMFORT RETURNS VS CHINA RETURNS -->
@@ -34,7 +36,7 @@
             <div class="row g-2 align-items-center">
                 <!-- Search Functionality Above -->
                 <div class="col-12 col-md-9 col-lg-10">
-                    <form method="GET" action="{{ route('returns.index') }}" class="d-flex gap-2">
+                    <form method="GET" action="{{ route('returns.index') }}" class="d-flex flex-wrap flex-md-nowrap gap-2">
                         @if(request('return_type'))
                             <input type="hidden" name="return_type" value="{{ request('return_type') }}">
                         @endif
@@ -43,15 +45,29 @@
                                 <i class="bi bi-search"></i>
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}" 
-                                placeholder="Search by return #, original invoice #, or customer/owner name..." 
+                                placeholder="Search by return #, invoice #, or customer..." 
                                 class="form-control border-start-0 ps-0" autocomplete="off">
                         </div>
+
+                        @if(Auth::user()->isSuperAdmin())
+                        <select name="user_id" class="form-select" style="min-width: 150px; max-width: 190px;" onchange="this.form.submit()">
+                            <option value="">All Users...</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>
+                                    {{ $u->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @endif
+
                         <button type="submit" class="btn btn-primary fw-bold px-3">
                             Search
                         </button>
-                        <a href="{{ route('returns.index', request('return_type') ? ['return_type' => request('return_type')] : []) }}" class="btn btn-outline-secondary btn-clear-search {{ request('search') ? '' : 'd-none' }}" title="Clear Search">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
+                        @if(request()->anyFilled(['search', 'user_id']))
+                            <a href="{{ route('returns.index', request('return_type') ? ['return_type' => request('return_type')] : []) }}" class="btn btn-outline-secondary btn-clear-search" title="Clear Search">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        @endif
                     </form>
                 </div>
 
@@ -121,6 +137,11 @@
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-0.5 px-1.5" style="font-size: 0.7rem;">Bee Comfort</span>
                                 @endif
                             </div>
+                            @if(Auth::user()->isSuperAdmin() && $ret->user)
+                                <span class="badge bg-light text-secondary border font-monospace mt-1 d-block text-truncate" style="max-width: 120px;" title="Created by {{ $ret->user->name }}">
+                                    <i class="bi bi-person me-1"></i>{{ $ret->user->name }}
+                                </span>
+                            @endif
                         </td>
 
                         <!-- Original Invoice / Reference -->
@@ -167,9 +188,11 @@
                                 <a href="{{ route('returns.show', $ret) }}" class="btn btn-sm btn-outline-info" title="View Return Receipt">
                                     <i class="bi bi-eye me-1"></i> View
                                 </a>
+                                @if(Auth::user()->hasPermission('returns', 'update'))
                                 <a href="{{ route('returns.edit', $ret) }}" class="btn btn-sm btn-outline-primary" title="Edit Return">
                                     <i class="bi bi-pencil me-1"></i> Edit
                                 </a>
+                                @endif
                             </div>
                         </td>
                     </tr>

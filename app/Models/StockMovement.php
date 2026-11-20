@@ -12,6 +12,7 @@ class StockMovement extends Model
 
     protected $fillable = [
         'product_id',
+        'customer_id',
         'type',
         'quantity_change',
         'previous_stock',
@@ -22,6 +23,7 @@ class StockMovement extends Model
     ];
 
     protected $casts = [
+        'customer_id' => 'integer',
         'quantity_change' => 'integer',
         'previous_stock' => 'integer',
         'new_stock' => 'integer',
@@ -30,5 +32,10 @@ class StockMovement extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 }

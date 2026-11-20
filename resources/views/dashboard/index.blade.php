@@ -10,35 +10,40 @@
 <div class="d-flex flex-column gap-4">
 
     <!-- PAGE HEADER -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Executive Dashboard</h1>
-            <p class="text-secondary small mb-0">Real-time inventory levels, customer billing, gross profit, and Bee Comfort vs China comparison.</p>
+            <p class="text-secondary small mb-0">
+                Showing data for: <strong class="text-primary">{{ $periodLabel }}</strong> &bull; Billing, gross profit, and Bee Comfort vs China comparison.
+            </p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('receipts.create') }}" class="btn btn-success fw-bold shadow-sm">
-                <i class="bi bi-cash-stack me-1"></i> Receive Cash (CRV)
-            </a>
-            <div class="dropdown">
-                <button class="btn btn-primary shadow-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-cart-plus me-1"></i> New Sales Bill
-                </button>
-                <ul class="dropdown-menu shadow border-0">
-                    <li>
-                        <a class="dropdown-item py-2 fw-semibold text-primary" href="{{ route('sales.create', ['bill_type' => 'bee_comfort']) }}">
-                            <i class="bi bi-receipt me-1"></i> New Bee Comfort Bill
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item py-2 fw-semibold text-danger" href="{{ route('sales.create', ['bill_type' => 'china']) }}">
-                            <i class="bi bi-box-seam me-1"></i> New China Bill
-                        </a>
-                    </li>
-                </ul>
+        <!-- PERIOD FILTER BUTTONS -->
+        <div class="d-flex align-items-center bg-white p-1 rounded-3 shadow-sm border">
+            <span class="text-secondary small fw-bold px-2 d-none d-sm-inline">
+                <i class="bi bi-calendar3 me-1"></i> Period:
+            </span>
+            <div class="btn-group" role="group" aria-label="Dashboard Period Filters">
+                <a href="{{ route('dashboard', ['period' => 'today']) }}" 
+                   class="btn btn-sm {{ $period === 'today' ? 'btn-primary fw-bold shadow-sm' : 'btn-light text-secondary fw-semibold' }}">
+                    Today
+                </a>
+                <a href="{{ route('dashboard', ['period' => '7_days']) }}" 
+                   class="btn btn-sm {{ $period === '7_days' ? 'btn-primary fw-bold shadow-sm' : 'btn-light text-secondary fw-semibold' }}">
+                    7 Days
+                </a>
+                <a href="{{ route('dashboard', ['period' => 'month']) }}" 
+                   class="btn btn-sm {{ $period === 'month' ? 'btn-primary fw-bold shadow-sm' : 'btn-light text-secondary fw-semibold' }}">
+                    Month
+                </a>
+                <a href="{{ route('dashboard', ['period' => '6_months']) }}" 
+                   class="btn btn-sm {{ $period === '6_months' ? 'btn-primary fw-bold shadow-sm' : 'btn-light text-secondary fw-semibold' }}">
+                    6 Months
+                </a>
+                <a href="{{ route('dashboard', ['period' => 'year']) }}" 
+                   class="btn btn-sm {{ $period === 'year' ? 'btn-primary fw-bold shadow-sm' : 'btn-light text-secondary fw-semibold' }}">
+                    Year
+                </a>
             </div>
-            <a href="{{ route('products.create') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-plus-lg me-1"></i> Add Product
-            </a>
         </div>
     </div>
 
@@ -471,7 +476,7 @@
                 <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="fw-bold text-dark mb-0">Sales &amp; Returns Activity</h5>
-                        <span class="text-secondary small">Transactions over the last 7 days</span>
+                        <span class="text-secondary small">Transactions for {{ $periodLabel }}</span>
                     </div>
                     <div class="d-flex align-items-center gap-3 small">
                         <span class="d-flex align-items-center gap-1 text-primary fw-bold">

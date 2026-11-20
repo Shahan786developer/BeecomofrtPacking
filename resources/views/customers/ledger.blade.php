@@ -65,15 +65,24 @@
 
                 <!-- Action Buttons: Receive Cash, New Invoice, Statement Print -->
                 <div class="d-flex flex-wrap gap-2 no-print">
+                    @if(Auth::user()->hasPermission('receipts', 'create'))
                     <a href="{{ route('receipts.create', ['customer_id' => $customer->id, 'redirect_to' => 'customer_ledger']) }}" class="btn btn-success fw-bold shadow-sm">
                         <i class="bi bi-cash-stack me-1"></i> Receive Cash (CRV)
                     </a>
+                    @endif
+                    <a href="{{ route('vouchers.create', ['customer_id' => $customer->id, 'redirect_to' => 'customer_ledger']) }}" class="btn btn-warning fw-bold shadow-sm text-dark">
+                        <i class="bi bi-journal-plus me-1"></i> New JV Voucher
+                    </a>
+                    @if(Auth::user()->hasPermission('sales', 'create'))
                     <a href="{{ route('sales.create', ['customer_id' => $customer->id]) }}" class="btn btn-primary fw-bold shadow-sm">
                         <i class="bi bi-cart-plus me-1"></i> New Invoice
                     </a>
+                    @endif
+                    @if(Auth::user()->hasPermission('customers', 'print'))
                     <a href="{{ route('customers.print-statement', ['customer' => $customer->id, 'start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank" class="btn btn-outline-dark fw-bold">
                         <i class="bi bi-printer me-1"></i> Print Statement
                     </a>
+                    @endif
                     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-1"></i> Back
                     </a>
@@ -188,7 +197,6 @@
         <div>
             <i class="bi bi-info-circle me-1"></i>
             Filtered Period: <strong>{{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d M Y') : 'Start' }}</strong> to <strong>{{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d M Y') : 'Today' }}</strong>
-            &bull; Opening Balance: <strong>Rs. {{ number_format($openingBalance, 2) }}</strong>
         </div>
         <div>
             Period Debits: <strong class="text-dark">Rs. {{ number_format($rangeDebits, 2) }}</strong> &bull;
@@ -246,6 +254,10 @@
                         class="btn btn-sm {{ $typeFilter === 'receipt' ? 'btn-success' : 'btn-outline-secondary' }} fw-bold">
                         CRV ({{ $allTransactions->where('type', 'receipt')->count() }})
                     </a>
+                    <a href="{{ route('customers.ledger', array_merge($baseParams, ['type' => 'jv'])) }}" 
+                        class="btn btn-sm {{ $typeFilter === 'jv' ? 'btn-warning text-dark' : 'btn-outline-secondary' }} fw-bold">
+                        JV ({{ $allTransactions->where('type', 'jv')->count() }})
+                    </a>
                     <a href="{{ route('customers.ledger', array_merge($baseParams, ['type' => 'return'])) }}" 
                         class="btn btn-sm {{ $typeFilter === 'return' ? 'btn-danger' : 'btn-outline-secondary' }} fw-bold">
                         Returns ({{ $allTransactions->where('type', 'return')->count() }})
@@ -283,25 +295,6 @@
                         </tr>
                     </thead>
                     <tbody class="border-top-0">
-                        @if($openingBalance > 0 && $startDate)
-                        <tr class="table-light">
-                            <td class="ps-4 py-3 font-monospace small">
-                                <strong>{{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}</strong>
-                            </td>
-                            <td class="py-3">
-                                <span class="badge bg-secondary text-uppercase fw-bold px-2 py-1">Opening</span>
-                            </td>
-                            <td class="py-3 font-monospace text-muted">—</td>
-                            <td class="py-3 text-dark fw-semibold">Balance Brought Forward</td>
-                            <td class="py-3 text-end font-monospace text-muted">—</td>
-                            <td class="py-3 text-end font-monospace text-muted">—</td>
-                            <td class="py-3 text-end font-monospace fw-bold text-dark">
-                                Rs. {{ number_format($openingBalance, 2) }}
-                            </td>
-                            <td class="pe-4 py-3 text-end no-print">—</td>
-                        </tr>
-                        @endif
-
                         @forelse($filteredTransactions as $tx)
                         <tr>
                             <!-- Date & Time -->

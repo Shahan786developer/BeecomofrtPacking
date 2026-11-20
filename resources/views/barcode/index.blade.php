@@ -22,6 +22,20 @@
         </div>
     </div>
 
+    <!-- Mode Tabs -->
+    <ul class="nav nav-pills gap-2 bg-white p-2 rounded-3 shadow-sm border">
+        <li class="nav-item">
+            <a class="nav-link active fw-bold" href="{{ route('barcode.index') }}">
+                <i class="bi bi-boxes me-1"></i> Product Barcodes (32&times;22mm)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-secondary" href="{{ route('barcode.customer') }}">
+                <i class="bi bi-person-badge me-1"></i> Customer Barcodes (32&times;22mm)
+            </a>
+        </li>
+    </ul>
+
     <!-- Main Grid -->
     <div class="row g-4 items-start">
 

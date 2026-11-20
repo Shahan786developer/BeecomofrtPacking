@@ -11,6 +11,7 @@ class CashReceipt extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'voucher_no',
         'customer_id',
         'payment_date',
@@ -23,6 +24,11 @@ class CashReceipt extends Model
         'payment_date' => 'date',
         'amount' => 'float',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function customer(): BelongsTo
     {

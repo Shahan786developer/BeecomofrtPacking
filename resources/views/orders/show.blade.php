@@ -23,12 +23,16 @@
             <p class="text-secondary small mb-0 mt-1">Booked for {{ $order->customer->name ?? 'Walk-in' }} ({{ $order->customer->formatted_code ?? 'B000' }}) on {{ $order->order_date ? $order->order_date->format('d/m/Y') : '-' }}</p>
         </div>
         <div class="d-flex gap-2">
+            @if(Auth::user()->hasPermission('orders', 'print'))
             <a href="{{ route('orders.print', $order) }}" class="btn btn-outline-primary btn-sm px-3" target="_blank">
                 <i class="bi bi-printer me-1"></i> Print Sheet
             </a>
+            @endif
+            @if(Auth::user()->hasPermission('orders', 'update'))
             <a href="{{ route('orders.edit', $order) }}" class="btn btn-primary btn-sm px-3">
                 <i class="bi bi-pencil-square me-1"></i> Edit Order
             </a>
+            @endif
             <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary btn-sm px-3">
                 <i class="bi bi-arrow-left me-1"></i> Back to Orders
             </a>

@@ -13,7 +13,9 @@ class CustomerController extends Controller
         $query = Customer::withCount(['sales', 'returns']);
 
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
                   ->orWhere('owner_name', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
                   ->orWhere('phone_2', 'like', "%{$search}%")
@@ -21,7 +23,10 @@ class CustomerController extends Controller
                   ->orWhere('phone_4', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('ntn', 'like', "%{$search}%")
+                  ->orWhere('strn', 'like', "%{$search}%");
+            });
         }
 
         $customers = $query->orderBy('name')->paginate(15)->withQueryString();
@@ -33,6 +38,7 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:150',
+            'code' => 'nullable|string|max:50',
             'owner_name' => 'nullable|string|max:150',
             'phone' => 'nullable|string|max:50',
             'phone_2' => 'nullable|string|max:50',
@@ -41,6 +47,9 @@ class CustomerController extends Controller
             'email' => 'nullable|email|max:100',
             'city' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:255',
+            'ntn' => 'nullable|string|max:50',
+            'strn' => 'nullable|string|max:50',
+            'credit_days' => 'nullable|integer|in:7,15,30',
         ]);
 
         $customer = Customer::create($validated);
@@ -61,6 +70,7 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:150',
+            'code' => 'nullable|string|max:50',
             'owner_name' => 'nullable|string|max:150',
             'phone' => 'nullable|string|max:50',
             'phone_2' => 'nullable|string|max:50',
@@ -69,12 +79,87 @@ class CustomerController extends Controller
             'email' => 'nullable|email|max:100',
             'city' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:255',
+            'ntn' => 'nullable|string|max:50',
+            'strn' => 'nullable|string|max:50',
+            'credit_days' => 'nullable|integer|in:7,15,30',
         ]);
 
         $customer->update($validated);
 
         return redirect()->route('customers.index')
             ->with('success', "Customer '{$customer->name}' updated successfully.");
+    }
+
+    /**
+     * Customer Default List (Aging & Credit Recovery)
+     * Categorized into tabs: All, 7 Days, 15 Days, 30 Days
+     */
+    public function defaultList(Request $request)
+    {
+        $tab = $request->input('tab', 'all');
+        $search = $request->input('search');
+
+        $query = Customer::whereIn('credit_days', [7, 15, 30])
+            ->with(['sales', 'returns', 'cashReceipts']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('owner_name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('phone_2', 'like', "%{$search}%")
+                  ->orWhere('phone_3', 'like', "%{$search}%")
+                  ->orWhere('phone_4', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%");
+            });
+        }
+
+        $allTermCustomers = $query->get();
+
+        $defaulters = collect();
+
+        foreach ($allTermCustomers as $customer) {
+            $info = $customer->getOldestUnpaidInvoiceInfo();
+            if ($info && $info['is_overdue']) {
+                $defaulters->push([
+                    'customer' => $customer,
+                    'info' => $info,
+                    'credit_days' => (int) $customer->credit_days,
+                    'balance_due' => $info['total_balance_due'],
+                    'days_elapsed' => $info['days_elapsed'],
+                    'overdue_days' => $info['overdue_days'],
+                ]);
+            }
+        }
+
+        $stats = [
+            'all' => [
+                'count' => $defaulters->count(),
+                'total_amount' => (float) $defaulters->sum('balance_due'),
+            ],
+            '7' => [
+                'count' => $defaulters->where('credit_days', 7)->count(),
+                'total_amount' => (float) $defaulters->where('credit_days', 7)->sum('balance_due'),
+            ],
+            '15' => [
+                'count' => $defaulters->where('credit_days', 15)->count(),
+                'total_amount' => (float) $defaulters->where('credit_days', 15)->sum('balance_due'),
+            ],
+            '30' => [
+                'count' => $defaulters->where('credit_days', 30)->count(),
+                'total_amount' => (float) $defaulters->where('credit_days', 30)->sum('balance_due'),
+            ],
+        ];
+
+        $filteredDefaulters = $defaulters;
+        if (in_array($tab, ['7', '15', '30'])) {
+            $filteredDefaulters = $defaulters->where('credit_days', (int) $tab);
+        }
+
+        $filteredDefaulters = $filteredDefaulters->sortByDesc('overdue_days')->values();
+
+        return view('customers.default_list', compact('filteredDefaulters', 'stats', 'tab', 'search'));
     }
 
     public function destroy(Customer $customer)
@@ -117,35 +202,33 @@ class CustomerController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        // Opening balance calculation before $startDate
+        // Opening balance removed per request
         $openingBalance = 0.0;
-        if ($startDate) {
-            $invoicedBefore = (float) $customer->sales()->whereDate('invoice_date', '<', $startDate)->sum('total_amount');
-            $returnedBefore = (float) $customer->returns()->whereDate('return_date', '<', $startDate)->sum('total_amount');
-            $paidBefore = (float) $customer->cashReceipts()->whereDate('payment_date', '<', $startDate)->sum('amount');
-            $openingBalance = max(0, $invoicedBefore - ($returnedBefore + $paidBefore));
-        }
 
         // Queries within date range
         $salesQuery = $customer->sales()->with(['details.product.category', 'details.product.dozen']);
         $returnsQuery = $customer->returns()->with(['details.product.category', 'details.product.dozen', 'sale']);
         $receiptsQuery = $customer->cashReceipts();
+        $jvsQuery = $customer->journalVouchers();
 
         if ($startDate) {
             $salesQuery->whereDate('invoice_date', '>=', $startDate);
             $returnsQuery->whereDate('return_date', '>=', $startDate);
             $receiptsQuery->whereDate('payment_date', '>=', $startDate);
+            $jvsQuery->whereDate('voucher_date', '>=', $startDate);
         }
 
         if ($endDate) {
             $salesQuery->whereDate('invoice_date', '<=', $endDate);
             $returnsQuery->whereDate('return_date', '<=', $endDate);
             $receiptsQuery->whereDate('payment_date', '<=', $endDate);
+            $jvsQuery->whereDate('voucher_date', '<=', $endDate);
         }
 
         $sales = $salesQuery->get();
         $returns = $returnsQuery->get();
         $receipts = $receiptsQuery->get();
+        $jvs = $jvsQuery->get();
 
         // Build unified chronological transactions
         $transactions = collect();
@@ -237,10 +320,36 @@ class CustomerController extends Controller
             ]);
         }
 
+        foreach ($jvs as $jv) {
+            $dateTime = $jv->created_at ?: Carbon::parse($jv->voucher_date);
+            $isDebit = ($jv->type === 'debit');
+            $transactions->push([
+                'id' => 'jv_' . $jv->id,
+                'model_id' => $jv->id,
+                'type' => 'jv',
+                'type_label' => $isDebit ? 'Journal Voucher (Debit)' : 'Journal Voucher (Credit)',
+                'badge_class' => $isDebit ? 'bg-warning-subtle text-dark border border-warning' : 'bg-info-subtle text-info-emphasis border border-info',
+                'doc_no' => $jv->voucher_no,
+                'related_doc_no' => $jv->reference_no ?: null,
+                'date' => $jv->voucher_date ? $jv->voucher_date->format('Y-m-d') : $dateTime->format('Y-m-d'),
+                'date_time' => $dateTime,
+                'date_formatted' => $jv->voucher_date ? $jv->voucher_date->format('d M Y') : $dateTime->format('d M Y'),
+                'items_count' => 1,
+                'quantity' => 0,
+                'quantity_formatted' => '—',
+                'debit' => $isDebit ? (float) $jv->amount : 0.0,
+                'credit' => !$isDebit ? (float) $jv->amount : 0.0,
+                'amount' => (float) $jv->amount,
+                'view_url' => route('vouchers.show', $jv),
+                'items' => collect(),
+                'notes' => ($isDebit ? '[Debit Adjustment] ' : '[Credit Adjustment] ') . ($jv->notes ?: ''),
+            ]);
+        }
+
         // Sort chronologically ascending to compute running balances correctly
         $sorted = $transactions->sortBy(fn($t) => $t['date_time']->timestamp)->values();
 
-        $running = $openingBalance;
+        $running = 0.0;
         $withBalance = $sorted->map(function ($tx) use (&$running) {
             $running += ($tx['debit'] - $tx['credit']);
             $tx['running_balance'] = $running;
@@ -284,7 +393,7 @@ class CustomerController extends Controller
         $typeFilter = $request->input('type');
 
         $filteredTransactions = $allTransactions;
-        if ($typeFilter && in_array($typeFilter, ['sale', 'return', 'receipt'])) {
+        if ($typeFilter && in_array($typeFilter, ['sale', 'return', 'receipt', 'jv'])) {
             $filteredTransactions = $filteredTransactions->where('type', $typeFilter);
         }
 

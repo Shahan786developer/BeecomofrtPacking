@@ -116,18 +116,18 @@
             <form method="POST" action="{{ route('login.post') }}" class="d-flex flex-column gap-3">
                 @csrf
 
-                <!-- Email Input -->
+                <!-- Login / Phone 1 or Email Input -->
                 <div>
-                    <label for="email" class="form-label small fw-bold text-secondary text-uppercase mb-1">
-                        Email Address <span class="text-danger">*</span>
+                    <label for="login" class="form-label small fw-bold text-secondary text-uppercase mb-1">
+                        Phone Number or Email <span class="text-danger">*</span>
                     </label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-secondary">
-                            <i class="bi bi-envelope"></i>
+                            <i class="bi bi-telephone"></i>
                         </span>
-                        <input type="email" name="email" id="email" value="{{ old('email') }}" required autofocus
-                            class="form-control border-start-0 ps-0 fw-semibold @error('email') is-invalid @enderror"
-                            placeholder="admin@domain.com">
+                        <input type="text" name="login" id="login" value="{{ old('login', old('email')) }}" required autofocus
+                            class="form-control border-start-0 ps-0 fw-semibold @error('login') is-invalid @enderror @error('email') is-invalid @enderror"
+                            placeholder="e.g. 03001234567 or email">
                     </div>
                 </div>
 

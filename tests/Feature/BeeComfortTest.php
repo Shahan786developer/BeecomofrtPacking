@@ -590,7 +590,7 @@ class BeeComfortTest extends TestCase
             $printResponse = $this->get(route('sales.print', $sale));
             $printResponse->assertStatus(200);
             $printResponse->assertSee('Bee Comfort Premium Garments');
-            $printResponse->assertDontSee('+92 321 7654321');
+            $printResponse->assertSee('+92 321 7654321');
             $printResponse->assertSee('Plot #45, Industrial Estate, Faisalabad');
         }
     }
@@ -674,16 +674,18 @@ class BeeComfortTest extends TestCase
         $chinaPage->assertStatus(200);
         $chinaPage->assertSee('New China Sales Invoice');
         $chinaPage->assertSee('China Catalog Locked');
-        $chinaPage->assertSee($chinaProduct->title);
-        $chinaPage->assertDontSee($beeProduct->title);
+        $chinaPage->assertSee($chinaProduct->clean_title);
+        $chinaPage->assertSee($chinaProduct->sku_code);
+        $chinaPage->assertDontSee($beeProduct->sku_code);
 
         // 2. Visit Bee Comfort Bill Create Page
         $beePage = $this->get(route('sales.create', ['bill_type' => 'bee_comfort']));
         $beePage->assertStatus(200);
         $beePage->assertSee('New Bee Comfort Sales Invoice');
         $beePage->assertSee('Bee Comfort Catalog Locked');
-        $beePage->assertSee($beeProduct->title);
-        $beePage->assertDontSee($chinaProduct->title);
+        $beePage->assertSee($beeProduct->clean_title);
+        $beePage->assertSee($beeProduct->sku_code);
+        $beePage->assertDontSee($chinaProduct->sku_code);
 
         // 3. API Barcode scan mismatch check
         $apiMismatch = $this->getJson("/api/products/by-sku/{$chinaProduct->sku_code}?bill_type=bee_comfort");
@@ -869,11 +871,12 @@ class BeeComfortTest extends TestCase
         $response = $this->get(route('sales.print', $sale));
         $response->assertStatus(200);
 
-        // Phone numbers must not appear
+        // Customer phone must appear, Owner and City must not appear
         if ($sale->customer->phone) {
-            $response->assertDontSee($sale->customer->phone);
+            $response->assertSee($sale->customer->phone);
         }
-        $response->assertDontSee('Phone / WhatsApp:');
+        $response->assertDontSee('Owner:');
+        $response->assertDontSee('City:');
 
         // Billing summary card must not appear
         $response->assertDontSee('Billing Summary');
@@ -1135,5 +1138,163 @@ class BeeComfortTest extends TestCase
         $deleteResponse = $this->delete(route('orders.destroy', $order));
         $deleteResponse->assertRedirect(route('orders.index'));
         $this->assertDatabaseMissing('sale_orders', ['id' => $order->id]);
+    }
+
+    /**
+     * Test Separate China & Bee Comfort Product creation forms
+     */
+    public function test_separate_china_and_bee_comfort_product_registration_forms(): void
+    {
+        // 1. Visit Bee Comfort Registration Page
+        $bcPage = $this->get(route('products.create', ['type' => 'bee_comfort']));
+        $bcPage->assertStatus(200);
+        $bcPage->assertSee('Register Bee Comfort Product');
+        $bcPage->assertSee('Manual SKU Code');
+        $bcPage->assertDontSee('3. Pricing Configuration (Rupees Rs.)');
+
+        // 2. Visit China Registration Page
+        $chinaPage = $this->get(route('products.create', ['type' => 'china']));
+        $chinaPage->assertStatus(200);
+        $chinaPage->assertSee('Register China Product');
+        $chinaPage->assertSee('SKU Code (7-Digits)');
+        $chinaPage->assertSee('Auto 7-Digits (Editable)');
+        $chinaPage->assertSee('3. Pricing Configuration (Rupees Rs.)');
+        $chinaPage->assertSee('Actual Purchase Price');
+    }
+
+    /**
+     * Test Bee Comfort product registration with manual SKU and omitted prices
+     */
+    public function test_bee_comfort_registration_with_manual_sku_and_no_prices(): void
+    {
+        $cat = Category::first();
+        $dozen = Dozen::first();
+        $manualSku = 'BC-MANUAL-99';
+
+        $response = $this->post(route('products.store'), [
+            'parent_category' => 'Bee Comfort',
+            'category_id' => $cat->id,
+            'dozen_id' => $dozen->id,
+            'product_code' => 'MN-01',
+            'sku_code' => $manualSku,
+            'quantity' => 150,
+            // no actual_price, pricing_rule_id, selling_price
+        ]);
+
+        $response->assertRedirect(route('products.index'));
+
+        $product = Product::where('sku_code', $manualSku)->first();
+        $this->assertNotNull($product);
+        $this->assertEquals('Bee Comfort', $product->parent_category);
+        $this->assertEquals($manualSku, $product->sku_code);
+        $this->assertEquals(150, $product->stock_quantity);
+        $this->assertNull($product->actual_price);
+        $this->assertNull($product->pricing_rule_id);
+        $this->assertNull($product->selling_price);
+
+        // Movement created
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product->id,
+            'type' => 'initial',
+            'quantity_change' => 150,
+            'new_stock' => 150,
+        ]);
+    }
+
+    /**
+     * Test editing product warehouse stock quantity creates adjustment movement
+     */
+    public function test_edit_product_stock_quantity_creates_adjustment_movement(): void
+    {
+        $cat = Category::first();
+        $dozen = Dozen::first();
+
+        $product = Product::create([
+            'parent_category' => 'Bee Comfort',
+            'category_id' => $cat->id,
+            'dozen_id' => $dozen->id,
+            'product_code' => 'ST-01',
+            'sku_id' => Sku::allocate()->id,
+            'sku_code' => 'ST10001',
+            'stock_quantity' => 50,
+        ]);
+
+        // Edit stock quantity from 50 to 75
+        $response = $this->put(route('products.update', $product), [
+            'parent_category' => 'Bee Comfort',
+            'category_id' => $cat->id,
+            'dozen_id' => $dozen->id,
+            'product_code' => 'ST-01',
+            'sku_code' => 'ST10001',
+            'stock_quantity' => 75,
+        ]);
+
+        $response->assertRedirect(route('products.index'));
+
+        $product->refresh();
+        $this->assertEquals(75, $product->stock_quantity);
+
+        // Verify audit adjustment movement recorded
+        $movement = $product->stockMovements()->where('type', 'adjustment')->first();
+        $this->assertNotNull($movement);
+        $this->assertEquals(25, $movement->quantity_change);
+        $this->assertEquals(50, $movement->previous_stock);
+        $this->assertEquals(75, $movement->new_stock);
+        $this->assertStringContainsString('50 to 75 units', $movement->notes);
+    }
+
+    /**
+     * Test product show and movements views display customer name for outward sales
+     */
+    public function test_product_show_and_movements_display_customer_name_for_sales(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Al-Madina Traders',
+            'owner_name' => 'Haji Usman',
+            'phone' => '03001234567',
+        ]);
+
+        $cat = Category::first();
+        $dozen = Dozen::first();
+        $pricingRule = PricingRule::first();
+
+        $product = Product::create([
+            'parent_category' => 'Bee Comfort',
+            'category_id' => $cat->id,
+            'dozen_id' => $dozen->id,
+            'pricing_rule_id' => $pricingRule->id,
+            'product_code' => 'DS-01',
+            'sku_id' => Sku::allocate()->id,
+            'sku_code' => 'DS10001',
+            'actual_price' => 500,
+            'selling_price' => 650,
+            'stock_quantity' => 100,
+        ]);
+
+        // Create sale invoice for this product
+        $saleResponse = $this->post(route('sales.store'), [
+            'bill_type' => 'bee_comfort',
+            'invoice_no' => 'BC-SIN-TEST-CUST',
+            'customer_id' => $customer->id,
+            'invoice_date' => Carbon::today()->format('Y-m-d'),
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 25],
+            ],
+        ]);
+        $saleResponse->assertRedirect();
+
+        // Check product show page
+        $showResponse = $this->get(route('products.show', $product));
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('Customer / Company');
+        $showResponse->assertSee('Al-Madina Traders');
+        $showResponse->assertSee('(Haji Usman)');
+
+        // Check product movements ledger page
+        $movementsResponse = $this->get(route('products.movements', $product));
+        $movementsResponse->assertStatus(200);
+        $movementsResponse->assertSee('Customer / Company');
+        $movementsResponse->assertSee('Al-Madina Traders');
+        $movementsResponse->assertSee('(Haji Usman)');
     }
 }

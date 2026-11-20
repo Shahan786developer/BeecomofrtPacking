@@ -20,8 +20,11 @@
                 <a href="{{ route('customers.ledger', $receipt->customer_id) }}" class="btn btn-outline-info">
                     <i class="bi bi-journal-text me-1"></i> Customer Ledger
                 </a>
+                <a href="{{ route('receipts.print', $receipt) }}" target="_blank" class="btn btn-outline-success fw-bold">
+                    <i class="bi bi-receipt me-1"></i> Print 52mm Slip
+                </a>
                 <button type="button" onclick="window.print()" class="btn btn-primary fw-bold shadow-sm">
-                    <i class="bi bi-printer me-1"></i> Print Voucher
+                    <i class="bi bi-printer me-1"></i> Print Full Sheet
                 </button>
             </div>
         </div>

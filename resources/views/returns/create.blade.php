@@ -93,7 +93,7 @@
                             <option value="">Select Customer...</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ (old('customer_id', $selectedCustomerId) == $customer->id) ? 'selected' : '' }}>
-                                    {{ $customer->name }} ({{ $customer->phone ?: ($customer->city ?: 'No Contact') }})
+                                    {{ $customer->search_dropdown_label }}
                                 </option>
                             @endforeach
                         </select>
@@ -285,9 +285,20 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Physical Address</label>
-                    <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control form-control-sm">
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Credit / Recovery Term</label>
+                        <select id="modal_cust_credit_days" class="form-select form-select-sm">
+                            <option value="">None / Cash Basis</option>
+                            <option value="7">7 Days (Weekly)</option>
+                            <option value="15">15 Days (Bi-Weekly)</option>
+                            <option value="30">30 Days (Monthly)</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small fw-bold text-secondary text-uppercase mb-1">Physical Address</label>
+                        <input type="text" id="modal_cust_address" placeholder="Physical shop or billing address" class="form-control form-control-sm">
+                    </div>
                 </div>
             </div>
 
@@ -566,6 +577,8 @@
         const p1 = document.getElementById('modal_cust_phone').value.trim();
         const city = document.getElementById('modal_cust_city').value.trim();
         const addr = document.getElementById('modal_cust_address').value.trim();
+        const creditDaysEl = document.getElementById('modal_cust_credit_days');
+        const creditDays = creditDaysEl ? creditDaysEl.value : null;
 
         if (!name) {
             alert('Customer name is required.');
@@ -585,6 +598,7 @@
                 phone: p1,
                 city: city,
                 address: addr,
+                credit_days: creditDays ? parseInt(creditDays) : null,
             })
         })
         .then(r => r.json())
@@ -594,13 +608,13 @@
                 if (customerSelect && customerSelect.tomselect) {
                     customerSelect.tomselect.addOption({
                         value: cust.id,
-                        text: `${cust.name} (${cust.phone || cust.city || 'Active'})`
+                        text: `${cust.name} — Owner: ${cust.owner_name || '—'} • City: ${cust.city || '—'}`
                     });
                     customerSelect.tomselect.setValue(cust.id);
                 } else if (customerSelect) {
                     const opt = document.createElement('option');
                     opt.value = cust.id;
-                    opt.textContent = `${cust.name} (${cust.phone || cust.city || 'Active'})`;
+                    opt.textContent = `${cust.name} — Owner: ${cust.owner_name || '—'} • City: ${cust.city || '—'}`;
                     opt.selected = true;
                     customerSelect.appendChild(opt);
                 }

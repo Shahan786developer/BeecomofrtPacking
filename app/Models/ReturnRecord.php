@@ -14,6 +14,7 @@ class ReturnRecord extends Model
     protected $table = 'returns';
 
     protected $fillable = [
+        'user_id',
         'return_no',
         'return_type',
         'sale_id',
@@ -27,6 +28,11 @@ class ReturnRecord extends Model
         'return_date' => 'date',
         'total_amount' => 'float',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function sale(): BelongsTo
     {

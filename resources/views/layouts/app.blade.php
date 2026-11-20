@@ -23,6 +23,9 @@
     <!-- JsBarcode -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
+    <!-- HTML5 QR & Barcode Camera Scanner -->
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
@@ -286,57 +289,85 @@
             
             <div class="menu-label">Main System</div>
 
-            <!-- Page 1: Dashboard Overview (First Tab) -->
+            @if(Auth::user()->canAccessModule('dashboard'))
+            <!-- Page 1: Dashboard Overview -->
             <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard', 'home') ? 'active' : '' }}">
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </a>
+            @endif
 
+            @if(Auth::user()->canAccessModule('products'))
             <!-- Page 2: Products & Stock -->
             <a href="{{ route('products.index') }}" class="sidebar-link {{ request()->routeIs('products.*', 'stock.*') ? 'active' : '' }}">
                 <i class="bi bi-boxes"></i>
                 <span>Products & Stock</span>
             </a>
+            @endif
 
-            <!-- Page 3: Sale Orders (Matrix Booking) -->
+            @if(Auth::user()->canAccessModule('orders'))
+            <!-- Page 3: Sale Orders -->
             <a href="{{ route('orders.index') }}" class="sidebar-link {{ request()->routeIs('orders.*') ? 'active' : '' }}">
                 <i class="bi bi-journal-check"></i>
                 <span>Sale Orders</span>
             </a>
+            @endif
 
+            @if(Auth::user()->canAccessModule('sales'))
             <!-- Page 4: Sales Invoices -->
             <a href="{{ route('sales.index') }}" class="sidebar-link {{ request()->routeIs('sales.*') ? 'active' : '' }}">
                 <i class="bi bi-receipt"></i>
                 <span>Sales Invoices</span>
             </a>
+            @endif
 
-            <!-- Page 4: Bill Returns -->
+            @if(Auth::user()->canAccessModule('returns'))
+            <!-- Page 5: Bill Returns -->
             <a href="{{ route('returns.index') }}" class="sidebar-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-counterclockwise"></i>
                 <span>Bill Returns</span>
             </a>
+            @endif
 
-            <!-- Page 5: Cash Receipts Voucher (CRV) -->
+            @if(Auth::user()->canAccessModule('receipts'))
+            <!-- Page 6: Cash Receipts Voucher (CRV) -->
             <a href="{{ route('receipts.index') }}" class="sidebar-link {{ request()->routeIs('receipts.*') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i>
                 <span>Cash Receipts (CRV)</span>
             </a>
+            @endif
 
-            <!-- Page 6: Customers & Ledgers -->
-            <a href="{{ route('customers.index') }}" class="sidebar-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
+            @if(Auth::user()->canAccessModule('customers'))
+            <!-- Page 7: Customers & Ledgers -->
+            <a href="{{ route('customers.index') }}" class="sidebar-link {{ (request()->routeIs('customers.*') && !request()->routeIs('customers.default-list')) ? 'active' : '' }}">
                 <i class="bi bi-people"></i>
                 <span>Customers & Ledger</span>
             </a>
+            <!-- Page 8: Customer Default List (Aging Recovery) -->
+            <a href="{{ route('customers.default-list') }}" class="sidebar-link {{ request()->routeIs('customers.default-list') ? 'active' : '' }}">
+                <i class="bi bi-shield-exclamation text-danger"></i>
+                <span>Default List</span>
+            </a>
+            <!-- Page 9: Journal Vouchers (JV) -->
+            <a href="{{ route('vouchers.index') }}" class="sidebar-link {{ request()->routeIs('vouchers.*') ? 'active' : '' }}">
+                <i class="bi bi-journal-text text-warning"></i>
+                <span>Journal Vouchers (JV)</span>
+            </a>
+            @endif
 
             <!-- Secondary Links (Tools & Print) -->
+            @if(Auth::user()->canAccessModule('barcode') || Auth::user()->canAccessModule('settings'))
             <div class="menu-label mt-4">Overview & Tools</div>
 
+            @if(Auth::user()->canAccessModule('barcode'))
             <a href="{{ route('barcode.index') }}" class="sidebar-link {{ request()->routeIs('barcode.*') ? 'active' : '' }}">
                 <i class="bi bi-printer"></i>
                 <span>Print Barcode Roll</span>
             </a>
+            @endif
 
             <!-- Settings Accordion / Modal Dropdown -->
+            @if(Auth::user()->canAccessModule('settings'))
             <div class="dropdown mt-2">
                 <button class="sidebar-link w-100 border-0 bg-transparent text-start dropdown-toggle {{ request()->routeIs('pricing.*', 'categories.*', 'dozens.*') ? 'text-primary' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-gear"></i>
@@ -350,6 +381,17 @@
                     <li><a class="dropdown-item rounded py-2 small fw-semibold" href="{{ route('barcode.settings') }}"><i class="bi bi-sliders me-2 text-primary"></i> Printer Settings</a></li>
                 </ul>
             </div>
+            @endif
+            @endif
+
+            <!-- Administration (Super Admin Only) -->
+            @if(Auth::user()->isSuperAdmin())
+            <div class="menu-label mt-4">Administration</div>
+            <a href="{{ route('users.index') }}" class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                <i class="bi bi-people-gear"></i>
+                <span>Users & Permissions</span>
+            </a>
+            @endif
 
         </div>
 
@@ -358,12 +400,14 @@
             @auth
             <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                        SA
+                    <span class="rounded-circle {{ Auth::user()->isSuperAdmin() ? 'bg-primary' : 'bg-success' }} text-white d-inline-flex align-items-center justify-content-center fw-bold text-uppercase" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                     </span>
                     <div class="lh-1 text-start">
-                        <span class="d-block fw-bold text-dark fs-7">{{ Auth::user()->name }}</span>
-                        <span class="text-secondary" style="font-size: 0.68rem;">Super Admin</span>
+                        <span class="d-block fw-bold text-dark fs-7 text-truncate" style="max-width: 130px;">{{ Auth::user()->name }}</span>
+                        <span class="badge {{ Auth::user()->isSuperAdmin() ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-success-subtle text-success border border-success-subtle' }} px-1.5 py-0 mt-0.5" style="font-size: 0.65rem;">
+                            {{ Auth::user()->isSuperAdmin() ? 'Super Admin' : 'Staff User' }}
+                        </span>
                     </div>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -405,16 +449,29 @@
                 <!-- User Profile & Logout Dropdown -->
                 <div class="dropdown ms-1">
                     <button class="btn btn-light btn-sm border dropdown-toggle d-flex align-items-center gap-2 py-1 px-2.5" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold" style="width: 24px; height: 24px; font-size: 0.7rem;">
-                            SA
+                        <span class="rounded-circle {{ Auth::user()->isSuperAdmin() ? 'bg-primary' : 'bg-success' }} text-white d-inline-flex align-items-center justify-content-center fw-bold text-uppercase" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                         </span>
                         <span class="d-none d-md-inline fw-semibold text-dark small">{{ Auth::user()->name }}</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 mt-1">
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 mt-1" style="min-width: 200px;">
                         <li class="px-2 py-1.5 border-bottom mb-1">
                             <span class="d-block fw-bold text-dark small">{{ Auth::user()->name }}</span>
-                            <span class="d-block text-secondary fs-7 text-truncate" style="max-width: 180px;">{{ Auth::user()->email }}</span>
+                            <span class="badge {{ Auth::user()->isSuperAdmin() ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-success-subtle text-success border border-success-subtle' }} px-1.5 py-0 mb-1" style="font-size: 0.65rem;">
+                                {{ Auth::user()->isSuperAdmin() ? 'Super Admin' : 'Staff User' }}
+                            </span>
+                            <span class="d-block text-secondary fs-7 text-truncate" style="max-width: 180px;">
+                                {{ Auth::user()->email ?: (Auth::user()->phone1 ? 'Phone: ' . Auth::user()->phone1 : '') }}
+                            </span>
                         </li>
+                        @if(Auth::user()->isSuperAdmin())
+                        <li>
+                            <a class="dropdown-item rounded py-1.5 small text-primary fw-semibold" href="{{ route('users.index') }}">
+                                <i class="bi bi-people-gear me-2"></i> Users & Permissions
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        @endif
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf

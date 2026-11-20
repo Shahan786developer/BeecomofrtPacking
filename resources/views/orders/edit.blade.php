@@ -197,14 +197,19 @@
             <div class="row g-3">
                 <!-- Customer Selection -->
                 <div class="col-12 col-md-6">
-                    <label class="form-label required fw-bold small text-secondary">
-                        Customer <span class="text-danger">*</span>
-                    </label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label required fw-bold small text-secondary mb-0">
+                            Customer <span class="text-danger">*</span>
+                        </label>
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 btn-customer-scanner" data-target="customerId" title="Scan Customer Barcode with Camera">
+                            <i class="bi bi-camera me-1"></i> Scan Barcode
+                        </button>
+                    </div>
                     <select name="customer_id" id="customerId" class="form-select searchable-select @error('customer_id') is-invalid @enderror" required placeholder="-- Select Customer --">
                         <option value="">-- Select Customer --</option>
                         @foreach($customers as $c)
-                            <option value="{{ $c->id }}" {{ old('customer_id', $order->customer_id) == $c->id ? 'selected' : '' }}>
-                                {{ $c->name }} ({{ $c->formatted_code }})
+                            <option value="{{ $c->id }}" data-code="{{ $c->formatted_code }}" {{ old('customer_id', $order->customer_id) == $c->id ? 'selected' : '' }}>
+                                {{ $c->search_dropdown_label }}
                             </option>
                         @endforeach
                     </select>
@@ -449,6 +454,8 @@
 
     </div>
 </form>
+
+@include('components.customer-barcode-scanner')
 @endsection
 
 @push('scripts')

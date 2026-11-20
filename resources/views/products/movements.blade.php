@@ -15,7 +15,10 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary font-monospace px-2 py-1">
+                <span class="badge {{ $product->parent_category === 'China' ? 'bg-danger' : 'bg-primary' }} text-white px-2 py-1">
+                    {{ $product->parent_category }}
+                </span>
+                <span class="badge bg-dark font-monospace px-2 py-1">
                     SKU: {{ $product->sku_code }}
                 </span>
                 <span class="text-secondary small">Current Stock: <strong class="text-dark">{{ $product->stock_quantity }} units</strong></span>
@@ -38,6 +41,7 @@
                     <tr>
                         <th class="ps-4 py-3 text-secondary text-uppercase fs-7">Timestamp</th>
                         <th class="py-3 text-secondary text-uppercase fs-7">Movement Type</th>
+                        <th class="py-3 text-secondary text-uppercase fs-7">Customer / Company</th>
                         <th class="py-3 text-center text-secondary text-uppercase fs-7">Change</th>
                         <th class="py-3 text-center text-secondary text-uppercase fs-7">Previous Stock</th>
                         <th class="py-3 text-center text-secondary text-uppercase fs-7">New Stock</th>
@@ -51,9 +55,24 @@
                             {{ $move->created_at->format('d M Y, H:i:s') }}
                         </td>
                         <td class="py-3">
-                            <span class="badge {{ $move->type === 'sale' ? 'bg-primary-subtle text-primary border border-primary-subtle' : ($move->type === 'return' ? 'bg-warning-subtle text-warning border border-warning-subtle' : 'bg-success-subtle text-success border border-success-subtle') }} text-uppercase">
+                            <span class="badge {{ $move->type === 'sale' ? 'bg-primary-subtle text-primary border border-primary-subtle' : ($move->type === 'return' ? 'bg-warning-subtle text-warning border border-warning-subtle' : ($move->type === 'adjustment' ? 'bg-info-subtle text-info border border-info-subtle' : 'bg-success-subtle text-success border border-success-subtle')) }} text-uppercase">
                                 {{ $move->type }}
                             </span>
+                        </td>
+                        <!-- Customer / Company Column -->
+                        <td class="py-3">
+                            @if(($move->type === 'sale' || $move->quantity_change < 0) && $move->customer)
+                                <div>
+                                    <span class="fw-bold text-dark">
+                                        <i class="bi bi-person-fill text-secondary me-1"></i>{{ $move->customer->name }}
+                                    </span>
+                                    @if($move->customer->owner_name)
+                                        <span class="text-secondary small d-block ps-3">({{ $move->customer->owner_name }})</span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
                         </td>
                         <td class="py-3 text-center fw-bold fs-6 {{ $move->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
                             {{ $move->quantity_change > 0 ? '+' : '' }}{{ $move->quantity_change }}
@@ -64,7 +83,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-secondary">No movements recorded for this product yet.</td>
+                        <td colspan="7" class="text-center py-5 text-secondary">No movements recorded for this product yet.</td>
                     </tr>
                     @endforelse
                 </tbody>

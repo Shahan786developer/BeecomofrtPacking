@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 class SaleOrderController extends Controller
 {
     /**
@@ -20,7 +23,23 @@ class SaleOrderController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = SaleOrder::with(['customer', 'items'])->latest('order_date')->latest('id');
+        $currentUser = Auth::user();
+        $isSuperAdmin = $currentUser->isSuperAdmin();
+
+        $query = SaleOrder::with(['customer', 'items', 'user'])->latest('order_date')->latest('id');
+        $allOrdersQuery = SaleOrder::query();
+
+        // Scope to current user if not Super Admin
+        if (!$isSuperAdmin) {
+            $query->where('user_id', $currentUser->id);
+            $allOrdersQuery->where('user_id', $currentUser->id);
+        } else {
+            // Super Admin can filter by any user
+            if ($request->filled('user_id') && $request->user_id !== 'all') {
+                $query->where('user_id', $request->user_id);
+                $allOrdersQuery->where('user_id', $request->user_id);
+            }
+        }
 
         // Filter: Order No / Voucher No
         if ($request->filled('order_no')) {
@@ -46,7 +65,6 @@ class SaleOrderController extends Controller
         }
 
         // Summary metrics
-        $allOrdersQuery = SaleOrder::query();
         $totalOrdersCount = $allOrdersQuery->count();
         $totalPiecesBooked = (int) $allOrdersQuery->sum('total_quantity');
         $pendingCount = (clone $allOrdersQuery)->where('status', 'Pending')->count();
@@ -55,7 +73,8 @@ class SaleOrderController extends Controller
         $orders = $query->paginate(20)->withQueryString();
 
         $customers = Customer::orderBy('name')->get();
-        $recentOrderNos = SaleOrder::orderByDesc('id')->take(30)->pluck('order_no');
+        $recentOrderNos = (clone $allOrdersQuery)->orderByDesc('id')->take(30)->pluck('order_no');
+        $users = $isSuperAdmin ? User::orderBy('name')->get() : collect();
 
         return view('orders.index', compact(
             'orders',
@@ -64,7 +83,8 @@ class SaleOrderController extends Controller
             'totalOrdersCount',
             'totalPiecesBooked',
             'pendingCount',
-            'completedCount'
+            'completedCount',
+            'users'
         ));
     }
 
@@ -160,6 +180,7 @@ class SaleOrderController extends Controller
         DB::beginTransaction();
         try {
             $order = SaleOrder::create([
+                'user_id' => Auth::id(),
                 'order_no' => trim($request->order_no),
                 'customer_id' => $request->customer_id,
                 'order_date' => $request->order_date,
@@ -254,7 +275,8 @@ class SaleOrderController extends Controller
      */
     public function show(SaleOrder $order): View
     {
-        $order->load(['customer', 'items']);
+        $this->checkOrderOwnership($order);
+        $order->load(['customer', 'items', 'user']);
         return view('orders.show', compact('order'));
     }
 
@@ -263,6 +285,7 @@ class SaleOrderController extends Controller
      */
     public function edit(SaleOrder $order): View
     {
+        $this->checkOrderOwnership($order);
         $order->load(['customer', 'items']);
         $customers = Customer::orderBy('name')->get();
 
@@ -339,6 +362,8 @@ class SaleOrderController extends Controller
      */
     public function update(Request $request, SaleOrder $order): RedirectResponse
     {
+        $this->checkOrderOwnership($order);
+
         $request->validate([
             'order_no' => 'required|string|max:64|unique:sale_orders,order_no,' . $order->id,
             'customer_id' => 'required|exists:customers,id',
@@ -447,6 +472,8 @@ class SaleOrderController extends Controller
      */
     public function destroy(SaleOrder $order): RedirectResponse
     {
+        $this->checkOrderOwnership($order);
+
         $orderNo = $order->order_no;
         $order->delete();
 
@@ -458,7 +485,9 @@ class SaleOrderController extends Controller
      */
     public function print(SaleOrder $order): View
     {
-        $order->load(['customer', 'items']);
+        $this->checkOrderOwnership($order);
+
+        $order->load(['customer', 'items', 'user']);
         $companyProfile = \App\Models\CompanyProfile::getSettings();
 
         // Group items by article
@@ -468,5 +497,15 @@ class SaleOrderController extends Controller
         }
 
         return view('orders.print', compact('order', 'companyProfile', 'groupedArticles'));
+    }
+
+    /**
+     * Enforce data ownership: regular users can only access their own orders.
+     */
+    protected function checkOrderOwnership(SaleOrder $order): void
+    {
+        if (!Auth::user()->isSuperAdmin() && $order->user_id && $order->user_id != Auth::id()) {
+            abort(403, 'Unauthorized access: You are only allowed to view and manage your own sale orders.');
+        }
     }
 }

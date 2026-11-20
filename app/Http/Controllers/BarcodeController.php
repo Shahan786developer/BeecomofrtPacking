@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BarcodeConfiguration;
 use App\Models\BarcodeDescription;
+use App\Models\Customer;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,33 @@ class BarcodeController extends Controller
         $secondLine = trim($product->category->name . ' ' . $product->product_code);
 
         return view('barcode.print', compact('product', 'secondLine', 'config', 'quantity'));
+    }
+
+    public function customerIndex(Request $request)
+    {
+        $customers = Customer::orderBy('name')->get();
+        $config = BarcodeConfiguration::getActive();
+
+        $selectedCustomer = null;
+        if ($request->filled('customer_id')) {
+            $selectedCustomer = Customer::find($request->customer_id);
+        }
+
+        return view('barcode.customer', compact('customers', 'config', 'selectedCustomer'));
+    }
+
+    public function customerPrint(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'quantity' => 'required|integer|min:1|max:1000',
+        ]);
+
+        $customer = Customer::findOrFail($validated['customer_id']);
+        $config = BarcodeConfiguration::getActive();
+        $quantity = (int) $validated['quantity'];
+
+        return view('barcode.customer_print', compact('customer', 'config', 'quantity'));
     }
 
     public function settings()
